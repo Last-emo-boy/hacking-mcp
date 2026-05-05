@@ -14,7 +14,7 @@
 [![Tests](https://img.shields.io/badge/Tests-176_passing-00FF88?style=flat-square)](.)
 [![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-FFA116?style=flat-square)](.)
 
-[![Star](https://img.shields.io/github/stars/user/hacking-mcp?style=social)](.)
+[![Star](https://img.shields.io/github/stars/Last-emo-boy/hacking-mcp?style=social)](.)
 
 </div>
 
