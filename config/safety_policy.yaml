@@ -1,0 +1,42 @@
+# Safety policy for hacking-mcp
+# Controls which tools/categories are exposed via MCP and under what conditions
+
+# Categories permanently excluded from MCP
+disabled_categories:
+  - "DDOS Attack"
+  - "Remote Administration (RAT)"
+  - "Payload Creation"
+  - "Phishing Attack"
+  - "Wireless Attack"
+  - "Anonymously Hiding"
+
+# Individual tools permanently excluded
+disabled_tools:
+  - "Chrome Keylogger"
+  - "Vegile"
+  - "Spycam"
+  - "SayCheese"
+
+# Categories that require explicit user confirmation per invocation
+require_confirmation_categories:
+  - "SQL Injection"
+  - "Exploit Framework"
+  - "Post Exploitation"
+  - "XSS Attack"
+
+# Execution limits
+max_execution_timeout_seconds: 300
+max_output_bytes: 52428800  # 50MB
+
+# Target scope (empty = allow all)
+# Define authorized IP ranges / domains for professional pentesting
+scope:
+  allowed_cidrs: []
+  allowed_domains: []
+  # Example:
+  # allowed_cidrs:
+  #   - "10.0.0.0/8"
+  #   - "192.168.1.0/24"
+  # allowed_domains:
+  #   - "example.com"
+  #   - "*.test.local"
