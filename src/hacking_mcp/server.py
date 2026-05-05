@@ -5,6 +5,7 @@ InstallManager, TaskManager, and AssetManager, then registers all MCP tool funct
 """
 
 import logging
+import shutil
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
@@ -22,16 +23,66 @@ from hacking_mcp.environment import ensure_data_dirs
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("hacking-mcp")
 
-# Configuration paths
-CONFIG_DIR = Path(__file__).parent.parent.parent / "config"
-SAFETY_POLICY_PATH = CONFIG_DIR / "safety_policy.yaml"
+# Configuration paths — try repo dir (dev mode), then ~/.hacking-mcp/ (installed)
+_REPO_CONFIG = Path(__file__).parent.parent.parent / "config" / "safety_policy.yaml"
+_USER_CONFIG = Path.home() / ".hacking-mcp" / "safety_policy.yaml"
 
 # Ensure data directories exist
 ensure_data_dirs()
 
+def _resolve_safety_config() -> SafetyPolicy:
+    """Load safety policy, preferring repo config in dev, user config otherwise."""
+    if _REPO_CONFIG.exists():
+        return SafetyPolicy.from_yaml(_REPO_CONFIG)
+    if _USER_CONFIG.exists():
+        return SafetyPolicy.from_yaml(_USER_CONFIG)
+    # Create default config in user directory
+    _USER_CONFIG.parent.mkdir(parents=True, exist_ok=True)
+    if _REPO_CONFIG.exists():
+        # Copy from repo
+        shutil.copy(_REPO_CONFIG, _USER_CONFIG)
+    else:
+        # Write built-in default
+        _USER_CONFIG.write_text("""# Safety policy for hacking-mcp
+# Controls which tools/categories are exposed via MCP and under what conditions
+
+# Categories permanently excluded from MCP
+disabled_categories:
+  - "DDOS Attack"
+  - "Remote Administration (RAT)"
+  - "Payload Creation"
+  - "Phishing Attack"
+  - "Wireless Attack"
+  - "Anonymously Hiding"
+
+# Individual tools permanently excluded
+disabled_tools:
+  - "Chrome Keylogger"
+  - "Vegile"
+  - "Spycam"
+  - "SayCheese"
+
+# Categories that require explicit user confirmation per invocation
+require_confirmation_categories:
+  - "SQL Injection"
+  - "Exploit Framework"
+  - "Post Exploitation"
+  - "XSS Attack"
+
+# Execution limits
+max_execution_timeout_seconds: 300
+max_output_bytes: 52428800  # 50MB
+
+# Target scope (empty = allow all)
+scope:
+  allowed_cidrs: []
+  allowed_domains: []
+""")
+    return SafetyPolicy.from_yaml(_USER_CONFIG)
+
 # Initialize shared state
 registry = ToolRegistry()
-safety = SafetyPolicy.from_yaml(SAFETY_POLICY_PATH)
+safety = _resolve_safety_config()
 runner = ToolRunner(registry, safety)
 formatter = OutputFormatter()
 asset_mgr = AssetManager()

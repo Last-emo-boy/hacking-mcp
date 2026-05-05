@@ -1,7 +1,12 @@
-"""Discovery MCP tools — list, search, and inspect available security tools."""
+"""Discovery MCP tools — progressive disclosure of available security tools.
+
+Three levels of detail:
+  Level 1: Category overview (no args) — names, counts, descriptions
+  Level 2: Tool listing (by category/tag/search) — compact one-line per tool
+  Level 3: Full detail — security_get_tool_info("name")
+"""
 
 from mcp.server.fastmcp import FastMCP, Context
-from mcp.types import ToolAnnotations
 
 from hacking_mcp.registry import ToolRegistry
 from hacking_mcp.safety import SafetyPolicy
@@ -12,79 +17,128 @@ from hacking_mcp.environment import get_tools_dir
 def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
     @mcp.tool(
         name="security_list_tools",
-        description="List all available security tools organized by category. "
-        "Shows tool name, description, safety tier, and whether it's installed. "
-        "Use to discover what tools are available before running them.",
+        description="Progressive discovery of security tools. "
+        "Without arguments: lists all 20 categories with tool counts and descriptions. "
+        "With a category: lists tools in that category (compact, one line each). "
+        "With search/tag: finds matching tools (compact results). "
+        "Use security_get_tool_info('name') for full details on any tool.",
     )
     async def security_list_tools(
         category: str = "",
         tag: str = "",
         search: str = "",
-        show_unavailable: bool = True,
         ctx: Context = None,
     ) -> str:
-        """List security tools with optional filtering.
+        """List security tools with progressive disclosure.
+
+        Level 1 (no args): Category overview — name, counts, description.
+        Level 2 (category/tag/search): Compact tool list — name + one-liner.
+        Level 3: Use security_get_tool_info('name') for full detail.
 
         Args:
             category: Filter by category name (e.g., 'Information Gathering', 'Web Attack')
             tag: Filter by tag (e.g., 'osint', 'recon', 'web', 'scanner')
             search: Search tools by name, description, or tags
-            show_unavailable: Include tools not installed on this system
         """
-        # Apply filters
+        tier_emoji = {"safe": "🟢", "caution": "🟡", "dangerous": "🔴"}
+
+        # ── Level 2: Search results (compact) ──
         if search:
             tools = registry.search_tools(search)
-            heading = f"Search results for: '{search}'"
-        elif tag:
-            tools = registry.search_by_tag(tag)
-            heading = f"Tools tagged: '{tag}'"
-        elif category:
-            tools = registry.get_category_tools(category)
-            heading = f"Category: {category}"
-        else:
-            # List all by category
-            lines = ["# Security Tools Catalog\n"]
-            lines.append(f"**Policy:** {len(safety.disabled_categories)} categories disabled, "
-                         f"{len(safety.require_confirmation_categories)} require confirmation\n")
-            for cat_info in registry.list_categories():
-                lines.append(f"\n## {cat_info['name']} "
-                             f"({cat_info['available_count']}/{cat_info['tool_count']} available)")
-                lines.append(f"_{cat_info['description']}_\n")
-                cat_tools = registry.get_category_tools(cat_info['name'])
-                for t in cat_tools:
-                    avail = registry.get_availability(t.name)
-                    status = "✓" if avail.available else "✗"
-                    tier_emoji = {"safe": "🟢", "caution": "🟡", "dangerous": "🔴"}
-                    tier = tier_emoji.get(t.safety_tier.value, "⚪")
-                    lines.append(
-                        f"- {status} {tier} **{t.name}** — {t.title}"
-                    )
-                    if not avail.platform_supported:
-                        lines[-1] += " *(unsupported platform)*"
-                    elif not avail.available and show_unavailable:
-                        lines[-1] += " *(not installed)*"
+            if not tools:
+                return (
+                    f"No tools found matching '{search}'. "
+                    "Try a different term or use `security_list_tools` to browse categories."
+                )
+            lines = [f"# Search: '{search}' ({len(tools)} tools)\n"]
+            for t in tools:
+                avail = registry.get_availability(t.name)
+                status = "✓" if avail.available else "✗"
+                tier = tier_emoji.get(t.safety_tier.value, "")
+                note = ""
+                if not avail.platform_supported:
+                    note = " *(unsupported)*"
+                elif not avail.available:
+                    note = " *(not installed)*"
+                lines.append(f"- {status} {tier} **{t.name}** — {t.title}{note}")
+            lines.append(f"\nUse `security_get_tool_info('name')` for full details on any tool above.")
             return "\n".join(lines)
 
-        # Filtered output
-        lines = [f"# {heading} ({len(tools)} tools)\n"]
-        for t in tools:
-            avail = registry.get_availability(t.name)
-            status = "✓ installed" if avail.available else "✗ not installed"
-            if not avail.platform_supported:
-                status = "⊘ unsupported platform"
-            tier_emoji = {"safe": "🟢 SAFE", "caution": "🟡 CAUTION", "dangerous": "🔴 DANGEROUS"}
-            tier = tier_emoji.get(t.safety_tier.value, "⚪ UNKNOWN")
-            lines.append(f"## {t.name}")
-            lines.append(f"**Title:** {t.title}")
-            lines.append(f"**Category:** {t.category}")
-            lines.append(f"**Tier:** {tier}")
-            lines.append(f"**Status:** {status}")
-            lines.append(f"**Description:** {t.description}")
-            if t.project_url:
-                lines.append(f"**URL:** {t.project_url}")
-            if t.tags:
-                lines.append(f"**Tags:** {', '.join(t.tags)}")
+        # ── Level 2: Tag results (compact) ──
+        if tag:
+            tools = registry.search_by_tag(tag)
+            if not tools:
+                all_tags = registry.get_all_tags()
+                return f"No tools tagged '{tag}'. Available tags: {', '.join(all_tags[:20])}..."
+            lines = [f"# Tag: '{tag}' ({len(tools)} tools)\n"]
+            for t in tools:
+                avail = registry.get_availability(t.name)
+                status = "✓" if avail.available else "✗"
+                tier = tier_emoji.get(t.safety_tier.value, "")
+                lines.append(f"- {status} {tier} **{t.name}** — {t.title}")
+            lines.append(f"\nUse `security_get_tool_info('name')` for full details on any tool above.")
+            return "\n".join(lines)
+
+        # ── Level 2: Category drill-down (compact) ──
+        if category:
+            tools = registry.get_category_tools(category)
+            if not tools:
+                cat_names = [c["name"] for c in registry.list_categories()]
+                return f"Unknown category: '{category}'. Available categories: {', '.join(cat_names)}"
+            available = sum(1 for t in tools if registry.is_available(t.name))
+            lines = [f"# {category} ({available}/{len(tools)} available)\n"]
+            for t in tools:
+                avail = registry.get_availability(t.name)
+                status = "✓" if avail.available else "✗"
+                tier = tier_emoji.get(t.safety_tier.value, "")
+                note = ""
+                if not avail.platform_supported:
+                    note = " *(unsupported)*"
+                elif not avail.available:
+                    note = " *(not installed)*"
+                lines.append(f"- {status} {tier} **{t.name}** — {t.title}{note}")
+            lines.append(f"\nUse `security_get_tool_info('name')` for full details on any tool above.")
+            lines.append(f"Use `security_install_tool('name')` to install a missing tool.")
+            return "\n".join(lines)
+
+        # ── Level 1: Category overview (no args) ──
+        all_cats = registry.list_categories()
+        total_tools = registry.get_tool_names()
+        total_avail = sum(1 for n in total_tools if registry.is_available(n))
+
+        lines = [
+            f"# Security Tools — {len(all_cats)} categories, {len(total_tools)} tools ({total_avail} installed)",
+            "",
+        ]
+
+        disabled_set = safety.disabled_categories
+        confirm_set = safety.require_confirmation_categories
+
+        for cat_info in all_cats:
+            name = cat_info["name"]
+            n_avail = cat_info["available_count"]
+            n_total = cat_info["tool_count"]
+            desc = cat_info["description"]
+
+            if name in disabled_set:
+                tag_line = "🚫 disabled"
+            elif name in confirm_set:
+                tag_line = "⚠️ requires confirmation"
+            else:
+                tag_line = "🟢 available"
+
+            lines.append(f"## {name} ({n_avail}/{n_total} tools) — {tag_line}")
+            if desc:
+                lines.append(f"_{desc}_")
             lines.append("")
+
+        lines.append("---")
+        lines.append("**Next steps:**")
+        lines.append('- Use `security_list_tools(category="Category Name")` to see tools in a category.')
+        lines.append('- Use `security_list_tools(search="keyword")` to find tools by name or function.')
+        lines.append('- Use `security_get_tool_info("tool_name")` for full detail on a specific tool.')
+        lines.append('- Use `security_install_tool("tool_name")` to install a tool.')
+
         return "\n".join(lines)
 
     @mcp.tool(
@@ -111,20 +165,23 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
             return msg
 
         avail = registry.get_availability(tool_name)
-        tier_emoji = {"safe": "SAFE (always available)", "caution": "CAUTION (explicit target required, logged)",
-                       "dangerous": "DANGEROUS (excluded from MCP)"}
+        tier_labels = {
+            "safe": "SAFE (always available)",
+            "caution": "CAUTION (explicit target required, logged)",
+            "dangerous": "DANGEROUS (excluded from MCP)",
+        }
 
         lines = [
             f"# {tool.title}",
-            f"",
+            "",
             f"**Name:** `{tool.name}`",
             f"**Category:** {tool.category}",
-            f"**Safety Tier:** {tier_emoji.get(tool.safety_tier.value, 'UNKNOWN')}",
-            f"",
-            f"## Description",
+            f"**Safety Tier:** {tier_labels.get(tool.safety_tier.value, 'UNKNOWN')}",
+            "",
+            "## Description",
             f"{tool.description}",
-            f"",
-            f"## Availability",
+            "",
+            "## Availability",
         ]
         if avail.available:
             lines.append(f"✓ Installed at: `{avail.path}`")

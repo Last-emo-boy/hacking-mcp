@@ -1,11 +1,34 @@
+# Bytecode
 __pycache__/
 *.py[cod]
 *.egg-info/
+
+# Build artifacts
 dist/
 build/
+
+# Virtual environments
 .venv/
 venv/
 *.egg
+
+# Test/coverage
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.coverage
+htmlcov/
+*.cover
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific
+.hacking-mcp/
