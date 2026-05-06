@@ -8,6 +8,25 @@ from hacking_mcp.registry import ToolRegistry
 
 def register(mcp: FastMCP, install_mgr: InstallManager, registry: ToolRegistry):
     @mcp.tool(
+        name="security_bootstrap_wsl",
+        description="Install base development tools into WSL2 (python3, pip, git, curl, go, ruby, build-essential). "
+        "Runs 'sudo apt-get install' inside WSL to set up the environment needed for installing security tools. "
+        "Use this once after setting up WSL2, before installing any security tools. "
+        "Safe to run multiple times — only installs missing packages.",
+    )
+    async def security_bootstrap_wsl(ctx: Context = None) -> str:
+        """Bootstrap WSL2 with basic dev toolchain."""
+        error = await install_mgr._bootstrap_wsl()
+        if error:
+            return f"❌ Bootstrap failed:\n\n{error}"
+        return (
+            "✅ WSL2 dev environment is ready.\n\n"
+            "Installed packages:\n"
+            + "\n".join(f"- `{p}`" for p in InstallManager.WSL_BOOTSTRAP_PACKAGES)
+            + "\n\nYou can now use `security_install_tool` to install security tools."
+        )
+
+    @mcp.tool(
         name="security_install_tool",
         description="Install a security tool automatically. "
         "Executes the tool's install commands (git clone, pip install, apt install, etc.) "

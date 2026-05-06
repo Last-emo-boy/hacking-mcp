@@ -10,6 +10,7 @@ Install state is persisted to ~/.hacking-mcp/installs/state.json.
 import json
 import logging
 import shlex
+import shutil
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -22,6 +23,14 @@ from hacking_mcp.runner import ToolRunner
 from hacking_mcp.environment import get_tools_dir, get_installs_dir
 
 logger = logging.getLogger("hacking-mcp.install")
+
+# Chinese mirror sources for faster downloads
+MIRRORS = {
+    "pip": "https://pypi.tuna.tsinghua.edu.cn/simple",
+    "apt": "http://mirrors.tuna.tsinghua.edu.cn/ubuntu",
+    "go": "https://goproxy.cn,direct",
+    "gem": "https://gems.ruby-china.com",
+}
 
 
 @dataclass
@@ -105,28 +114,51 @@ class InstallCommandParser:
 
         first = tokens[0].lower()
 
-        # git clone
+        # git clone — pass all original args, just resolve target directory path
         if first == "git" and len(tokens) >= 3 and tokens[1] == "clone":
-            repo_url = tokens[2]
-            # Extract repo name from URL
+            # Find the URL (first arg containing :// or github.com/ etc.)
+            repo_url = ""
+            for t in tokens[2:]:
+                if "/" in t and not t.startswith("-"):
+                    repo_url = t
+                    break
+            if not repo_url:
+                return InstallStep(method="shell", command=tokens, cwd=cwd,
+                                   description=f"git clone (no URL): {cmd_str[:80]}")
+
             repo_name = repo_url.rstrip("/").split("/")[-1]
             if repo_name.endswith(".git"):
                 repo_name = repo_name[:-4]
-            # Check if there's a custom target directory (4th argument)
-            if len(tokens) >= 4:
-                target_dir = tokens[3]
-                if not target_dir.startswith("/") and not target_dir.startswith("~"):
-                    target_dir = str(Path(tools_dir) / target_dir)
+
+            # Last positional arg is the target dir; replace with resolved path.
+            # If no target dir arg, append resolved path.
+            pos_args = [i for i, t in enumerate(tokens) if i >= 2 and not t.startswith("-")]
+            # Exclude URL itself from positional args
+            url_idx = tokens.index(repo_url, 2)
+            target_args = [i for i in pos_args if i > url_idx]
+
+            # Determine target dir: use user-specified dir if provided, else repo name
+            if target_args:
+                user_dir = tokens[target_args[-1]]
+                if not user_dir.startswith("/") and not user_dir.startswith("~"):
+                    user_dir = str(Path(tools_dir) / user_dir)
+                resolved_target = user_dir
             else:
-                target_dir = str(Path(tools_dir) / repo_name)
+                resolved_target = str(Path(tools_dir) / repo_name)
+
+            clone_cmd = list(tokens)
+            if target_args:
+                clone_cmd[target_args[-1]] = resolved_target
+            else:
+                clone_cmd.append(resolved_target)
 
             return InstallStep(
                 method="git_clone",
-                command=["git", "clone", repo_url, target_dir],
+                command=clone_cmd,
                 cwd=tools_dir,
                 description=f"Clone {repo_url}",
                 clone_url=repo_url,
-                clone_dir=target_dir,
+                clone_dir=resolved_target,
             )
 
         # pip install
@@ -238,10 +270,24 @@ class InstallManager:
     State is persisted to ~/.hacking-mcp/installs/state.json.
     """
 
-    def __init__(self, runner: ToolRunner, registry: ToolRegistry):
+    # Packages required in WSL for building/installing security tools
+    WSL_BOOTSTRAP_PACKAGES = [
+        "python3", "python3-pip", "python3-venv",
+        "git", "curl", "wget",
+        "golang-go",
+        "ruby", "ruby-dev",
+        "build-essential",
+    ]
+
+    def __init__(self, runner: ToolRunner, registry: ToolRegistry,
+                 proxy_env: dict[str, str] | None = None,
+                 mirrors: dict[str, str] | None = None):
         self._runner = runner
         self._registry = registry
+        self._proxy_env = proxy_env or {}
+        self._mirrors = mirrors or {}
         self._state: dict[str, dict] = {}
+        self._bootstrap_done = False
         self._load_state()
 
     @property
@@ -294,10 +340,163 @@ class InstallManager:
         """Check if a tool is fully installed."""
         return self._state.get(tool_name, {}).get("installed", False)
 
+    # Commands to verify after bootstrap, with fallback install packages
+    WSL_REQUIRED_COMMANDS = {
+        "python3": "python3",
+        "pip3": "python3-pip",
+        "git": "git",
+        "curl": "curl",
+        "go": "golang-go",
+        "gem": "ruby",
+        "gcc": "build-essential",
+    }
+
+    def _wsl_root_cmd(self, cmd: str) -> list[str]:
+        """Build a WSL command that runs as root (avoids sudo password prompt)."""
+        return ["wsl", "-u", "root", "bash", "-c", cmd]
+
+    async def _verify_wsl_command(self, cmd_name: str) -> bool:
+        """Check if a command actually exists in WSL."""
+        result = await self._runner.run_raw(
+            cmd=["bash", "-c", f"command -v {shlex.quote(cmd_name)}"],
+            timeout=10,
+            description=f"Check if {cmd_name} exists in WSL",
+        )
+        # Non-zero exit is OK for missing commands
+        return result.return_code == 0 and bool(result.stdout.strip())
+
+    async def _bootstrap_wsl(self) -> str:
+        """Ensure WSL has basic dev tools (pip, git, go, curl, etc.).
+
+        Runs once per process. Uses wsl -u root to avoid sudo password prompts.
+        After installing packages, verifies each command actually works.
+        Returns error message if bootstrap fails, empty string on success.
+        """
+        if self._bootstrap_done:
+            return ""
+
+        from hacking_mcp.environment import ExecBackend
+        if self._runner.env.backend != ExecBackend.WSL2:
+            self._bootstrap_done = True  # No WSL → no bootstrap needed, mark done
+            return ""
+
+        # Check if we can reach WSL (cold start can take 15-30s)
+        test = await self._runner.run_raw(
+            cmd=["echo", "ok"],
+            timeout=60,
+            description="Test WSL connectivity (may take time if WSL was stopped)",
+        )
+        if "ok" not in test.stdout:
+            return (
+                f"WSL connectivity test failed: {test.stderr.strip() or 'no output'}.\n"
+                "Ensure WSL is running: run 'wsl echo ok' in a terminal first."
+            )
+
+        logger.info("Checking WSL dev environment...")
+
+        # Check each required command
+        missing = []
+        for cmd_name, pkg_name in self.WSL_REQUIRED_COMMANDS.items():
+            if await self._verify_wsl_command(cmd_name):
+                logger.info("  ✓ %s found", cmd_name)
+            else:
+                logger.info("  ✗ %s missing (needs %s)", cmd_name, pkg_name)
+                missing.append(pkg_name)
+
+        if not missing:
+            # Even if all found, verify pip actually works
+            pip_test = await self._runner.run_raw(
+                cmd=["sh", "-c", "python3 -m pip --version 2>/dev/null || pip3 --version 2>/dev/null || true"],
+                timeout=10,
+                description="Verify pip works",
+            )
+            if not pip_test.stdout.strip():
+                missing.append("python3-pip")
+                logger.info("  ✗ pip not functional (will reinstall python3-pip)")
+
+        if not missing:
+            logger.info("WSL dev environment ready")
+            return ""
+
+        # Install missing packages one by one (as root, no sudo)
+        # One-by-one gives clear error per package
+        logger.info("Installing %d missing packages via apt-get...", len(missing))
+        update_result = await self._runner.run_raw(
+            cmd=self._wsl_root_cmd("apt-get update -qq 2>/dev/null"),
+            timeout=180,  # 3 min for apt update on slow connections
+            env=self._proxy_env or None,
+            description="apt-get update (root)",
+        )
+
+        failed_packages = []
+        for pkg in missing:
+            result = await self._runner.run_raw(
+                cmd=self._wsl_root_cmd(
+                    f"DEBIAN_FRONTEND=noninteractive apt-get install -y {shlex.quote(pkg)} 2>&1"
+                ),
+                timeout=120,
+                env=self._proxy_env or None,
+                description=f"apt-get install {pkg}",
+            )
+            if result.return_code != 0:
+                failed_packages.append(pkg)
+                logger.warning("  ✗ %s install failed (exit %d): %s",
+                             pkg, result.return_code, result.stderr[:200])
+            else:
+                logger.info("  ✓ %s installed", pkg)
+
+        if failed_packages:
+            # Try with sudo as fallback
+            logger.info("Retrying %d packages with sudo...", len(failed_packages))
+            for pkg in failed_packages[:]:
+                result = await self._runner.run_raw(
+                    cmd=["sh", "-c",
+                         f"sudo DEBIAN_FRONTEND=noninteractive apt-get install -y {shlex.quote(pkg)} 2>&1"],
+                    timeout=120,
+                    env=self._proxy_env or None,
+                    description=f"sudo apt-get install {pkg}",
+                )
+                if result.return_code == 0:
+                    failed_packages.remove(pkg)
+                    logger.info("  ✓ %s installed via sudo", pkg)
+                elif "sudo: no tty present" in result.stderr or "a password is required" in result.stderr:
+                    logger.warning("  ✗ sudo requires password for %s — skipping", pkg)
+
+        # Verify each missing command now works (login shell for PATH)
+        still_missing = []
+        for cmd_name in self.WSL_REQUIRED_COMMANDS:
+            if await self._verify_wsl_command(cmd_name):
+                logger.info("  ✓ %s now available", cmd_name)
+            else:
+                still_missing.append(cmd_name)
+
+        if still_missing:
+            # One more try: python3 -m pip
+            if "pip3" in still_missing:
+                pip_check = await self._runner.run_raw(
+                    cmd=["sh", "-c", "python3 -m pip --version 2>/dev/null || true"],
+                    timeout=10,
+                    description="Check python3 -m pip",
+                )
+                if pip_check.stdout.strip():
+                    still_missing.remove("pip3")
+
+            if still_missing:
+                return (
+                    f"{len(still_missing)} packages installed but commands still not found: {', '.join(still_missing)}.\n"
+                    f"This may be a PATH issue in non-login shells.\n"
+                    f"Run manually in WSL: sudo apt-get install -y {' '.join(still_missing)}"
+                )
+
+        logger.info("WSL dev environment ready")
+        self._bootstrap_done = True
+        return ""
+
     async def install_tool(self, tool_name: str) -> InstallRecord:
         """Install a tool by executing its install_commands.
 
         Steps:
+        0. Auto-bootstrap WSL with basic dev tools if needed
         1. Look up tool in registry
         2. Get install_commands
         3. Parse into InstallSteps
@@ -305,6 +504,15 @@ class InstallManager:
         5. Update state after each step
         6. Return InstallRecord
         """
+        # Ensure WSL has basic tools
+        bootstrap_error = await self._bootstrap_wsl()
+        if bootstrap_error:
+            return InstallRecord(
+                tool_name=tool_name,
+                installed=False,
+                error=f"WSL environment not ready:\n{bootstrap_error}",
+            )
+
         tool = self._registry.get_tool(tool_name)
         if not tool:
             return InstallRecord(
@@ -343,14 +551,24 @@ class InstallManager:
         # Determine primary install method
         primary_method = all_steps[0].method if all_steps else ""
 
-        # Check for existing git repos (git pull instead of clone)
+        # Check for existing git repos — clean up stale/broken clones
         for step in all_steps:
             if step.method == "git_clone" and Path(step.clone_dir).exists():
                 if (Path(step.clone_dir) / ".git").exists():
-                    logger.info("Git repo exists at %s, pulling instead", step.clone_dir)
-                    step.command = ["git", "-C", step.clone_dir, "pull"]
-                    step.description = f"git pull in {step.clone_dir}"
-                    step.method = "git_pull"
+                    # Fresh clone is safer than git pull for partial/broken repos
+                    logger.info("Git repo exists at %s, removing for fresh clone", step.clone_dir)
+                    # (shutil already imported at top)
+                    try:
+                        shutil.rmtree(step.clone_dir)
+                    except OSError:
+                        pass
+                else:
+                    # Stale directory without .git — remove it
+                    logger.info("Stale directory at %s, removing", step.clone_dir)
+                    try:
+                        Path(step.clone_dir).rmdir()
+                    except OSError:
+                        pass
 
         # Initialize state
         now = datetime.now(timezone.utc).isoformat()
@@ -374,12 +592,119 @@ class InstallManager:
                 i + 1, len(all_steps), tool_name, step.method, step.description,
             )
 
+            cmd = list(step.command)
+            extra_env = dict(self._proxy_env or {})
+
+            # ── Apply mirrors and command fixes ──
+            if step.method == "pip":
+                # pip → pip3, add mirror
+                if cmd and cmd[0] == "pip":
+                    cmd[0] = "pip3"
+                # Ubuntu 24.04+ PEP 668: allow system installs when running as root
+                if self._runner.env.backend.value == "wsl2":
+                    for j, token in enumerate(cmd):
+                        if token == "install" and j + 1 < len(cmd):
+                            cmd.insert(j + 1, "--break-system-packages")
+                            break
+
+                # Insert mirror after "install" subcommand
+                mirror = self._mirrors.get("pip", "")
+                if mirror:
+                    for j, token in enumerate(cmd):
+                        if token == "install" and j + 1 < len(cmd):
+                            cmd.insert(j + 1, "-i")
+                            cmd.insert(j + 2, mirror)
+                            break
+
+            elif step.method == "go":
+                if self._mirrors.get("go"):
+                    extra_env["GOPROXY"] = self._mirrors["go"]
+
+            elif step.method == "gem":
+                # Use mirror for gem install
+                mirror = self._mirrors.get("gem", "")
+                if mirror:
+                    for j, token in enumerate(cmd):
+                        if token == "install" and j + 1 < len(cmd):
+                            cmd.insert(j + 1, "--source")
+                            cmd.insert(j + 2, mirror)
+                            break
+
+            # ── Strip sudo prefix, use run_as_root instead ──
+            use_root = False
+            if step.requires_sudo:
+                use_root = True
+            if step.method == "apt":
+                use_root = True
+            if use_root and cmd and cmd[0] == "sudo":
+                cmd = cmd[1:]  # Strip sudo — run_as_root handles privilege
+
+            # ── git clone: ensure target directory is clean ──
+            if step.method == "git_clone" and step.clone_dir and Path(step.clone_dir).exists():
+                logger.info("Clone target %s exists, removing", step.clone_dir)
+                # (shutil already imported at top)
+                try:
+                    shutil.rmtree(step.clone_dir)
+                except OSError:
+                    pass
+
             result = await self._runner.run_raw(
-                cmd=step.command,
+                cmd=cmd,
                 cwd=step.cwd,
-                timeout=600,  # 10 min per step
+                timeout=600,
+                env=extra_env or None,
                 description=step.description,
+                run_as_root=use_root,
             )
+
+            # ── pip fallback chain: pip3 → python3 -m pip → ensurepip ──
+            if (result.return_code != 0 and step.method == "pip" and
+                ("not found" in result.stderr.lower() or
+                 "No module named pip" in result.stderr or
+                 result.return_code == 127)):
+                # Try python3 -m pip
+                pip_cmd = ["python3", "-m", "pip"] + cmd[1:]
+                logger.info("Retrying with python3 -m pip")
+                result = await self._runner.run_raw(
+                    cmd=pip_cmd, cwd=step.cwd, timeout=600,
+                    env=extra_env or None, description=step.description,
+                )
+                if result.return_code != 0:
+                    # Ubuntu 24.04+ PEP 668: --break-system-packages
+                    if "externally-managed" in result.stderr:
+                        logger.info("PEP 668 detected, retrying with --break-system-packages")
+                        pep_cmd = list(pip_cmd)
+                        pep_cmd.insert(2, "--break-system-packages")
+                        result = await self._runner.run_raw(
+                            cmd=pep_cmd, cwd=step.cwd, timeout=600,
+                            env=extra_env or None, description=step.description,
+                        )
+                    if result.return_code != 0:
+                        # Try ensurepip + retry
+                        logger.info("Bootstrapping pip via ensurepip")
+                        await self._runner.run_raw(
+                            cmd=["sh", "-c", "python3 -m ensurepip --upgrade 2>/dev/null || true"],
+                            timeout=60, description="ensurepip bootstrap",
+                        )
+                        result = await self._runner.run_raw(
+                            cmd=pip_cmd, cwd=step.cwd, timeout=600,
+                            env=extra_env or None, description=step.description,
+                        )
+
+            # ── Command not found → re-bootstrap and retry once ──
+            if (result.return_code != 0 and not result.timed_out and
+                ("command not found" in result.stderr.lower() or
+                 "not found" in result.stderr.lower())):
+                missing_cmd = cmd[0] if cmd else ""
+                logger.info("Command '%s' not found, re-bootstrapping...", missing_cmd)
+                self._bootstrap_done = False
+                await self._bootstrap_wsl()
+                result = await self._runner.run_raw(
+                    cmd=cmd, cwd=step.cwd, timeout=600,
+                    env=extra_env or None,
+                    run_as_root=use_root,
+                    description=f"{step.description} (retry after bootstrap)",
+                )
 
             if result.return_code != 0 and not (
                 # apt-get returns 100 for "no updates" — still OK

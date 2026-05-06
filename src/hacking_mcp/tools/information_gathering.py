@@ -315,4 +315,15 @@ INFORMATION_GATHERING_TOOLS: list[HackingToolDef] = [
         tags=["secrets", "git", "credentials", "scan"],
         safety_tier=SafetyTier.SAFE,
     ),
+    HackingToolDef(
+        name="whatweb",
+        title="WhatWeb (Web Technology Fingerprinter)",
+        description="Identify websites: CMS, blogging platform, JS libraries, web servers, analytics packages, and more. 1800+ plugins.",
+        category="Information Gathering",
+        install_commands=["sudo apt-get install -y whatweb"],
+        run_command="whatweb {target}",
+        project_url="https://github.com/urbanadventurer/WhatWeb",
+        tags=["web", "fingerprint", "cms", "recon", "technology"],
+        safety_tier=SafetyTier.SAFE,
+    ),
 ]

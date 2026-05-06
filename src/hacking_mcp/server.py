@@ -77,6 +77,14 @@ max_output_bytes: 52428800  # 50MB
 scope:
   allowed_cidrs: []
   allowed_domains: []
+
+# Proxy for tool downloads (git clone, pip install, curl, etc.)
+# Only used during installation — security tool execution never uses proxy.
+# Uncomment and set your proxy if downloads fail due to network restrictions:
+# proxy:
+#   http: "http://127.0.0.1:8080"
+#   https: "http://127.0.0.1:8080"
+#   no_proxy: "localhost,127.0.0.1,.local"
 """)
     return SafetyPolicy.from_yaml(_USER_CONFIG)
 
@@ -87,7 +95,9 @@ runner = ToolRunner(registry, safety)
 formatter = OutputFormatter()
 asset_mgr = AssetManager()
 orchestrator = ToolOrchestrator(registry, safety, runner, formatter, asset_manager=asset_mgr)
-install_mgr = InstallManager(runner, registry)
+install_mgr = InstallManager(runner, registry,
+                            proxy_env=safety.get_proxy_env(),
+                            mirrors=safety.get_mirrors_config())
 task_mgr = TaskManager(orchestrator, asset_mgr=asset_mgr)
 
 # Create the MCP server
@@ -135,7 +145,7 @@ def create_server():
         "hacking-mcp initialized: %d tools across %d categories. "
         "Safety policy: %d categories disabled, %d require confirmation.",
         len(registry.get_tool_names()),
-        len(registry.list_categories()),
+        20,  # Static — avoid triggering lazy WSL scan
         len(safety.disabled_categories),
         len(safety.require_confirmation_categories),
     )

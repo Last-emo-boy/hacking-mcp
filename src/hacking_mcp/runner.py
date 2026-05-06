@@ -6,6 +6,8 @@ On Linux/macOS, tools run natively.
 
 import asyncio
 import logging
+import shutil
+import subprocess
 import time
 from typing import Optional
 
@@ -207,7 +209,7 @@ class ToolRunner:
             return RunResult(
                 tool_name=tool_name,
                 command=cmd,
-                return_code=proc.returncode or -1,
+                return_code=proc.returncode if proc.returncode is not None else -1,
                 stdout=stdout,
                 stderr=stderr,
                 duration_ms=duration_ms,
@@ -273,6 +275,7 @@ class ToolRunner:
         timeout: int = 900,
         env: Optional[dict] = None,
         description: str = "",
+        run_as_root: bool = False,
     ) -> RunResult:
         """Run an arbitrary command with WSL2 routing, timeout, and output truncation.
 
@@ -304,18 +307,65 @@ class ToolRunner:
 
         # Build command for the execution backend
         if self.env.backend == ExecBackend.WSL2:
-            # Wrap for WSL2 execution
             import shlex
-            # Build bash command string
-            if cwd:
-                wsl_cwd = to_wsl_path(cwd) if ":" in cwd else cwd
-                bash_cmd = f"cd {shlex.quote(wsl_cwd)} && {' '.join(shlex.quote(a) for a in cmd)}"
+            # cmd starting with "wsl" → already wrapped, use as-is but resolve full path
+            if cmd and cmd[0] == "wsl":
+                exec_cmd = [shutil.which("wsl") or "wsl"]
+                exec_cmd.extend(cmd[1:])
+            # cmd starting with "bash"/"sh" → wrap in wsl, inject env vars
+            elif cmd and cmd[0] in ("bash", "sh"):
+                wsl_exe = shutil.which("wsl") or "wsl"
+                exec_cmd = [wsl_exe]
+                if run_as_root:
+                    exec_cmd.extend(["-u", "root"])
+                if self.env.wsl_distro:
+                    exec_cmd.extend(["-d", self.env.wsl_distro])
+                # Inject env vars as exports before the -c command
+                if env and len(cmd) >= 3 and cmd[1] == "-c":
+                    exports = " ".join(
+                        f"export {shlex.quote(k)}={shlex.quote(str(v))}"
+                        for k, v in env.items() if k.isupper() and not k.startswith("_")
+                    )
+                    if exports:
+                        new_cmd = list(cmd)
+                        new_cmd[2] = f"{exports} && {cmd[2]}"
+                        exec_cmd.extend(new_cmd)
+                    else:
+                        exec_cmd.extend(cmd)
+                else:
+                    exec_cmd.extend(cmd)
             else:
-                bash_cmd = " ".join(shlex.quote(a) for a in cmd)
-            exec_cmd = ["wsl"]
-            if self.env.wsl_distro:
-                exec_cmd.extend(["-d", self.env.wsl_distro])
-            exec_cmd.extend(["bash", "-c", bash_cmd])
+                # Wrap for WSL2: wsl [-d distro] bash -c "<translated command>"
+                translated_args = []
+                for a in cmd:
+                    if ":" in a and ("\\" in a or "/" in a):
+                        translated_args.append(to_wsl_path(a))
+                    else:
+                        translated_args.append(a)
+
+                # Inject extra env vars as exports before the command
+                env_prefix = ""
+                if env:
+                    exports = " ".join(
+                        f"export {shlex.quote(k)}={shlex.quote(str(v))}"
+                        for k, v in env.items() if k.isupper() and not k.startswith("_")
+                    )
+                    if exports:
+                        env_prefix = exports + " && "
+
+                if cwd:
+                    wsl_cwd = to_wsl_path(cwd) if ":" in cwd else cwd
+                    bash_cmd = f"cd {shlex.quote(wsl_cwd)} && {env_prefix}{' '.join(shlex.quote(a) for a in translated_args)}"
+                else:
+                    bash_cmd = f"{env_prefix}{' '.join(shlex.quote(a) for a in translated_args)}"
+
+                wsl_exe = shutil.which("wsl") or "wsl"
+                exec_cmd = [wsl_exe]
+                if run_as_root:
+                    exec_cmd.extend(["-u", "root"])
+                if self.env.wsl_distro:
+                    exec_cmd.extend(["-d", self.env.wsl_distro])
+                exec_cmd.extend(["bash", "-c", bash_cmd])
         else:
             # Native execution
             exec_cmd = list(cmd)
@@ -327,24 +377,48 @@ class ToolRunner:
 
         start = time.monotonic()
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *exec_cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=cwd if self.env.backend != ExecBackend.WSL2 else None,
-                env=env,
-            )
-            self._current_proc = proc
-            try:
-                stdout_bytes, stderr_bytes = await asyncio.wait_for(
-                    proc.communicate(), timeout=timeout
+            if self.env.backend == ExecBackend.WSL2:
+                # asyncio.create_subprocess_exec has COM activation issues
+                # with wsl.exe on Windows 10. Use subprocess.run in executor.
+                # Merge env with os.environ — shell=True needs full environment.
+                merged_env = None
+                if env:
+                    import os as _os
+                    merged_env = dict(_os.environ)
+                    merged_env.update(env)
+
+                shell_cmd = subprocess.list2cmdline(exec_cmd)
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(
+                    None,
+                    lambda: subprocess.run(
+                        shell_cmd, shell=True, capture_output=True,
+                        timeout=timeout, env=merged_env,
+                    ),
                 )
+                stdout_bytes, stderr_bytes = result.stdout, result.stderr
+                return_code = result.returncode
                 timed_out = False
-            except asyncio.TimeoutError:
-                proc.kill()
-                await proc.wait()
-                stdout_bytes, stderr_bytes = b"", b"[Command timed out]"
-                timed_out = True
+            else:
+                proc = await asyncio.create_subprocess_exec(
+                    *exec_cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    cwd=cwd,
+                    env=env,
+                )
+                self._current_proc = proc
+                try:
+                    stdout_bytes, stderr_bytes = await asyncio.wait_for(
+                        proc.communicate(), timeout=timeout
+                    )
+                    timed_out = False
+                except asyncio.TimeoutError:
+                    proc.kill()
+                    await proc.wait()
+                    stdout_bytes, stderr_bytes = b"", b"[Command timed out]"
+                    timed_out = True
+                return_code = proc.returncode if proc.returncode is not None else -1
 
             duration_ms = int((time.monotonic() - start) * 1000)
 
@@ -355,13 +429,24 @@ class ToolRunner:
             return RunResult(
                 tool_name="raw",
                 command=exec_cmd,
-                return_code=proc.returncode or -1,
+                return_code=return_code,
                 stdout=stdout,
                 stderr=stderr,
                 duration_ms=duration_ms,
                 timed_out=timed_out,
             )
 
+        except subprocess.TimeoutExpired:
+            duration_ms = int((time.monotonic() - start) * 1000)
+            return RunResult(
+                tool_name="raw",
+                command=exec_cmd,
+                return_code=-1,
+                stdout="",
+                stderr="[Command timed out]",
+                duration_ms=duration_ms,
+                timed_out=True,
+            )
         except FileNotFoundError:
             duration_ms = int((time.monotonic() - start) * 1000)
             return RunResult(

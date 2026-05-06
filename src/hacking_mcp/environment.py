@@ -74,37 +74,79 @@ def detect_environment() -> Environment:
 
 
 def _check_wsl2() -> tuple[bool, str]:
-    """Check if WSL2 is available and get default distro name."""
+    """Check if WSL2 is available and get default distro name.
+
+    wsl.exe may output UTF-8 or UTF-16 LE depending on the system locale.
+    We capture raw bytes and auto-detect the encoding.
+    """
     wsl_exe = shutil.which("wsl")
     if not wsl_exe:
         return False, ""
 
-    try:
-        # Get list of WSL distros
-        result = subprocess.run(
-            [wsl_exe, "--list", "--verbose", "--quiet"],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=5,
-        )
-        if result.returncode != 0:
+    # Try multiple flag combinations — some WSL versions don't support --quiet
+    flag_sets = [
+        ["--list", "--verbose"],             # most common, shows version column
+        ["--list", "--verbose", "--quiet"],  # newer WSL, suppresses extra output
+        ["--list"],                          # minimal fallback
+    ]
+
+    for flags in flag_sets:
+        try:
+            result = subprocess.run(
+                [wsl_exe] + flags,
+                capture_output=True,
+                timeout=3,
+            )
+            if result.returncode != 0:
+                continue
+
+            # Auto-detect encoding: try UTF-8 first, then UTF-16 LE
+            # (wsl.exe on Chinese/Japanese Windows outputs UTF-16 LE)
+            stdout = _decode_wsl_output(result.stdout)
+            if not stdout:
+                continue
+
+            # Parse default distro — look for the line with "*"
+            for line in stdout.split("\n"):
+                stripped = line.strip()
+                if stripped.startswith("*"):
+                    parts = stripped.lstrip("*").strip().split()
+                    if parts:
+                        distro = parts[0]
+                        if distro and not distro.startswith("("):
+                            return True, distro
+
+            # WSL installed but no default distro set
             return False, ""
+        except (subprocess.TimeoutExpired, OSError):
+            continue
 
-        # Parse default distro name
-        lines = result.stdout.strip().split("\n")
-        for line in lines:
-            # Lines look like: "* Ubuntu-22.04    Running    2"
-            if line.startswith("*"):
-                parts = line.lstrip("*").strip().split()
-                if parts:
-                    return True, parts[0]
+    return False, ""
 
-        # WSL installed but no default distro
-        return False, ""
-    except (subprocess.TimeoutExpired, OSError):
-        return False, ""
+
+def _decode_wsl_output(data: bytes) -> str:
+    """Decode wsl.exe output, which may be UTF-8 or UTF-16 LE depending on locale."""
+    # Try UTF-8 first (common on English Windows and newer WSL)
+    try:
+        text = data.decode("utf-8")
+        # If we can find a '*' line, this is probably correct
+        for line in text.split("\n"):
+            if line.strip().startswith("*"):
+                return text
+    except UnicodeDecodeError:
+        pass
+
+    # Try UTF-16 LE (common on Chinese/Japanese/Korean Windows)
+    try:
+        text = data.decode("utf-16-le")
+        for line in text.split("\n"):
+            if line.strip().startswith("*"):
+                return text
+    except UnicodeDecodeError:
+        pass
+
+    # Last resort: UTF-8 with replacement
+    return data.decode("utf-8", errors="replace")
 
 
 # ---- Path Translation ----

@@ -311,3 +311,41 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
             f"- Domains: {summary['scope_domain_count']}",
         ])
         return "\n".join(lines)
+
+    @mcp.tool(
+        name="security_get_proxy_config",
+        description="Show the current proxy configuration for tool downloads. "
+        "Proxy is ONLY used during tool installation (git clone, pip, curl, etc.) — "
+        "never during security tool execution. "
+        "Configure proxy in ~/.hacking-mcp/safety_policy.yaml.",
+    )
+    async def security_get_proxy_config(ctx: Context = None) -> str:
+        """Display current proxy configuration."""
+        proxy = safety.get_proxy_config()
+        lines = [
+            "# Proxy Configuration",
+            "",
+            "Proxy is **only** used for tool downloads during installation.",
+            "Security tool execution never uses proxy.",
+            "",
+        ]
+        if proxy.get("http") or proxy.get("https"):
+            if proxy.get("http"):
+                lines.append(f"- **HTTP_PROXY:** `{proxy['http']}`")
+            if proxy.get("https"):
+                lines.append(f"- **HTTPS_PROXY:** `{proxy['https']}`")
+            if proxy.get("no_proxy"):
+                lines.append(f"- **NO_PROXY:** `{proxy['no_proxy']}`")
+            lines.append("")
+            lines.append("✅ Proxy is **active** for install operations.")
+        else:
+            lines.append("❌ **No proxy configured.**")
+            lines.append("")
+            lines.append("To set a proxy, edit `~/.hacking-mcp/safety_policy.yaml`:")
+            lines.append("```yaml")
+            lines.append("proxy:")
+            lines.append('  http: "http://127.0.0.1:8080"')
+            lines.append('  https: "http://127.0.0.1:8080"')
+            lines.append('  no_proxy: "localhost,127.0.0.1,.local"')
+            lines.append("```")
+        return "\n".join(lines)

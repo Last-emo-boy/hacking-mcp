@@ -30,6 +30,8 @@ class SafetyPolicy:
         max_output_bytes: int = 52_428_800,
         allowed_cidrs: Optional[list[str]] = None,
         allowed_domains: Optional[list[str]] = None,
+        _proxy_config: Optional[dict] = None,
+        _mirrors_config: Optional[dict] = None,
     ):
         self.disabled_categories: set[str] = set(
             disabled_categories or []
@@ -48,6 +50,11 @@ class SafetyPolicy:
                 logger.warning("Invalid CIDR in scope: %s", cidr)
         self._allowed_domains: list[str] = allowed_domains or []
 
+        # Proxy config (only used for tool installation downloads)
+        self._proxy_config: dict = _proxy_config or {}
+        # Mirror config (pip, go, gem, apt sources)
+        self._mirrors_config: dict = _mirrors_config or {}
+
         # Audit log: list of invocation records
         self._audit_log: list[dict] = []
 
@@ -58,6 +65,8 @@ class SafetyPolicy:
             config = yaml.safe_load(f) or {}
 
         scope = config.get("scope", {})
+        proxy = config.get("proxy", {})
+        mirrors = config.get("mirrors", {})
         return cls(
             disabled_categories=config.get("disabled_categories", []),
             disabled_tools=config.get("disabled_tools", []),
@@ -68,6 +77,8 @@ class SafetyPolicy:
             max_output_bytes=config.get("max_output_bytes", 52_428_800),
             allowed_cidrs=scope.get("allowed_cidrs", []),
             allowed_domains=scope.get("allowed_domains", []),
+            _proxy_config=proxy,
+            _mirrors_config=mirrors,
         )
 
     def check_tool(self, tool: HackingToolDef) -> tuple[bool, str]:
@@ -149,6 +160,33 @@ class SafetyPolicy:
     def get_audit_log(self) -> list[dict]:
         """Return the audit log."""
         return list(self._audit_log)
+
+    def get_proxy_config(self) -> dict:
+        """Return proxy configuration for install downloads."""
+        return dict(self._proxy_config)
+
+    def get_proxy_env(self) -> dict[str, str]:
+        """Return proxy settings as environment variables for subprocess.
+
+        Only HTTP_PROXY/HTTPS_PROXY/NO_PROXY are passed.
+        Returns empty dict if no proxy configured.
+        """
+        env: dict[str, str] = {}
+        p = self._proxy_config
+        if p.get("http"):
+            env["HTTP_PROXY"] = p["http"]
+            env["http_proxy"] = p["http"]
+        if p.get("https"):
+            env["HTTPS_PROXY"] = p["https"]
+            env["https_proxy"] = p["https"]
+        if p.get("no_proxy"):
+            env["NO_PROXY"] = p["no_proxy"]
+            env["no_proxy"] = p["no_proxy"]
+        return env
+
+    def get_mirrors_config(self) -> dict:
+        """Return mirror configuration for install sources."""
+        return dict(self._mirrors_config)
 
     def get_policy_summary(self) -> dict:
         """Return a human-readable summary of the current policy."""

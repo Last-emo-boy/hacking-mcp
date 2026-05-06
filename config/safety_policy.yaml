@@ -40,3 +40,19 @@ scope:
   # allowed_domains:
   #   - "example.com"
   #   - "*.test.local"
+
+# Proxy for tool downloads (git clone, pip install, curl, etc.)
+# Only used during installation — security tool execution never uses proxy.
+# Uncomment and set your proxy if downloads fail due to network restrictions:
+# proxy:
+#   http: "http://127.0.0.1:8080"
+#   https: "http://127.0.0.1:8080"
+#   no_proxy: "localhost,127.0.0.1,.local"
+
+# Mirror sources for faster tool downloads (uncomment for China-friendly mirrors)
+mirrors:
+  pip: "https://pypi.tuna.tsinghua.edu.cn/simple"
+  apt: "http://mirrors.tuna.tsinghua.edu.cn/ubuntu"
+  go: "https://goproxy.cn,direct"
+  gem: "https://gems.ruby-china.com"
+  git: ""  # e.g. "https://ghproxy.net/" for GitHub proxy
