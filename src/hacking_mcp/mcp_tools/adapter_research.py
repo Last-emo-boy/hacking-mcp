@@ -784,6 +784,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "log_file",
         ),
     ),
+    "dsss": SourceReview(
+        note=(
+            "Reviewed against upstream DSSS option parsing for POST data, cookie, "
+            "user-agent, referer, and proxy flags."
+        ),
+        references=(
+            "https://github.com/stamparm/DSSS",
+            "https://raw.githubusercontent.com/stamparm/DSSS/master/dsss.py",
+        ),
+        verified_parameters=(
+            "data",
+            "cookie",
+            "user_agent",
+            "referer",
+            "proxy",
+        ),
+    ),
     "wafw00f": SourceReview(
         note=(
             "Reviewed against upstream wafw00f OptionParser definitions for "

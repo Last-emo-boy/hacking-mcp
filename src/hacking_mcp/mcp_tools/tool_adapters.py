@@ -41,6 +41,7 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "commix",
         "dalfox",
         "dirsearch",
+        "dsss",
         "evil-winrm",
         "evilginx3",
         "explo",
@@ -844,6 +845,14 @@ def _adapter_parameters(
             AdapterParameterSpec("file_log_level", str, "", "File logging level."),
             AdapterParameterSpec("log_file", str, "", "Log file name."),
         ])
+    elif tool.name == "dsss":
+        params.extend([
+            AdapterParameterSpec("data", str, "", "POST data, for example query=test."),
+            AdapterParameterSpec("cookie", str, "", "HTTP Cookie header value."),
+            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent header value."),
+            AdapterParameterSpec("referer", str, "", "HTTP Referer header value."),
+            AdapterParameterSpec("proxy", str, "", "HTTP proxy address."),
+        ])
     elif tool.name == "testssl":
         params.extend([
             AdapterParameterSpec("input_file", str, "", "Mass testing input file."),
@@ -934,7 +943,7 @@ def _adapter_parameters(
             AdapterParameterSpec("proxy", str, "", "Optional HTTP proxy URL."),
         ])
 
-    if tags & {"sqli", "injection", "database"}:
+    if tags & {"sqli", "injection", "database"} and tool.name not in {"dsss"}:
         params.extend([
             AdapterParameterSpec("data", str, "", "Optional POST body or data string."),
             AdapterParameterSpec("dbms", str, "", "Force DBMS fingerprint, for example MySQL or PostgreSQL."),
@@ -1254,7 +1263,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "xsstrike", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "dsss", "xsstrike", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -1891,6 +1900,12 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "console_log_level", "--console-log-level")
         _add_value(tokens, kwargs, "file_log_level", "--file-log-level")
         _add_value(tokens, kwargs, "log_file", "--log-file")
+    elif tool.name == "dsss":
+        _add_value(tokens, kwargs, "data", "--data")
+        _add_value(tokens, kwargs, "cookie", "--cookie")
+        _add_value(tokens, kwargs, "user_agent", "--user-agent")
+        _add_value(tokens, kwargs, "referer", "--referer")
+        _add_value(tokens, kwargs, "proxy", "--proxy")
     elif tool.name == "testssl":
         _add_value(tokens, kwargs, "input_file", "--file")
         _add_value(tokens, kwargs, "mode", "--mode")
@@ -1977,7 +1992,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "follow_redirects", "-r")
         _add_value(tokens, kwargs, "proxy", "-proxy")
 
-    if tags & {"sqli", "injection", "database"}:
+    if tags & {"sqli", "injection", "database"} and tool.name not in {"dsss"}:
         _add_value(tokens, kwargs, "data", "--data")
         _add_value(tokens, kwargs, "dbms", "--dbms")
         _add_value(tokens, kwargs, "risk", "--risk")
@@ -2242,7 +2257,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "xsstrike", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "dsss", "xsstrike", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
