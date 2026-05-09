@@ -132,6 +132,7 @@ def test_split_adapter_registry_includes_migrated_tools():
         "objection",
         "owasp-zap",
         "pspy",
+        "radare2",
         "sherlock",
         "stegcracker",
         "steghide",
@@ -295,6 +296,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["objection"].source_status == "source-reviewed"
     assert records["objection"].unverified_parameters == ()
     assert any("sensepost/objection" in item for item in records["objection"].evidence)
+
+    assert records["radare2"].source_status == "source-reviewed"
+    assert records["radare2"].unverified_parameters == ()
+    assert any("radareorg/radare2" in item for item in records["radare2"].evidence)
 
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
@@ -723,6 +728,20 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "verbose", "quiet", "disable_plugins", "config", "save_config",
         "print_files", "plugin_options", "version", "help",
     }.issubset(jadx_schema)
+
+    radare2_schema = tools["security_tool_radare2"].inputSchema["properties"]
+    assert {
+        "arch", "bits", "base_addr", "map_addr", "seek_addr", "command",
+        "eval_config", "script", "pre_script", "project", "patch_file",
+        "rarun_profile", "rarun_directive", "debug", "debug_backend",
+        "analyze", "write", "quiet", "quit_after_commands", "quick_quiet",
+        "json", "version", "lib_version", "help", "long_help", "sandbox",
+        "no_user_config", "no_scripts_plugins", "no_bin_info",
+        "bin_structures_only", "full_file", "force_bin_plugin", "asm_os",
+        "raw_names", "no_demangle", "list_io_plugins", "list_core_plugins",
+        "no_exec", "no_extr", "no_strings", "load_strings", "connect_mode",
+        "zero_sep", "stderr_to_stdout", "no_stderr",
+    }.issubset(radare2_schema)
 
     setoolkit_schema = tools["security_tool_setoolkit"].inputSchema["properties"]
     assert {"template", "listener_host", "listener_port", "tunnel"}.issubset(
@@ -2559,6 +2578,52 @@ async def test_jadx_source_reviewed_parameters_build_cli_options(registry, safet
         "--raw-cfg --use-dx --comments-level debug --log-level info -v "
         "--disable-plugins plugin.one,plugin.two --config none "
         "-Pfoo=bar -Pbaz=qux"
+    )
+
+
+@pytest.mark.asyncio
+async def test_radare2_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_radare2",
+        {
+            "target": "firmware.bin",
+            "arch": "x86",
+            "bits": "64",
+            "base_addr": "0x400000",
+            "analyze": True,
+            "command": "afl",
+            "debug": True,
+            "eval_config": "scr.color=false",
+            "script": "init.r2",
+            "pre_script": "pre.r2",
+            "json": True,
+            "list_core_plugins": True,
+            "no_scripts_plugins": True,
+            "bin_structures_only": True,
+            "project": "audit",
+            "quit_after_commands": True,
+            "write": True,
+            "load_strings": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "radare2"
+    assert request.target == "firmware.bin"
+    assert request.options_before_target is True
+    assert request.options == (
+        "-a x86 -A -b 64 -B 0x400000 -c afl -d -e scr.color=false "
+        "-i init.r2 -I pre.r2 -j -LL -NN -nn -p audit -qq -w -zz"
     )
 
 

@@ -382,6 +382,68 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "radare2": SourceReview(
+        note=(
+            "Reviewed against upstream radare2 r2 command-line usage and "
+            "option parser source for architecture/bits/base/load/seek "
+            "controls, command/eval/script execution, project and patch "
+            "inputs, rarun profiles, debug and write modes, quiet/JSON/version/"
+            "help output, sandbox and startup loading controls, binary loading "
+            "modes, plugin listing, name/demangle/string behavior, connection "
+            "mode, and stderr/NUL output toggles."
+        ),
+        references=(
+            "https://github.com/radareorg/radare2",
+            "https://raw.githubusercontent.com/radareorg/radare2/master/libr/main/radare2.c",
+        ),
+        verified_parameters=(
+            "arch",
+            "bits",
+            "base_addr",
+            "map_addr",
+            "seek_addr",
+            "command",
+            "eval_config",
+            "script",
+            "pre_script",
+            "project",
+            "patch_file",
+            "rarun_profile",
+            "rarun_directive",
+            "debug",
+            "debug_backend",
+            "analyze",
+            "write",
+            "quiet",
+            "quit_after_commands",
+            "quick_quiet",
+            "json",
+            "version",
+            "lib_version",
+            "help",
+            "long_help",
+            "sandbox",
+            "no_user_config",
+            "no_scripts_plugins",
+            "no_bin_info",
+            "bin_structures_only",
+            "full_file",
+            "force_bin_plugin",
+            "asm_os",
+            "raw_names",
+            "no_demangle",
+            "list_io_plugins",
+            "list_core_plugins",
+            "no_exec",
+            "no_extr",
+            "no_strings",
+            "load_strings",
+            "connect_mode",
+            "zero_sep",
+            "stderr_to_stdout",
+            "no_stderr",
+        ),
+    ),
     "mobsf": SourceReview(
         note=(
             "Reviewed against upstream MobSF run.sh server entrypoint. The "

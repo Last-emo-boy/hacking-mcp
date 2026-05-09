@@ -82,7 +82,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "prowler",
         "pwncat-cs",
         "pyphisher",
-        "radare2",
         "responder",
         "routersploit",
         "rustscan",
@@ -1373,7 +1372,7 @@ def _adapter_parameters(
             AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
         ])
 
-    if tool.name in {"radare2", "ghidra"}:
+    if tool.name == "ghidra":
         params.extend([
             AdapterParameterSpec("project_name", str, "", "Project name when supported."),
             AdapterParameterSpec("analysis_level", str, "", "Analysis depth/profile when supported."),
@@ -2346,7 +2345,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "local_auth", "--local-auth")
         _add_value(tokens, kwargs, "target_ip", "--target-ip")
 
-    if tool.name in {"radare2", "ghidra"}:
+    if tool.name == "ghidra":
         _add_value(tokens, kwargs, "project_name", "--project")
         _add_value(tokens, kwargs, "analysis_level", "--analysis")
         _add_value(tokens, kwargs, "entrypoint", "--entrypoint")
@@ -2514,4 +2513,4 @@ def _should_validate_scope(tool: HackingToolDef) -> bool:
 
 
 def _options_before_target(tool: HackingToolDef) -> bool:
-    return tool.name in {"frida", "jadx", "testssl"}
+    return tool.name in {"frida", "jadx", "radare2", "testssl"}
