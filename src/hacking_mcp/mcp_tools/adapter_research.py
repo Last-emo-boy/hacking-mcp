@@ -811,6 +811,28 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "verbose",
         ),
     ),
+    "xsscon": SourceReview(
+        note=(
+            "Reviewed against upstream XSSCon argparse definitions for crawl "
+            "depth, payload level/value, method mode, user-agent, single URL, "
+            "proxy, about, and cookie flags."
+        ),
+        references=(
+            "https://github.com/menkrep1337/XSSCon",
+            "https://raw.githubusercontent.com/menkrep1337/XSSCon/master/xsscon.py",
+        ),
+        verified_parameters=(
+            "depth",
+            "payload_level",
+            "payload",
+            "method",
+            "user_agent",
+            "single_url",
+            "proxy",
+            "about",
+            "cookie",
+        ),
+    ),
     "dsss": SourceReview(
         note=(
             "Reviewed against upstream DSSS option parsing for POST data, cookie, "

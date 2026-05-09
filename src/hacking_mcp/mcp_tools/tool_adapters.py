@@ -862,6 +862,18 @@ def _adapter_parameters(
             AdapterParameterSpec("config_file", str, "", "Config JSON file."),
             AdapterParameterSpec("verbose", int, 0, "Verbose level 0-3; 0 leaves default."),
         ])
+    elif tool.name == "xsscon":
+        params.extend([
+            AdapterParameterSpec("depth", int, 0, "Crawl depth; 0 leaves default."),
+            AdapterParameterSpec("payload_level", int, 0, "Generated payload level 1-7; 0 leaves default."),
+            AdapterParameterSpec("payload", str, "", "Custom payload value."),
+            AdapterParameterSpec("method", int, 0, "Method mode: 0 GET, 1 POST, 2 both; 0 leaves default."),
+            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value."),
+            AdapterParameterSpec("single_url", str, "", "Single URL to scan without crawling."),
+            AdapterParameterSpec("proxy", str, "", "Proxy mapping string."),
+            AdapterParameterSpec("about", bool, False, "Print XSSCon tool information."),
+            AdapterParameterSpec("cookie", str, "", "Cookie mapping string."),
+        ])
     elif tool.name == "dsss":
         params.extend([
             AdapterParameterSpec("data", str, "", "POST data, for example query=test."),
@@ -973,7 +985,7 @@ def _adapter_parameters(
             AdapterParameterSpec("enumerate_databases", bool, False, "Request database enumeration when supported."),
         ])
 
-    if "xss" in tags and tool.name not in {"dalfox", "xspear", "xsstrike"}:
+    if "xss" in tags and tool.name not in {"dalfox", "xspear", "xsstrike", "xsscon"}:
         params.extend([
             AdapterParameterSpec("parameter", str, "", "Parameter name to test when supported."),
             AdapterParameterSpec("cookies", str, "", "Cookie header value when supported."),
@@ -1284,7 +1296,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "dsss", "sqlscan", "xspear", "xsstrike", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "dsss", "sqlscan", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -1416,7 +1428,7 @@ def _adapter_parameters(
             AdapterParameterSpec("add_slash", bool, False, "Append trailing slash to discovered paths when supported."),
         ])
 
-    if tool.name in {"owasp-zap", "xsscon"}:
+    if tool.name == "owasp-zap":
         params.extend([
             AdapterParameterSpec("scan_policy", str, "", "Scan policy/profile when supported."),
             AdapterParameterSpec("ajax_spider", bool, False, "Enable AJAX spidering when supported."),
@@ -1937,6 +1949,16 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         verbosity = _int_value(kwargs, "verbose")
         if verbosity:
             tokens.append("-" + ("v" * min(verbosity, 3)))
+    elif tool.name == "xsscon":
+        _add_value(tokens, kwargs, "depth", "--depth")
+        _add_value(tokens, kwargs, "payload_level", "--payload-level")
+        _add_value(tokens, kwargs, "payload", "--payload")
+        _add_value(tokens, kwargs, "method", "--method")
+        _add_value(tokens, kwargs, "user_agent", "--user-agent")
+        _add_value(tokens, kwargs, "single_url", "--single")
+        _add_value(tokens, kwargs, "proxy", "--proxy")
+        _add_bool(tokens, kwargs, "about", "--about")
+        _add_value(tokens, kwargs, "cookie", "--cookie")
     elif tool.name == "dsss":
         _add_value(tokens, kwargs, "data", "--data")
         _add_value(tokens, kwargs, "cookie", "--cookie")
@@ -2039,7 +2061,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "level", "--level")
         _add_bool(tokens, kwargs, "enumerate_databases", "--dbs")
 
-    if "xss" in tags and tool.name not in {"dalfox", "xspear", "xsstrike"}:
+    if "xss" in tags and tool.name not in {"dalfox", "xspear", "xsstrike", "xsscon"}:
         _add_value(tokens, kwargs, "parameter", "-p")
         _add_value(tokens, kwargs, "cookies", "--cookie")
         _add_value(tokens, kwargs, "blind_callback", "-b")
@@ -2297,7 +2319,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "dsss", "sqlscan", "xspear", "xsstrike", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "dsss", "sqlscan", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
@@ -2396,7 +2418,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "filter_words", "-fw")
         _add_bool(tokens, kwargs, "add_slash", "--add-slash")
 
-    if tool.name in {"owasp-zap", "xsscon"}:
+    if tool.name == "owasp-zap":
         _add_value(tokens, kwargs, "scan_policy", "--scan-policy")
         _add_bool(tokens, kwargs, "ajax_spider", "--ajax-spider")
         _add_value(tokens, kwargs, "auth_header", "-H")

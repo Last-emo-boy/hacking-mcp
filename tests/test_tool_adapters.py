@@ -196,6 +196,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["xspear"].unverified_parameters == ()
     assert any("hahwul/XSpear" in item for item in records["xspear"].evidence)
 
+    assert records["xsscon"].source_status == "source-reviewed"
+    assert records["xsscon"].unverified_parameters == ()
+    assert any("menkrep1337/XSSCon" in item for item in records["xsscon"].evidence)
+
     assert records["dsss"].source_status == "source-reviewed"
     assert records["dsss"].unverified_parameters == ()
     assert any("stamparm/DSSS" in item for item in records["dsss"].evidence)
@@ -418,6 +422,12 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "custom_payload", "raw_file", "parameter", "blind_callback", "threads",
         "output_format", "config_file", "verbose",
     }.issubset(xspear_schema)
+
+    xsscon_schema = tools["security_tool_xsscon"].inputSchema["properties"]
+    assert {
+        "depth", "payload_level", "payload", "method", "user_agent",
+        "single_url", "proxy", "about", "cookie",
+    }.issubset(xsscon_schema)
 
     dsss_schema = tools["security_tool_dsss"].inputSchema["properties"]
     assert {"data", "cookie", "user_agent", "referer", "proxy"}.issubset(
@@ -1228,6 +1238,48 @@ async def test_xspear_source_reviewed_parameters_build_cli_options(registry, saf
         "-d q=1 -a --no-xss --headers 'X-Test: 1' --cookie a=b "
         "--custom-payload payloads.json --raw request.txt -p q "
         "-b https://callback.test -t 8 -o json -c xspear.json -vv"
+    )
+
+
+@pytest.mark.asyncio
+async def test_xsscon_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_xsscon",
+        {
+            "target": "https://example.test",
+            "confirm_authorized": True,
+            "depth": 2,
+            "payload_level": 5,
+            "payload": "<script>alert(1)</script>",
+            "method": 2,
+            "user_agent": "hacking-mcp",
+            "single_url": "https://example.test/?q=1",
+            "proxy": '{"http":"http://127.0.0.1:8080"}',
+            "about": True,
+            "cookie": '{"sid":"abc"}',
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "xsscon"
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+    assert request.options == (
+        "--depth 2 --payload-level 5 --payload '<script>alert(1)</script>' "
+        "--method 2 --user-agent hacking-mcp "
+        "--single 'https://example.test/?q=1' "
+        "--proxy '{\"http\":\"http://127.0.0.1:8080\"}' --about "
+        "--cookie '{\"sid\":\"abc\"}'"
     )
 
 
