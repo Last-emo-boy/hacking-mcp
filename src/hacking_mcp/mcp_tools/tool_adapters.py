@@ -316,6 +316,66 @@ def _adapter_parameters(
             AdapterParameterSpec("severity", str, "", "Severity filter when supported."),
         ])
 
+    if "ad" in tags or tool.category == "Active Directory":
+        params.extend([
+            AdapterParameterSpec("domain", str, "", "Active Directory domain when supported."),
+            AdapterParameterSpec("username", str, "", "Username for authorized AD assessment."),
+            AdapterParameterSpec(
+                "password",
+                str,
+                "",
+                "Password for lab/authorized use; may be present in process/audit logs.",
+            ),
+            AdapterParameterSpec("hashes", str, "", "NTLM hashes when supported."),
+            AdapterParameterSpec("dc_ip", str, "", "Domain controller IP address when supported."),
+            AdapterParameterSpec("nameserver", str, "", "DNS nameserver when supported."),
+            AdapterParameterSpec("interface", str, "", "Network interface name when supported."),
+            AdapterParameterSpec("collection_method", str, "", "Collection method, for example All or Default."),
+        ])
+
+    if "forensics" in tags or tool.category == "Forensics":
+        params.extend([
+            AdapterParameterSpec("output_dir", str, "", "Output directory for extracted or report artifacts."),
+            AdapterParameterSpec("plugin", str, "", "Analysis plugin or module when supported."),
+            AdapterParameterSpec("extract", bool, False, "Extract embedded files or artifacts when supported."),
+            AdapterParameterSpec("profile", str, "", "Memory/image profile when supported."),
+        ])
+
+    if tool.category == "Wordlist Generator" or tags & {"wordlist", "password", "hash"}:
+        params.extend([
+            AdapterParameterSpec("wordlist", str, "", "Wordlist path when supported."),
+            AdapterParameterSpec("hash_file", str, "", "Hash file path when supported."),
+            AdapterParameterSpec("hash_type", str, "", "Hash mode/type when supported."),
+            AdapterParameterSpec("attack_mode", str, "", "Attack mode when supported."),
+            AdapterParameterSpec("min_length", int, 0, "Minimum generated password length when supported."),
+            AdapterParameterSpec("max_length", int, 0, "Maximum generated password length when supported."),
+            AdapterParameterSpec("output_file", str, "", "Output file path when supported."),
+        ])
+
+    if "stegano" in tags or tool.category == "Steganography":
+        params.extend([
+            AdapterParameterSpec("passphrase", str, "", "Steganography passphrase when supported."),
+            AdapterParameterSpec("wordlist", str, "", "Password wordlist path when supported."),
+            AdapterParameterSpec("extract", bool, False, "Extract hidden payload when supported."),
+            AdapterParameterSpec("output_file", str, "", "Output file path when supported."),
+        ])
+
+    if "mobile" in tags or tool.category == "Mobile Security":
+        params.extend([
+            AdapterParameterSpec("apk_path", str, "", "APK/IPA path when supported."),
+            AdapterParameterSpec("package_name", str, "", "Mobile app package or bundle identifier."),
+            AdapterParameterSpec("device_id", str, "", "Connected device identifier when supported."),
+            AdapterParameterSpec("spawn", bool, False, "Spawn target app when supported."),
+        ])
+
+    if "reverse-engineering" in tags or tool.category == "Reverse Engineering":
+        params.extend([
+            AdapterParameterSpec("binary_path", str, "", "Binary/APK path when different from target."),
+            AdapterParameterSpec("output_dir", str, "", "Output directory for decompilation artifacts."),
+            AdapterParameterSpec("decompile", bool, False, "Request decompilation when supported."),
+            AdapterParameterSpec("analysis_command", str, "", "Analysis command/script when supported."),
+        ])
+
     params.extend([
         AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
         AdapterParameterSpec(
@@ -410,6 +470,49 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "region", "--region")
         _add_value(tokens, kwargs, "services", "--services")
         _add_value(tokens, kwargs, "severity", "--severity")
+
+    if "ad" in tags or tool.category == "Active Directory":
+        _add_value(tokens, kwargs, "domain", "-d")
+        _add_value(tokens, kwargs, "username", "-u")
+        _add_value(tokens, kwargs, "password", "-p")
+        _add_value(tokens, kwargs, "hashes", "-H")
+        _add_value(tokens, kwargs, "dc_ip", "-dc-ip")
+        _add_value(tokens, kwargs, "nameserver", "-ns")
+        _add_value(tokens, kwargs, "interface", "-I")
+        _add_value(tokens, kwargs, "collection_method", "-c")
+
+    if "forensics" in tags or tool.category == "Forensics":
+        _add_value(tokens, kwargs, "output_dir", "-o")
+        _add_value(tokens, kwargs, "plugin", "--plugin")
+        _add_bool(tokens, kwargs, "extract", "-e")
+        _add_value(tokens, kwargs, "profile", "--profile")
+
+    if tool.category == "Wordlist Generator" or tags & {"wordlist", "password", "hash"}:
+        _add_value(tokens, kwargs, "wordlist", "-w")
+        _add_value(tokens, kwargs, "hash_file", "-h")
+        _add_value(tokens, kwargs, "hash_type", "-m")
+        _add_value(tokens, kwargs, "attack_mode", "-a")
+        _add_value(tokens, kwargs, "min_length", "--increment-min")
+        _add_value(tokens, kwargs, "max_length", "--increment-max")
+        _add_value(tokens, kwargs, "output_file", "-o")
+
+    if "stegano" in tags or tool.category == "Steganography":
+        _add_value(tokens, kwargs, "passphrase", "-p")
+        _add_value(tokens, kwargs, "wordlist", "-w")
+        _add_bool(tokens, kwargs, "extract", "extract")
+        _add_value(tokens, kwargs, "output_file", "-xf")
+
+    if "mobile" in tags or tool.category == "Mobile Security":
+        _add_value(tokens, kwargs, "apk_path", "--apk")
+        _add_value(tokens, kwargs, "package_name", "-g")
+        _add_value(tokens, kwargs, "device_id", "-D")
+        _add_bool(tokens, kwargs, "spawn", "--spawn")
+
+    if "reverse-engineering" in tags or tool.category == "Reverse Engineering":
+        _add_value(tokens, kwargs, "binary_path", "-b")
+        _add_value(tokens, kwargs, "output_dir", "-d")
+        _add_bool(tokens, kwargs, "decompile", "--decompile")
+        _add_value(tokens, kwargs, "analysis_command", "-c")
 
     return tokens
 

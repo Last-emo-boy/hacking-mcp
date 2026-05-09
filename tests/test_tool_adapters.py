@@ -123,6 +123,17 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         sqlmap_schema
     )
 
+    bloodhound_schema = tools["security_tool_bloodhound"].inputSchema["properties"]
+    assert {"domain", "username", "dc_ip", "collection_method"}.issubset(
+        bloodhound_schema
+    )
+
+    binwalk_schema = tools["security_tool_binwalk"].inputSchema["properties"]
+    assert {"output_dir", "extract", "plugin"}.issubset(binwalk_schema)
+
+    jadx_schema = tools["security_tool_jadx"].inputSchema["properties"]
+    assert {"binary_path", "output_dir", "decompile"}.issubset(jadx_schema)
+
 
 @pytest.mark.asyncio
 async def test_structured_parameters_build_cli_options(registry, safety):
@@ -151,6 +162,35 @@ async def test_structured_parameters_build_cli_options(registry, safety):
     assert request.tool_name == "nmap"
     assert request.target == "127.0.0.1"
     assert request.options == "-p 80,443 -sV -T4 --reason"
+
+
+@pytest.mark.asyncio
+async def test_ad_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_bloodhound",
+        {
+            "target": "corp.local",
+            "domain": "corp.local",
+            "username": "alice",
+            "dc_ip": "10.0.0.10",
+            "collection_method": "Default",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "bloodhound"
+    assert request.target == "corp.local"
+    assert request.options == "-d corp.local -u alice -dc-ip 10.0.0.10 -c Default"
 
 
 @pytest.mark.asyncio
