@@ -48,7 +48,26 @@ class TestServerCreation:
         assert "security_tool_sqlmap" in names
         assert "security_tool_vegil" in names
         assert "security_run_recon" in names
+        assert "security_list_tool_adapters" in names
         assert len(adapter_names) == len(registry.get_tool_names())
+
+    @pytest.mark.asyncio
+    async def test_tool_adapter_inventory_reports_coverage(self):
+        """Adapter inventory should summarize executable and policy-only coverage."""
+        from hacking_mcp.server import create_server
+
+        server = create_server()
+        content, metadata = await server.call_tool(
+            "security_list_tool_adapters",
+            {"execution": "blocked", "limit": 3},
+        )
+
+        result = metadata["result"]
+        assert "Total adapters: 184" in result
+        assert "Executable adapters: 123" in result
+        assert "Policy/info-only adapters: 61" in result
+        assert "policy/info-only" in result
+        assert content
 
 
 class TestToolCoherence:

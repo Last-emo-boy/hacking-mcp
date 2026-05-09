@@ -144,6 +144,79 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
         return "\n".join(lines)
 
     @mcp.tool(
+        name="security_list_tool_adapters",
+        description="List dedicated per-tool MCP adapter coverage. "
+        "Use execution='executable' or execution='blocked' to filter adapters. "
+        "Optional category/search filters narrow the inventory.",
+    )
+    async def security_list_tool_adapters(
+        category: str = "",
+        execution: str = "",
+        search: str = "",
+        limit: int = 200,
+        ctx: Context = None,
+    ) -> str:
+        """List generated per-tool MCP adapter coverage."""
+        specs = build_adapter_specs(registry, safety)
+        specs.sort(key=lambda item: (item.category, item.tool_name))
+
+        category_filter = category.strip().lower()
+        execution_filter = execution.strip().lower()
+        search_filter = search.strip().lower()
+
+        if category_filter:
+            specs = [s for s in specs if s.category.lower() == category_filter]
+        if search_filter:
+            specs = [
+                s for s in specs
+                if search_filter in s.tool_name.lower()
+                or search_filter in s.title.lower()
+                or search_filter in s.category.lower()
+            ]
+        if execution_filter in {"executable", "enabled"}:
+            specs = [s for s in specs if s.exposed]
+        elif execution_filter in {"blocked", "policy-only", "policy_only"}:
+            specs = [s for s in specs if not s.exposed]
+        elif execution_filter and execution_filter != "all":
+            return (
+                "Unknown execution filter. Use one of: all, executable, blocked."
+            )
+
+        total_specs = build_adapter_specs(registry, safety)
+        total = len(total_specs)
+        executable = sum(1 for s in total_specs if s.exposed)
+        blocked = total - executable
+        limit = max(1, min(limit, 500))
+
+        lines = [
+            "# Dedicated MCP Adapter Inventory",
+            "",
+            f"Total adapters: {total}",
+            f"Executable adapters: {executable}",
+            f"Policy/info-only adapters: {blocked}",
+            f"Showing: {min(len(specs), limit)}/{len(specs)}",
+            "",
+        ]
+
+        for spec in specs[:limit]:
+            state = "executable" if spec.exposed else "policy/info-only"
+            confirm = ", confirmation required" if spec.requires_confirmation else ""
+            reason = ""
+            if not spec.exposed:
+                reason = f" - {spec.blocked_reason or 'not executable by policy'}"
+            lines.append(
+                f"- `{spec.mcp_name}` -> `{spec.tool_name}` "
+                f"({spec.category}, {spec.safety_tier}, {state}{confirm}){reason}"
+            )
+
+        if len(specs) > limit:
+            lines.append("")
+            remaining = len(specs) - limit
+            lines.append(f"Use a higher limit or narrower filters to see {remaining} more.")
+
+        return "\n".join(lines)
+
+    @mcp.tool(
         name="security_get_tool_info",
         description="Get detailed information about a specific security tool, "
         "including description, install commands, project URL, and safety tier. "

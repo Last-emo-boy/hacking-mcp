@@ -10,8 +10,8 @@
 
 [![Tools](https://img.shields.io/badge/Tools-184-00FF88?style=flat-square)](.)
 [![Categories](https://img.shields.io/badge/Categories-20-7B61FF?style=flat-square)](.)
-[![MCP Endpoints](https://img.shields.io/badge/MCP_Endpoints-208-FF61DC?style=flat-square)](.)
-[![Tests](https://img.shields.io/badge/Tests-215_passing-00FF88?style=flat-square)](.)
+[![MCP Endpoints](https://img.shields.io/badge/MCP_Endpoints-209-FF61DC?style=flat-square)](.)
+[![Tests](https://img.shields.io/badge/Tests-216_passing-00FF88?style=flat-square)](.)
 [![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-FFA116?style=flat-square)](.)
 
 [![Star](https://img.shields.io/github/stars/Last-emo-boy/hacking-mcp?style=social)](.)
@@ -140,9 +140,9 @@
 
 ---
 
-## 📡 MCP Tool Reference (208 endpoints)
+## 📡 MCP Tool Reference (209 endpoints)
 
-The server exposes 24 base workflow endpoints plus 184 generated per-tool adapters under
+The server exposes 25 base workflow endpoints plus 184 generated per-tool adapters under
 `security_tool_<tool_name>`. Safety-eligible adapters execute through the normal
 orchestrator gates; dangerous, archived, no-command, or policy-disabled adapters return
 policy information only and never execute the underlying tool.
@@ -152,6 +152,7 @@ policy information only and never execute the underlying tool.
 | Endpoint | Description |
 |---|---|
 | `security_list_tools` | Browse categories (L1) → list tools in category (L2) → search by keyword |
+| `security_list_tool_adapters` | Inventory all generated per-tool adapters, filter executable vs policy-only |
 | `security_get_tool_info` | Full detail (L3): description, install commands, safety tier, project URL |
 | `security_get_environment` | OS, execution backend (native/WSL2), WSL distro, tools directory |
 | `security_get_policy` | Disabled categories, confirmation categories, scope, execution limits |
