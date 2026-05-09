@@ -539,6 +539,67 @@ def _adapter_parameters(
             AdapterParameterSpec("content_length", bool, False, "Show response content length."),
         ])
 
+    if tool.name == "nuclei":
+        params.extend([
+            AdapterParameterSpec("workflows", str, "", "Nuclei workflow file or directory."),
+            AdapterParameterSpec("exclude_templates", str, "", "Comma-separated templates to exclude."),
+            AdapterParameterSpec("headless", bool, False, "Enable headless browser templates."),
+            AdapterParameterSpec("interactsh", bool, False, "Enable interactsh/OAST interaction support."),
+        ])
+
+    if tool.name in {"dalfox", "xsstrike"}:
+        params.extend([
+            AdapterParameterSpec("method", str, "", "HTTP method when supported."),
+            AdapterParameterSpec("data", str, "", "POST body/data when supported."),
+            AdapterParameterSpec("headers", str, "", "Additional HTTP headers."),
+            AdapterParameterSpec("payload", str, "", "Payload or payload file when supported."),
+            AdapterParameterSpec("skip_bav", bool, False, "Skip basic another verification when supported."),
+        ])
+
+    if tool.name == "theHarvester":
+        params.extend([
+            AdapterParameterSpec("limit", int, 0, "Maximum results when supported; 0 leaves default."),
+            AdapterParameterSpec("start", int, 0, "Start offset when supported; 0 leaves default."),
+            AdapterParameterSpec("takeover", bool, False, "Check takeover candidates when supported."),
+            AdapterParameterSpec("dns_lookup", bool, False, "Run DNS lookup when supported."),
+        ])
+
+    if tool.name == "sherlock":
+        params.extend([
+            AdapterParameterSpec("site_list", str, "", "Comma-separated site list when supported."),
+            AdapterParameterSpec("csv_output", bool, False, "Request CSV output when supported."),
+            AdapterParameterSpec("print_found", bool, False, "Only print found accounts when supported."),
+            AdapterParameterSpec("browse", bool, False, "Open found results in browser when supported."),
+        ])
+
+    if tool.name in {"trufflehog", "gitleaks"}:
+        params.extend([
+            AdapterParameterSpec("source_type", str, "", "Source type such as git, filesystem, github, or docker."),
+            AdapterParameterSpec("branch", str, "", "Git branch when supported."),
+            AdapterParameterSpec("max_depth", int, 0, "Maximum git history depth when supported; 0 leaves default."),
+            AdapterParameterSpec("report_format", str, "", "Report format such as json or sarif when supported."),
+            AdapterParameterSpec("report_path", str, "", "Report output path when supported."),
+            AdapterParameterSpec("verbose", bool, False, "Enable verbose output when supported."),
+        ])
+
+    if tool.name in {"prowler", "trivy"}:
+        params.extend([
+            AdapterParameterSpec("provider", str, "", "Cloud/provider selector when supported."),
+            AdapterParameterSpec("checks", str, "", "Comma-separated checks to include when supported."),
+            AdapterParameterSpec("excluded_checks", str, "", "Comma-separated checks to exclude when supported."),
+            AdapterParameterSpec("output_format", str, "", "Output format when supported."),
+            AdapterParameterSpec("ignore_unfixed", bool, False, "Ignore unfixed vulnerabilities when supported."),
+        ])
+
+    if tool.name in {"netexec", "certipy", "kerbrute"}:
+        params.extend([
+            AdapterParameterSpec("users_file", str, "", "Username list path when supported."),
+            AdapterParameterSpec("passwords_file", str, "", "Password list path when supported."),
+            AdapterParameterSpec("kerberos", bool, False, "Use Kerberos authentication when supported."),
+            AdapterParameterSpec("local_auth", bool, False, "Use local authentication when supported."),
+            AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
+        ])
+
     params.extend([
         AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
         AdapterParameterSpec(
@@ -732,7 +793,8 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "protocol", "--protocol")
 
     if tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}:
-        _add_value(tokens, kwargs, "sources", "-sources")
+        if "email" not in tags:
+            _add_value(tokens, kwargs, "sources", "-sources")
         _add_bool(tokens, kwargs, "passive", "-passive")
         _add_value(tokens, kwargs, "resolvers", "-r")
         _add_value(tokens, kwargs, "api_key", "--api-key")
@@ -793,6 +855,53 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "title", "-title")
         _add_bool(tokens, kwargs, "tech_detect", "-tech-detect")
         _add_bool(tokens, kwargs, "content_length", "-content-length")
+
+    if tool.name == "nuclei":
+        _add_value(tokens, kwargs, "workflows", "-w")
+        _add_value(tokens, kwargs, "exclude_templates", "-exclude-templates")
+        _add_bool(tokens, kwargs, "headless", "-headless")
+        _add_bool(tokens, kwargs, "interactsh", "-interactsh-server")
+
+    if tool.name in {"dalfox", "xsstrike"}:
+        _add_value(tokens, kwargs, "method", "--method")
+        _add_value(tokens, kwargs, "data", "--data")
+        _add_value(tokens, kwargs, "headers", "--headers")
+        _add_value(tokens, kwargs, "payload", "--payload")
+        _add_bool(tokens, kwargs, "skip_bav", "--skip-bav")
+
+    if tool.name == "theHarvester":
+        _add_value(tokens, kwargs, "limit", "-l")
+        _add_value(tokens, kwargs, "start", "-S")
+        _add_bool(tokens, kwargs, "takeover", "--takeover")
+        _add_bool(tokens, kwargs, "dns_lookup", "-n")
+
+    if tool.name == "sherlock":
+        _add_value(tokens, kwargs, "site_list", "--site")
+        _add_bool(tokens, kwargs, "csv_output", "--csv")
+        _add_bool(tokens, kwargs, "print_found", "--print-found")
+        _add_bool(tokens, kwargs, "browse", "--browse")
+
+    if tool.name in {"trufflehog", "gitleaks"}:
+        _add_value(tokens, kwargs, "source_type", "--source-type")
+        _add_value(tokens, kwargs, "branch", "--branch")
+        _add_value(tokens, kwargs, "max_depth", "--max-depth")
+        _add_value(tokens, kwargs, "report_format", "--report-format")
+        _add_value(tokens, kwargs, "report_path", "--report-path")
+        _add_bool(tokens, kwargs, "verbose", "--verbose")
+
+    if tool.name in {"prowler", "trivy"}:
+        _add_value(tokens, kwargs, "provider", "--provider")
+        _add_value(tokens, kwargs, "checks", "--checks")
+        _add_value(tokens, kwargs, "excluded_checks", "--excluded-checks")
+        _add_value(tokens, kwargs, "output_format", "--output")
+        _add_bool(tokens, kwargs, "ignore_unfixed", "--ignore-unfixed")
+
+    if tool.name in {"netexec", "certipy", "kerbrute"}:
+        _add_value(tokens, kwargs, "users_file", "-U")
+        _add_value(tokens, kwargs, "passwords_file", "-P")
+        _add_bool(tokens, kwargs, "kerberos", "-k")
+        _add_bool(tokens, kwargs, "local_auth", "--local-auth")
+        _add_value(tokens, kwargs, "target_ip", "--target-ip")
 
     return tokens
 

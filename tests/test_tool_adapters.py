@@ -144,6 +144,29 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         httpx_schema
     )
 
+    nuclei_schema = tools["security_tool_nuclei"].inputSchema["properties"]
+    assert {"workflows", "exclude_templates", "headless", "interactsh"}.issubset(
+        nuclei_schema
+    )
+
+    harvester_schema = tools["security_tool_theharvester"].inputSchema["properties"]
+    assert {"limit", "start", "takeover", "dns_lookup"}.issubset(harvester_schema)
+
+    trufflehog_schema = tools["security_tool_trufflehog"].inputSchema["properties"]
+    assert {"source_type", "branch", "max_depth", "report_format"}.issubset(
+        trufflehog_schema
+    )
+
+    prowler_schema = tools["security_tool_prowler"].inputSchema["properties"]
+    assert {"provider", "checks", "excluded_checks", "output_format"}.issubset(
+        prowler_schema
+    )
+
+    netexec_schema = tools["security_tool_netexec"].inputSchema["properties"]
+    assert {"users_file", "passwords_file", "kerberos", "local_auth"}.issubset(
+        netexec_schema
+    )
+
     bloodhound_schema = tools["security_tool_bloodhound"].inputSchema["properties"]
     assert {"domain", "username", "dc_ip", "collection_method"}.issubset(
         bloodhound_schema
@@ -233,6 +256,36 @@ async def test_tool_specific_parameters_build_cli_options(registry, safety):
     assert request.options == (
         "--data id=1 --risk 2 --level 3 --tamper space2comment "
         "--technique BEUSTQ --random-agent"
+    )
+
+
+@pytest.mark.asyncio
+async def test_second_wave_named_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_nuclei",
+        {
+            "target": "https://example.test",
+            "severity": "critical,high",
+            "tags": "exposure",
+            "headless": True,
+            "workflows": "workflows/",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "nuclei"
+    assert request.options == (
+        "-severity critical,high -tags exposure -w workflows/ -headless"
     )
 
 
