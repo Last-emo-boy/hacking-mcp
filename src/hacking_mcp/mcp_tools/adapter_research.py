@@ -229,6 +229,61 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "log_level",
         ),
     ),
+    "amass": SourceReview(
+        note=(
+            "Reviewed against the OWASP Amass user guide for the enum command, "
+            "including config/output controls, active/passive modes, alteration "
+            "and brute-force inputs, source include/exclude lists, resolver/QPS "
+            "controls, ports, scripts, timeout, and verbose output."
+        ),
+        references=(
+            "https://github.com/owasp-amass/amass/blob/master/doc/user_guide.md",
+        ),
+        verified_parameters=(
+            "config_file",
+            "output_dir",
+            "no_color",
+            "silent",
+            "active",
+            "passive",
+            "alts",
+            "alteration_wordlist",
+            "alteration_masks",
+            "blacklist",
+            "blacklist_file",
+            "brute",
+            "domain_file",
+            "exclude_sources",
+            "exclude_file",
+            "include_sources",
+            "include_file",
+            "interface",
+            "include_ip",
+            "ipv4",
+            "ipv6",
+            "list_sources",
+            "log_file",
+            "max_depth",
+            "min_for_recursive",
+            "known_names_file",
+            "no_recursive",
+            "output_file",
+            "output_prefix",
+            "ports",
+            "resolvers",
+            "resolver_file",
+            "dns_qps",
+            "resolver_qps",
+            "scripts_dir",
+            "timeout",
+            "trusted_resolvers",
+            "trusted_resolver_file",
+            "trusted_qps",
+            "verbose",
+            "wordlist",
+            "wordlist_masks",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}

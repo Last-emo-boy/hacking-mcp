@@ -144,6 +144,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["subfinder"].unverified_parameters == ()
     assert any("subfinder/usage" in item for item in records["subfinder"].evidence)
 
+    assert records["amass"].source_status == "source-reviewed"
+    assert records["amass"].unverified_parameters == ()
+    assert any("owasp-amass/amass" in item for item in records["amass"].evidence)
+
     assert records["gitleaks"].source_status == "source-reviewed"
     assert records["gitleaks"].unverified_parameters == ()
     assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
@@ -210,6 +214,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "input_file", "sources", "exclude_sources", "all_sources", "recursive",
         "resolver_file", "rate_limit", "output_file", "json_output", "silent",
     }.issubset(subfinder_schema)
+
+    amass_schema = tools["security_tool_amass"].inputSchema["properties"]
+    assert {
+        "config_file", "output_dir", "active", "passive", "brute",
+        "domain_file", "exclude_sources", "include_sources", "resolver_file",
+        "dns_qps", "trusted_resolver_file", "wordlist", "wordlist_masks",
+    }.issubset(amass_schema)
 
     nuclei_schema = tools["security_tool_nuclei"].inputSchema["properties"]
     assert {"workflows", "exclude_templates", "headless", "interactsh"}.issubset(
@@ -518,6 +529,61 @@ async def test_subfinder_source_reviewed_parameters_build_cli_options(registry, 
         "-timeout 30 -max-time 10 -o subdomains.txt -oJ -oD subfinder-out "
         "-cs -oI -config config.yaml -pc providers.yaml "
         "-proxy http://127.0.0.1:8080 -silent"
+    )
+
+
+@pytest.mark.asyncio
+async def test_amass_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_amass",
+        {
+            "target": "example.test",
+            "config_file": "amass.yaml",
+            "output_dir": "amass-out",
+            "active": True,
+            "brute": True,
+            "domain_file": "domains.txt",
+            "exclude_sources": "shodan",
+            "include_sources": "crtsh",
+            "interface": "eth0",
+            "include_ip": True,
+            "log_file": "amass.log",
+            "max_depth": 3,
+            "output_file": "names.txt",
+            "ports": "80,443",
+            "resolvers": "1.1.1.1",
+            "resolver_file": "resolvers.txt",
+            "dns_qps": 200,
+            "resolver_qps": 20,
+            "scripts_dir": "scripts",
+            "timeout": 30,
+            "trusted_resolvers": "8.8.8.8",
+            "trusted_resolver_file": "trusted.txt",
+            "trusted_qps": 50,
+            "verbose": True,
+            "wordlist": "words.txt",
+            "wordlist_masks": "?l?l?l",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "amass"
+    assert request.options == (
+        "-config amass.yaml -dir amass-out -active -brute -df domains.txt "
+        "-exclude shodan -include crtsh -iface eth0 -ip -log amass.log "
+        "-max-depth 3 -o names.txt -p 80,443 -r 1.1.1.1 -rf resolvers.txt "
+        "-dns-qps 200 -rqps 20 -scripts scripts -timeout 30 -tr 8.8.8.8 "
+        "-trf trusted.txt -trqps 50 -v -w words.txt -wm '?l?l?l'"
     )
 
 
