@@ -93,11 +93,14 @@ def register(
     registry: ToolRegistry,
     safety: SafetyPolicy,
 ) -> list[ToolAdapterSpec]:
-    """Register one MCP tool per exposed ToolAdapterSpec."""
+    """Register one MCP tool per known registry tool.
+
+    Safety-eligible tools get executable adapters. Tools blocked by policy,
+    missing run commands, or otherwise unavailable still get dedicated MCP
+    entries that return a policy explanation without invoking the orchestrator.
+    """
     specs = build_adapter_specs(registry, safety)
     for spec in specs:
-        if not spec.exposed:
-            continue
         _register_one(mcp, orchestrator, spec)
     return specs
 
@@ -108,6 +111,19 @@ def _register_one(
     spec: ToolAdapterSpec,
 ) -> None:
     description = _adapter_description(spec)
+
+    if not spec.exposed:
+        async def blocked_tool(
+            target: str = "",
+            options: str = "",
+            confirm_authorized: bool = False,
+            ctx: Context = None,
+        ) -> str:
+            return _blocked_adapter_response(spec)
+
+        blocked_tool.__name__ = spec.mcp_name
+        mcp.tool(name=spec.mcp_name, description=description)(blocked_tool)
+        return
 
     async def run_tool(
         target: str = "",
@@ -137,6 +153,14 @@ def _register_one(
 
 
 def _adapter_description(spec: ToolAdapterSpec) -> str:
+    if not spec.exposed:
+        return (
+            f"Dedicated adapter for {spec.title} ({spec.tool_name}). "
+            f"Category: {spec.category}. Safety tier: {spec.safety_tier}. "
+            "Execution is not available from MCP: "
+            f"{spec.blocked_reason or 'not exposed by policy'}"
+        )
+
     confirmation = (
         " Requires confirm_authorized=true before execution."
         if spec.requires_confirmation
@@ -151,6 +175,26 @@ def _adapter_description(spec: ToolAdapterSpec) -> str:
         f"Dedicated adapter for {spec.title} ({spec.tool_name}). "
         f"Category: {spec.category}. Safety tier: {spec.safety_tier}."
         f"{target} Options: {spec.option_hint}.{confirmation}"
+    )
+
+
+def _blocked_adapter_response(spec: ToolAdapterSpec) -> str:
+    reason = spec.blocked_reason or "This tool is not exposed for execution by policy."
+    return "\n".join(
+        [
+            f"# {spec.title}",
+            "",
+            f"**Tool:** `{spec.tool_name}`",
+            f"**Category:** {spec.category}",
+            f"**Safety tier:** {spec.safety_tier}",
+            f"**Dedicated endpoint:** `{spec.mcp_name}`",
+            "",
+            "## Execution",
+            f"Blocked: {reason}",
+            "",
+            "This endpoint is registered for inventory completeness only. It does not "
+            "run the tool or bypass the safety policy.",
+        ]
     )
 
 

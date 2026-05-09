@@ -52,7 +52,7 @@ def test_adapter_names_are_unique_and_prefixed(registry, safety):
     assert all(name.startswith(MCP_TOOL_PREFIX) for name in names)
 
 
-def test_dangerous_tools_are_not_exposed(registry, safety):
+def test_dangerous_tools_are_not_executable(registry, safety):
     specs = build_adapter_specs(registry, safety)
     exposed = {s.tool_name for s in specs if s.exposed}
     dangerous = {
@@ -83,7 +83,7 @@ def test_disabled_safe_categories_are_not_exposed(registry, safety):
 
 
 @pytest.mark.asyncio
-async def test_register_adds_exposed_tool_names(registry, safety):
+async def test_register_adds_every_tool_name(registry, safety):
     from mcp.server.fastmcp import FastMCP
     from unittest.mock import AsyncMock, MagicMock
 
@@ -93,8 +93,30 @@ async def test_register_adds_exposed_tool_names(registry, safety):
 
     specs = register(mcp, orchestrator, registry, safety)
     tool_names = {tool.name for tool in await mcp.list_tools()}
-    exposed_names = {spec.mcp_name for spec in specs if spec.exposed}
+    adapter_names = {spec.mcp_name for spec in specs}
 
     assert "security_tool_nmap" in tool_names
     assert "security_tool_sqlmap" in tool_names
-    assert exposed_names.issubset(tool_names)
+    assert "security_tool_vegil" in tool_names
+    assert adapter_names == tool_names
+
+
+@pytest.mark.asyncio
+async def test_blocked_adapter_does_not_execute_orchestrator(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock()
+
+    register(mcp, orchestrator, registry, safety)
+    content, metadata = await mcp.call_tool(
+        "security_tool_vegil",
+        {"target": "example.com", "options": "--anything"},
+    )
+
+    assert "classified DANGEROUS" in metadata["result"]
+    assert "does not run the tool" in metadata["result"]
+    assert content
+    orchestrator.execute.assert_not_awaited()

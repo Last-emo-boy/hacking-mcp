@@ -382,5 +382,6 @@ def _format_adapter_info(
         )
     return (
         "## Dedicated MCP Adapter\n"
-        f"Not registered for execution: {spec.blocked_reason or 'not exposed by policy'}"
+        f"**Endpoint:** `{spec.mcp_name}`\n"
+        f"**Execution:** blocked: {spec.blocked_reason or 'not exposed by policy'}"
     )

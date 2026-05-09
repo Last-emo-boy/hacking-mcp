@@ -37,15 +37,18 @@ class TestServerCreation:
 
     @pytest.mark.asyncio
     async def test_per_tool_adapters_registered(self):
-        """Server should expose dedicated adapters for safety-eligible tools."""
-        from hacking_mcp.server import create_server
+        """Server should expose a dedicated adapter for every registry tool."""
+        from hacking_mcp.server import create_server, registry
 
         server = create_server()
         names = {tool.name for tool in await server.list_tools()}
+        adapter_names = {name for name in names if name.startswith("security_tool_")}
 
         assert "security_tool_nmap" in names
         assert "security_tool_sqlmap" in names
+        assert "security_tool_vegil" in names
         assert "security_run_recon" in names
+        assert len(adapter_names) == len(registry.get_tool_names())
 
 
 class TestToolCoherence:

@@ -141,16 +141,20 @@ def create_server():
     register_task(mcp, task_mgr)
     # Asset management
     register_asset(mcp, asset_mgr)
-    # Per-tool adapters — one dedicated endpoint for each safety-eligible tool.
+    # Per-tool adapters — one dedicated endpoint for each known registry tool.
     adapter_specs = register_tool_adapters(mcp, orchestrator, registry, safety)
     exposed_adapter_count = sum(1 for spec in adapter_specs if spec.exposed)
+    blocked_adapter_count = len(adapter_specs) - exposed_adapter_count
 
     logger.info(
-        "hacking-mcp initialized: %d tools across %d categories, %d per-tool adapters. "
+        "hacking-mcp initialized: %d tools across %d categories, "
+        "%d per-tool adapters (%d executable, %d policy/info-only). "
         "Safety policy: %d categories disabled, %d require confirmation.",
         len(registry.get_tool_names()),
         20,  # Static — avoid triggering lazy WSL scan
+        len(adapter_specs),
         exposed_adapter_count,
+        blocked_adapter_count,
         len(safety.disabled_categories),
         len(safety.require_confirmation_categories),
     )
