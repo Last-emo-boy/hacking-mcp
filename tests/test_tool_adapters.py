@@ -127,6 +127,7 @@ def test_split_adapter_registry_includes_migrated_tools():
 
     migrated = {
         "binwalk",
+        "haiti",
         "owasp-zap",
         "pspy",
         "sherlock",
@@ -170,6 +171,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["pspy"].source_status == "source-reviewed"
     assert records["pspy"].unverified_parameters == ()
     assert any("DominicBreuker/pspy" in item for item in records["pspy"].evidence)
+
+    assert records["haiti"].source_status == "source-reviewed"
+    assert records["haiti"].unverified_parameters == ()
+    assert any("noraj/haiti" in item for item in records["haiti"].evidence)
 
     assert records["subfinder"].source_status == "source-reviewed"
     assert records["subfinder"].unverified_parameters == ()
@@ -412,6 +417,12 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "procevents", "fsevents", "recursive_dirs", "dirs", "interval",
         "color", "debug", "ppid", "truncate",
     }.issubset(pspy_schema)
+
+    haiti_schema = tools["security_tool_haiti"].inputSchema["properties"]
+    assert {
+        "no_color", "extended", "short", "hashcat_only", "john_only",
+        "ascii_art", "debug",
+    }.issubset(haiti_schema)
 
     hashcat_schema = tools["security_tool_hashcat"].inputSchema["properties"]
     assert {"rules", "mask", "session", "show", "potfile_path"}.issubset(
@@ -2213,6 +2224,39 @@ async def test_pspy_source_reviewed_parameters_build_cli_options(registry, safet
         "--procevents=false --fsevents --recursive_dirs /usr "
         "--recursive_dirs /tmp --dirs /opt/app --interval 1000 "
         "--color=false --debug --ppid --truncate 4096"
+    )
+
+
+@pytest.mark.asyncio
+async def test_haiti_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_haiti",
+        {
+            "target": "d41d8cd98f00b204e9800998ecf8427e",
+            "no_color": True,
+            "extended": True,
+            "short": True,
+            "hashcat_only": True,
+            "john_only": True,
+            "debug": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "haiti"
+    assert request.target == "d41d8cd98f00b204e9800998ecf8427e"
+    assert request.options == (
+        "--no-color --extended --short --hashcat-only --john-only --debug"
     )
 
 

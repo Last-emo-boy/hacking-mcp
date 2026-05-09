@@ -124,6 +124,27 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "truncate",
         ),
     ),
+    "haiti": SourceReview(
+        note=(
+            "Reviewed against upstream haiti docopt CLI definition for hash "
+            "identification display controls, including color disabling, "
+            "extended salted variants, short output, hashcat-only, John-only, "
+            "ASCII art, and debug argument output."
+        ),
+        references=(
+            "https://github.com/noraj/haiti",
+            "https://raw.githubusercontent.com/noraj/haiti/master/bin/haiti",
+        ),
+        verified_parameters=(
+            "no_color",
+            "extended",
+            "short",
+            "hashcat_only",
+            "john_only",
+            "ascii_art",
+            "debug",
+        ),
+    ),
     "nmap": SourceReview(
         note=(
             "Reviewed against the official Nmap reference guide for target "
