@@ -19,6 +19,7 @@ def register(mcp: FastMCP, task_mgr: TaskManager):
         target: str,
         options: str = "",
         category: str = "",
+        confirm_authorized: bool = False,
         ctx: Context = None,
     ) -> str:
         """Start a background security scan.
@@ -28,12 +29,14 @@ def register(mcp: FastMCP, task_mgr: TaskManager):
             target: Target IP, domain, or URL
             options: Additional CLI options
             category: Category hint for validation (recon, scanner, etc.)
+            confirm_authorized: Set true only when the selected tool requires explicit authorization confirmation.
         """
         record = await task_mgr.start_task(
             tool_name=tool_name,
             target=target,
             options=options,
             category=category,
+            confirm_authorized=confirm_authorized,
             ctx=ctx,
         )
 
@@ -45,6 +48,8 @@ def register(mcp: FastMCP, task_mgr: TaskManager):
         ]
         if record.options:
             lines.append(f"**Options:** `{record.options}`")
+        if record.confirm_authorized:
+            lines.append("**Authorization confirmed:** true")
         lines.extend([
             f"**Status:** {record.status.value}",
             f"**Created:** {record.created_at}",

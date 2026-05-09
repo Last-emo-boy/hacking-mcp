@@ -95,7 +95,7 @@ runner = ToolRunner(registry, safety)
 formatter = OutputFormatter()
 asset_mgr = AssetManager()
 orchestrator = ToolOrchestrator(registry, safety, runner, formatter, asset_manager=asset_mgr)
-install_mgr = InstallManager(runner, registry,
+install_mgr = InstallManager(runner, registry, safety,
                             proxy_env=safety.get_proxy_env(),
                             mirrors=safety.get_mirrors_config())
 task_mgr = TaskManager(orchestrator, asset_mgr=asset_mgr)

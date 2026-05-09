@@ -7,6 +7,7 @@ Also provides ToolRequest/ToolResponse dataclasses for clean data flow.
 """
 
 import logging
+import shlex
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -42,6 +43,7 @@ class ToolRequest:
     force_safety_check: bool = False
     # Confirmation warning configuration
     require_confirmation: bool = False
+    confirm_authorized: bool = False
     confirmation_message: str = ""
     # Output format
     output_format: OutputFormat = OutputFormat.MARKDOWN
@@ -121,13 +123,12 @@ class ToolOrchestrator:
             )
 
         # ── Step 2: Safety gate ──────────────────────────────────────
-        if request.force_safety_check or tool.safety_tier.value in ("dangerous",):
-            allowed, reason = self.safety.check_tool(tool)
-            if not allowed:
-                return ToolResponse(
-                    tool_name=request.tool_name,
-                    error=f"⛔ **BLOCKED:** {reason}",
-                )
+        allowed, reason = self.safety.check_tool(tool)
+        if not allowed:
+            return ToolResponse(
+                tool_name=request.tool_name,
+                error=f"⛔ **BLOCKED:** {reason}",
+            )
 
         # ── Step 3: Target validation ────────────────────────────────
         if request.target_required and not request.target:
@@ -136,7 +137,27 @@ class ToolOrchestrator:
                 error=f"'{request.tool_name}' requires a target.",
             )
 
-        # ── Step 4: Availability ─────────────────────────────────────
+        # ── Step 4: Confirmation gate ────────────────────────────────
+        needs_confirmation = (
+            request.require_confirmation
+            or request.force_safety_check
+            or self.safety.requires_confirmation(tool)
+        )
+        if needs_confirmation and not request.confirm_authorized:
+            msg = request.confirmation_message or (
+                f"Tool '{request.tool_name}' ({tool.category}) requires explicit "
+                "authorization confirmation."
+            )
+            return ToolResponse(
+                tool_name=request.tool_name,
+                error=(
+                    f"⚠️ **CONFIRMATION REQUIRED:** {msg}\n\n"
+                    "Re-run with `confirm_authorized=True` only if you own the target "
+                    "or have explicit written authorization to test it."
+                ),
+            )
+
+        # ── Step 5: Availability ─────────────────────────────────────
         if not self.registry.is_available(request.tool_name):
             return ToolResponse(
                 tool_name=request.tool_name,
@@ -151,8 +172,8 @@ class ToolOrchestrator:
                     error=f"⛔ Target rejected by scope policy: {scope_reason}",
                 )
 
-        # ── Step 5: Confirmation warning ─────────────────────────────
-        if request.require_confirmation and ctx:
+        # ── Step 6: Confirmation warning ─────────────────────────────
+        if needs_confirmation and ctx:
             tool_obj = tool
             msg = request.confirmation_message or (
                 f"Tool '{request.tool_name}' ({tool_obj.category}) requires confirmation. "
@@ -160,21 +181,31 @@ class ToolOrchestrator:
             )
             await ctx.warning(msg)
 
-        # ── Step 6: Progress notification ────────────────────────────
+        # ── Step 7: Progress notification ────────────────────────────
         if ctx:
             target_str = f" against {request.target}" if request.target else ""
             await ctx.info(f"Running {request.tool_name}{target_str}...")
 
-        # ── Step 7: Execute ──────────────────────────────────────────
+        # ── Step 8: Execute ──────────────────────────────────────────
         args = []
         if request.target:
             args.append(request.target)
         if request.options:
-            args.extend(request.options.split())
+            try:
+                args.extend(shlex.split(request.options))
+            except ValueError as e:
+                return ToolResponse(
+                    tool_name=request.tool_name,
+                    error=f"Invalid options syntax: {e}",
+                )
 
-        result = await self.runner.run(request.tool_name, args)
+        result = await self.runner.run(
+            request.tool_name,
+            args,
+            confirm_authorized=request.confirm_authorized,
+        )
 
-        # ── Step 8: Save to asset manager ────────────────────────────
+        # ── Step 9: Save to asset manager ────────────────────────────
         if self.asset_mgr and request.target and not result.was_blocked:
             try:
                 scan_id = self.asset_mgr.save_result(
@@ -189,7 +220,7 @@ class ToolOrchestrator:
             except Exception as e:
                 logger.warning("Failed to save asset result for %s: %s", request.tool_name, e)
 
-        # ── Step 9: Format ───────────────────────────────────────────
+        # ── Step 10: Format ──────────────────────────────────────────
         formatted = self.formatter.format(result, request.output_format)
 
         return ToolResponse(
@@ -222,5 +253,8 @@ class ToolOrchestrator:
         if target:
             args.append(target)
         if options:
-            args.extend(options.split())
+            try:
+                args.extend(shlex.split(options))
+            except ValueError as e:
+                return f"# Invalid options syntax: {e}"
         return self.runner.dry_run(tool_name, args)

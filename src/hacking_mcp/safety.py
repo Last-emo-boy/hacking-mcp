@@ -6,6 +6,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -106,7 +107,10 @@ class SafetyPolicy:
 
     def requires_confirmation(self, tool: HackingToolDef) -> bool:
         """Check if this tool requires explicit user confirmation."""
-        return tool.category in self.require_confirmation_categories
+        return (
+            tool.safety_tier == SafetyTier.CAUTION
+            or tool.category in self.require_confirmation_categories
+        )
 
     def validate_target(self, target: str) -> tuple[bool, str]:
         """Validate a target against defined scope.
@@ -118,26 +122,78 @@ class SafetyPolicy:
         if not self._allowed_cidrs and not self._allowed_domains:
             return True, ""
 
-        # Try to parse as IP
+        candidates = self._scope_candidates(target)
+        if not candidates:
+            return False, f"Target '{target}' could not be parsed for scope validation."
+
+        for candidate in candidates:
+            ok, is_ip_like = self._validate_ip_or_network(candidate)
+            if ok:
+                return True, ""
+            if is_ip_like:
+                continue
+
+            if self._domain_allowed(candidate):
+                return True, ""
+
+        return False, f"Target '{target}' is not in the authorized scope."
+
+    def _validate_ip_or_network(self, value: str) -> tuple[bool, bool]:
+        """Return (allowed, was_ip_like) for an IP address or CIDR."""
         try:
-            addr = ipaddress.ip_address(target)
-            for net in self._allowed_cidrs:
-                if addr in net:
-                    return True, ""
-            return False, f"Target '{target}' is not in the authorized IP scope."
+            addr = ipaddress.ip_address(value)
+            return any(addr in net for net in self._allowed_cidrs), True
         except ValueError:
             pass
 
-        # Try to match as domain
-        for domain in self._allowed_domains:
-            # Support wildcard: *.example.com
-            if domain.startswith("*."):
-                if target.endswith(domain[1:]) or target == domain[2:]:
-                    return True, ""
-            elif target == domain:
-                return True, ""
+        try:
+            target_net = ipaddress.ip_network(value, strict=False)
+        except ValueError:
+            return False, False
 
-        return False, f"Target '{target}' is not in the authorized domain scope."
+        return any(target_net.subnet_of(net) for net in self._allowed_cidrs), True
+
+    def _domain_allowed(self, value: str) -> bool:
+        target = value.rstrip(".").lower()
+        for domain in self._allowed_domains:
+            allowed = domain.rstrip(".").lower()
+            if allowed.startswith("*."):
+                suffix = allowed[1:]
+                if target.endswith(suffix) or target == allowed[2:]:
+                    return True
+            elif target == allowed:
+                return True
+        return False
+
+    @staticmethod
+    def _scope_candidates(target: str) -> list[str]:
+        """Extract scope-checkable host/IP/CIDR candidates from a user target."""
+        raw = target.strip()
+        if not raw:
+            return []
+
+        candidates: list[str] = []
+
+        # Preserve bare IP/CIDR targets before URL parsing turns CIDR into a path.
+        candidates.append(raw)
+
+        try:
+            parsed = urlsplit(raw if "://" in raw else f"//{raw}")
+            if parsed.hostname:
+                candidates.append(parsed.hostname)
+        except ValueError:
+            pass
+
+        # Deduplicate while preserving order.
+        seen: set[str] = set()
+        result: list[str] = []
+        for candidate in candidates:
+            normalized = candidate.strip().strip("[]")
+            if not normalized or normalized in seen:
+                continue
+            seen.add(normalized)
+            result.append(normalized)
+        return result
 
     def log_invocation(
         self,

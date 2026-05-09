@@ -33,6 +33,7 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
         tool_name: str,
         target: str,
         options: str = "",
+        confirm_authorized: bool = False,
         ctx: Context = None,
     ) -> str:
         """Run a reconnaissance tool against a target.
@@ -41,12 +42,14 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
             tool_name: Recon tool to use (e.g., 'nmap', 'theHarvester', 'amass', 'subfinder', 'httpx', 'holehe', 'maigret')
             target: Target IP, domain, email, username, or path
             options: Additional CLI options (e.g., '-sV -p 80,443' for nmap, '-b all' for theHarvester)
+            confirm_authorized: Set true when the selected tool requires explicit authorization confirmation.
         """
         response = await orchestrator.execute(
             ToolRequest(
                 tool_name=tool_name,
                 target=target,
                 options=options,
+                confirm_authorized=confirm_authorized,
                 allowed_tools=recon_tools,
                 category_label="reconnaissance",
             ),

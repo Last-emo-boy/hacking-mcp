@@ -104,6 +104,16 @@ class TestSafetyPolicy:
         assert not safety.requires_confirmation(safe_tool)
         assert safety.requires_confirmation(caution_tool)
 
+    def test_caution_tier_requires_confirmation_even_outside_configured_categories(self, safety):
+        tool = HackingToolDef(
+            name="active-tool",
+            title="Active Tool",
+            description="Active assessment tool",
+            category="Information Gathering",
+            safety_tier=SafetyTier.CAUTION,
+        )
+        assert safety.requires_confirmation(tool)
+
     def test_validate_target_ip_in_scope(self, safety):
         ok, reason = safety.validate_target("10.0.0.1")
         assert ok
@@ -117,9 +127,33 @@ class TestSafetyPolicy:
         ok, reason = safety.validate_target("example.com")
         assert ok
 
+    def test_validate_target_url_domain_in_scope(self, safety):
+        ok, reason = safety.validate_target("https://example.com:8443/login")
+        assert ok
+
     def test_validate_target_wildcard_domain(self, safety):
         ok, reason = safety.validate_target("app.test.local")
         assert ok
+
+    def test_validate_target_url_wildcard_domain(self, safety):
+        ok, reason = safety.validate_target("https://app.test.local/path?q=1")
+        assert ok
+
+    def test_validate_target_ip_with_port_in_scope(self, safety):
+        ok, reason = safety.validate_target("10.0.0.1:443")
+        assert ok
+
+    def test_validate_target_cidr_subset_in_scope(self, safety):
+        ok, reason = safety.validate_target("192.168.1.0/28")
+        assert ok
+
+    def test_validate_target_cidr_out_of_scope(self, safety):
+        ok, reason = safety.validate_target("192.168.2.0/24")
+        assert not ok
+
+    def test_validate_target_url_out_of_scope(self, safety):
+        ok, reason = safety.validate_target("https://evil.example.net")
+        assert not ok
 
     def test_validate_target_no_scope_allows_all(self):
         no_scope = SafetyPolicy()

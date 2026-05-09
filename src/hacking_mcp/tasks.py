@@ -87,6 +87,7 @@ class TaskManager:
                 target=data.get("target", ""),
                 options=data.get("options", ""),
                 category=data.get("category", ""),
+                confirm_authorized=data.get("confirm_authorized", False),
                 status=TaskStatus(status_str),
                 created_at=data.get("created_at", ""),
                 started_at=data.get("started_at", ""),
@@ -117,6 +118,7 @@ class TaskManager:
             "target": record.target,
             "options": record.options,
             "category": record.category,
+            "confirm_authorized": record.confirm_authorized,
             "status": record.status.value,
             "created_at": record.created_at,
             "started_at": record.started_at,
@@ -148,6 +150,7 @@ class TaskManager:
         target: str,
         options: str = "",
         category: str = "",
+        confirm_authorized: bool = False,
         ctx=None,
     ) -> TaskRecord:
         """Start a background task. Returns immediately with a TaskRecord.
@@ -164,6 +167,7 @@ class TaskManager:
             target=target,
             options=options,
             category=category,
+            confirm_authorized=confirm_authorized,
             status=TaskStatus.PENDING,
             created_at=now,
         )
@@ -194,6 +198,7 @@ class TaskManager:
                 tool_name=record.tool_name,
                 target=record.target,
                 options=record.options,
+                confirm_authorized=record.confirm_authorized,
             )
             response = await self._orchestrator.execute(request, ctx=ctx)
 
@@ -204,8 +209,10 @@ class TaskManager:
                 record.status = TaskStatus.COMPLETED
                 record.duration_ms = response.result.duration_ms
 
-                # Save to asset manager if available
-                if self._asset_mgr:
+                if record.result and record.result.output_file:
+                    record.asset_scan_id = Path(record.result.output_file).stem
+                # Save to asset manager only if the orchestrator is not already doing it.
+                elif self._asset_mgr and not getattr(self._orchestrator, "asset_mgr", None):
                     try:
                         scan_id = self._asset_mgr.save_result(
                             target=record.target,

@@ -21,6 +21,7 @@ from hacking_mcp.models import InstallRecord
 from hacking_mcp.registry import ToolRegistry
 from hacking_mcp.runner import ToolRunner
 from hacking_mcp.environment import get_tools_dir, get_installs_dir
+from hacking_mcp.safety import SafetyPolicy
 
 logger = logging.getLogger("hacking-mcp.install")
 
@@ -280,10 +281,12 @@ class InstallManager:
     ]
 
     def __init__(self, runner: ToolRunner, registry: ToolRegistry,
+                 safety: SafetyPolicy | None = None,
                  proxy_env: dict[str, str] | None = None,
                  mirrors: dict[str, str] | None = None):
         self._runner = runner
         self._registry = registry
+        self._safety = safety
         self._proxy_env = proxy_env or {}
         self._mirrors = mirrors or {}
         self._state: dict[str, dict] = {}
@@ -504,21 +507,30 @@ class InstallManager:
         5. Update state after each step
         6. Return InstallRecord
         """
-        # Ensure WSL has basic tools
-        bootstrap_error = await self._bootstrap_wsl()
-        if bootstrap_error:
-            return InstallRecord(
-                tool_name=tool_name,
-                installed=False,
-                error=f"WSL environment not ready:\n{bootstrap_error}",
-            )
-
         tool = self._registry.get_tool(tool_name)
         if not tool:
             return InstallRecord(
                 tool_name=tool_name,
                 installed=False,
                 error=f"Unknown tool: {tool_name}",
+            )
+
+        if self._safety:
+            allowed, reason = self._safety.check_tool(tool)
+            if not allowed:
+                return InstallRecord(
+                    tool_name=tool_name,
+                    installed=False,
+                    error=f"Installation blocked by safety policy: {reason}",
+                )
+
+        # Ensure WSL has basic tools after the tool is known and allowed.
+        bootstrap_error = await self._bootstrap_wsl()
+        if bootstrap_error:
+            return InstallRecord(
+                tool_name=tool_name,
+                installed=False,
+                error=f"WSL environment not ready:\n{bootstrap_error}",
             )
 
         install_cmds = tool.install_commands

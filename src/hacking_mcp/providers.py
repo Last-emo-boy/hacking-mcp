@@ -35,7 +35,7 @@ class ToolProvider(ABC):
 
 
 class HackingtoolProvider(ToolProvider):
-    """Provider wrapping the built-in hackingtool catalog (182 tools, 20 categories).
+    """Provider wrapping the built-in hackingtool catalog (184 tools, 20 categories).
 
     This is the default provider. It reads from the existing ALL_CATEGORIES
     and CATEGORY_DESCRIPTIONS in registry.py.

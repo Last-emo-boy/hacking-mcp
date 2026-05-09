@@ -24,6 +24,7 @@ def registry():
 def safety():
     return SafetyPolicy(
         disabled_categories=["DDOS Attack", "Phishing Attack"],
+        require_confirmation_categories=["SQL Injection", "Exploit Framework", "XSS Attack"],
     )
 
 
@@ -51,6 +52,7 @@ class TestToolRequest:
         assert req.allowed_tools == set()
         assert req.target_required is True
         assert req.validate_scope is True
+        assert req.confirm_authorized is False
 
     def test_with_allowlist(self):
         req = ToolRequest(
@@ -157,12 +159,91 @@ class TestToolOrchestrator:
             ToolRequest(
                 tool_name="slowloris",
                 target="example.com",
-                force_safety_check=True,
             )
         )
         # slowloris is in DDOS Attack (disabled) — should be blocked
-        if response.error:
-            assert "BLOCKED" in response.error or "disabled" in response.error.lower()
+        assert response.error
+        assert "BLOCKED" in response.error or "disabled" in response.error.lower()
+
+    @pytest.mark.asyncio
+    async def test_execute_requires_explicit_confirmation(self, orchestrator):
+        response = await orchestrator.execute(
+            ToolRequest(
+                tool_name="sqlmap",
+                target="http://127.0.0.1:8000",
+                allowed_tools={"sqlmap"},
+            )
+        )
+        assert response.error
+        assert "CONFIRMATION REQUIRED" in response.error
+        assert "confirm_authorized=True" in response.error
+
+    @pytest.mark.asyncio
+    async def test_execute_confirmed_tool_reaches_runner(self, orchestrator):
+        orchestrator.registry.is_available = MagicMock(return_value=True)
+        orchestrator.runner.run = AsyncMock(return_value=RunResult(
+            tool_name="sqlmap",
+            command=["sqlmap"],
+            return_code=0,
+            stdout="ok",
+            stderr="",
+            duration_ms=10,
+        ))
+
+        response = await orchestrator.execute(
+            ToolRequest(
+                tool_name="sqlmap",
+                target="http://127.0.0.1:8000",
+                confirm_authorized=True,
+                allowed_tools={"sqlmap"},
+            )
+        )
+
+        assert response.error == ""
+        orchestrator.runner.run.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_execute_uses_shell_like_options_parsing(self, orchestrator):
+        orchestrator.registry.is_available = MagicMock(return_value=True)
+        orchestrator.runner.run = AsyncMock(return_value=RunResult(
+            tool_name="nmap",
+            command=["nmap"],
+            return_code=0,
+            stdout="ok",
+            stderr="",
+            duration_ms=10,
+        ))
+
+        response = await orchestrator.execute(
+            ToolRequest(
+                tool_name="nmap",
+                target="127.0.0.1",
+                options='--script "safe arg" -p 80',
+                allowed_tools={"nmap"},
+            )
+        )
+
+        assert response.error == ""
+        _, args = orchestrator.runner.run.call_args.args
+        assert args == ["127.0.0.1", "--script", "safe arg", "-p", "80"]
+
+    @pytest.mark.asyncio
+    async def test_execute_rejects_invalid_options_syntax(self, orchestrator):
+        orchestrator.registry.is_available = MagicMock(return_value=True)
+        orchestrator.runner.run = AsyncMock()
+
+        response = await orchestrator.execute(
+            ToolRequest(
+                tool_name="nmap",
+                target="127.0.0.1",
+                options='"unterminated',
+                allowed_tools={"nmap"},
+            )
+        )
+
+        assert response.error
+        assert "Invalid options syntax" in response.error
+        orchestrator.runner.run.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_execute_successful_tool(self, orchestrator):

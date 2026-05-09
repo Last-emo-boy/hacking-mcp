@@ -21,6 +21,7 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
         tool_name: str,
         target: str,
         options: str = "",
+        confirm_authorized: bool = False,
         ctx: Context = None,
     ) -> str:
         """Run an Active Directory security tool against a target.
@@ -29,12 +30,14 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
             tool_name: AD tool (e.g., 'bloodhound', 'netexec', 'impacket', 'responder', 'certipy', 'kerbrute')
             target: Target domain, DC IP, or username
             options: Additional CLI options (e.g., '-u username -p password' for netexec)
+            confirm_authorized: Set true only when you have written authorization for this domain.
         """
         response = await orchestrator.execute(
             ToolRequest(
                 tool_name=tool_name,
                 target=target,
                 options=options,
+                confirm_authorized=confirm_authorized,
                 allowed_tools=AD_TOOL_NAMES,
                 category_label="Active Directory",
                 require_confirmation=True,

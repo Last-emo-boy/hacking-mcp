@@ -28,6 +28,7 @@ def mock_orchestrator():
     ))
     orch.runner = MagicMock()
     orch.runner.kill_current = MagicMock()
+    orch.asset_mgr = None
     return orch
 
 
@@ -48,6 +49,20 @@ class TestTaskManager:
         assert record.target == "192.168.1.1"
         assert record.options == "-sV"
         assert record.status == TaskStatus.PENDING
+
+    @pytest.mark.asyncio
+    async def test_start_task_persists_authorization_confirmation(self, task_mgr, tmp_path):
+        record = await task_mgr.start_task(
+            "sqlmap",
+            "http://127.0.0.1:8000",
+            confirm_authorized=True,
+        )
+        assert record.confirm_authorized is True
+
+        task_file = Path(tmp_path) / "tasks" / f"{record.task_id}.json"
+        with open(task_file, "r") as f:
+            data = json.load(f)
+        assert data["confirm_authorized"] is True
 
     @pytest.mark.asyncio
     async def test_get_task(self, task_mgr):
@@ -189,6 +204,34 @@ class TestTaskManager:
         assert data["tool_name"] == "nmap"
         assert data["target"] == "192.168.1.1"
         assert data["options"] == "-sV"
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_asset_output_is_not_saved_twice(self, mock_orchestrator, tmp_path):
+        asset_mgr = MagicMock()
+        mock_orchestrator.asset_mgr = MagicMock()
+        output_file = str(Path(tmp_path) / "assets" / "127.0.0.1" / "scan-123.json")
+        mock_orchestrator.execute.return_value = ToolResponse(
+            tool_name="nmap",
+            result=RunResult(
+                tool_name="nmap",
+                command=["nmap", "127.0.0.1"],
+                return_code=0,
+                stdout="done",
+                stderr="",
+                duration_ms=100,
+                output_file=output_file,
+            ),
+            formatted="done",
+        )
+
+        with patch("hacking_mcp.tasks.get_tasks_dir", return_value=Path(tmp_path / "tasks")):
+            mgr = TaskManager(mock_orchestrator, asset_mgr=asset_mgr)
+            record = await mgr.start_task("nmap", "127.0.0.1")
+            await asyncio.sleep(0.2)
+
+        completed = mgr.get_task(record.task_id)
+        assert completed.asset_scan_id == "scan-123"
+        asset_mgr.save_result.assert_not_called()
 
     def test_load_existing_tasks(self, mock_orchestrator, tmp_path):
         """Test that existing tasks are loaded on startup."""

@@ -63,6 +63,7 @@ class ToolRunner:
         args: Optional[list[str]] = None,
         timeout: int = 300,
         env: Optional[dict] = None,
+        confirm_authorized: bool = False,
     ) -> RunResult:
         """Run a tool safely, adapting to the current OS environment.
 
@@ -71,6 +72,7 @@ class ToolRunner:
             args: Arguments to pass to the tool. First arg is typically the target.
             timeout: Maximum execution time in seconds
             env: Optional extra environment variables
+            confirm_authorized: Explicit authorization confirmation for CAUTION tools
 
         Returns:
             RunResult with stdout, stderr, return code, timing info
@@ -95,6 +97,24 @@ class ToolRunner:
         allowed, reason = self.safety.check_tool(tool)
         if not allowed:
             self.safety.log_invocation(tool_name, "", args, allowed=False)
+            return RunResult(
+                tool_name=tool_name,
+                command=[],
+                return_code=-1,
+                stdout="",
+                stderr=reason,
+                duration_ms=0,
+                was_blocked=True,
+                block_reason=reason,
+            )
+
+        target = args[0] if args else ""
+        if self.safety.requires_confirmation(tool) and not confirm_authorized:
+            reason = (
+                f"Tool '{tool_name}' requires explicit authorization confirmation. "
+                "Set confirm_authorized=True only for targets you own or are authorized to test."
+            )
+            self.safety.log_invocation(tool_name, target, args, allowed=False)
             return RunResult(
                 tool_name=tool_name,
                 command=[],
@@ -148,7 +168,6 @@ class ToolRunner:
             )
 
         # Build the command adapted to the execution environment
-        target = args[0] if args else ""
         extra_args = args[1:] if len(args) > 1 else []
 
         parsed = parse_command(tool.run_command, target)

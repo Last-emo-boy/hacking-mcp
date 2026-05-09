@@ -12,6 +12,7 @@ from hacking_mcp.registry import ToolRegistry
 from hacking_mcp.safety import SafetyPolicy
 from hacking_mcp.runner import get_environment
 from hacking_mcp.environment import get_tools_dir
+from hacking_mcp.ai_help import format_ai_help
 
 
 def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
@@ -181,6 +182,8 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
             "## Description",
             f"{tool.description}",
             "",
+            format_ai_help(tool),
+            "",
             "## Availability",
         ]
         if avail.available:
@@ -245,7 +248,7 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
                 lines.append("**WSL2:** NOT available")
                 lines.append("")
                 lines.append(
-                    "179/182 tools are Linux-only and **cannot run** without WSL2.\\n"
+                    "181/184 tools are Linux-only and **cannot run** without WSL2.\\n"
                     "Install WSL2 to enable execution of security tools.\\n"
                     "```powershell\\n"
                     "wsl --install -d Ubuntu-22.04\\n"

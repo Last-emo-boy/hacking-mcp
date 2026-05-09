@@ -116,6 +116,17 @@ OTHER_TOOLS: list[HackingToolDef] = [
 
     # === Social Media Bruteforce ===
     HackingToolDef(
+        name="instabrute",
+        title="Instagram Attack",
+        description="Archived Instagram brute force tool retained for catalog completeness.",
+        category="Other Tools",
+        project_url="https://github.com/chinoogawa/instaBrute",
+        tags=["bruteforce", "instagram", "social-media"],
+        safety_tier=SafetyTier.DANGEROUS,
+        archived=True,
+        archived_reason="Python 2 only, unmaintained, and violates service terms.",
+    ),
+    HackingToolDef(
         name="allinone-socialmedia",
         title="AllinOne SocialMedia Attack",
         description="Brute force attack tool for Gmail, Hotmail, Twitter, Facebook, Netflix. Usage: python3 Brute_Force.py -g <Account> -l <File_list>",
@@ -310,6 +321,7 @@ OTHER_TOOLS: list[HackingToolDef] = [
         description="Tilix — a tiling terminal emulator that allows opening several terminal sessions inside one window.",
         category="Other Tools",
         install_commands=["sudo apt-get install -y tilix"],
+        run_command="tilix --version",
         tags=["utility", "terminal", "multiplexer", "tiling"],
         safety_tier=SafetyTier.SAFE,
         supported_os=["linux"],

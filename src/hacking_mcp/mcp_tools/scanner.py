@@ -29,6 +29,7 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
         tool_name: str,
         target: str,
         options: str = "",
+        confirm_authorized: bool = False,
         ctx: Context = None,
     ) -> str:
         """Run a vulnerability scanner against a target.
@@ -37,12 +38,14 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
             tool_name: Scanner to use (e.g., 'nuclei', 'nikto', 'wafw00f', 'testssl', 'dalfox', 'xsstrike', 'dsss')
             target: Target URL, IP, or domain
             options: Additional CLI options (e.g., '-severity critical' for nuclei)
+            confirm_authorized: Set true only when you have authorization to scan this target.
         """
         response = await orchestrator.execute(
             ToolRequest(
                 tool_name=tool_name,
                 target=target,
                 options=options,
+                confirm_authorized=confirm_authorized,
                 allowed_tools=SCANNER_TOOLS,
                 category_label="scanner",
                 require_confirmation=True,

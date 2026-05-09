@@ -9,7 +9,9 @@ from hacking_mcp.install import (
     InstallCommandParser,
     InstallStep,
 )
-from hacking_mcp.models import InstallRecord
+from hacking_mcp.models import HackingToolDef, InstallRecord, SafetyTier
+from hacking_mcp.environment import get_tools_dir
+from hacking_mcp.safety import SafetyPolicy
 
 
 @pytest.fixture
@@ -138,6 +140,34 @@ class TestInstallCommandParser:
         steps = InstallCommandParser.parse("cd mydir", "/tmp/tools")
         assert len(steps) == 0  # cd is just a context setter
 
+    def test_all_tool_install_commands_are_parseable(self, mock_registry):
+        """Every declared install command should produce executable install steps."""
+        failures = []
+        for tool in mock_registry.list_all_tools():
+            for cmd in tool.install_commands:
+                steps = InstallCommandParser.parse(cmd, str(get_tools_dir()))
+                if cmd.strip() and not steps:
+                    failures.append((tool.name, cmd))
+        assert failures == []
+
+    def test_active_tools_have_install_commands(self, mock_registry):
+        """Non-archived tools should have an automatic install path."""
+        missing = [
+            tool.name
+            for tool in mock_registry.list_all_tools()
+            if not tool.archived and not tool.install_commands
+        ]
+        assert missing == []
+
+    def test_active_tools_have_run_commands(self, mock_registry):
+        """Non-archived tools should expose a runnable command template."""
+        missing = [
+            tool.name
+            for tool in mock_registry.list_all_tools()
+            if not tool.archived and not tool.run_command
+        ]
+        assert missing == []
+
 
 class TestInstallManager:
     @pytest.mark.asyncio
@@ -148,8 +178,15 @@ class TestInstallManager:
 
     @pytest.mark.asyncio
     async def test_install_no_commands(self, install_mgr):
-        # Create a tool with no install_commands (like portscan, host2ip)
-        record = await install_mgr.install_tool("portscan")
+        install_mgr._registry._tools["no-install-test"] = HackingToolDef(
+            name="no-install-test",
+            title="No Install Test",
+            description="Test-only tool with no install commands.",
+            category="Information Gathering",
+            run_command="echo ok",
+            safety_tier=SafetyTier.SAFE,
+        )
+        record = await install_mgr.install_tool("no-install-test")
         assert record.installed is False
         assert "No install commands" in record.error
 
@@ -226,3 +263,15 @@ class TestInstallManager:
     async def test_uninstall_not_installed(self, install_mgr):
         success = await install_mgr.uninstall_tool("nonexistent")
         assert success is False
+
+    @pytest.mark.asyncio
+    async def test_install_blocked_by_safety_policy(self, mock_runner, mock_registry):
+        safety = SafetyPolicy(disabled_categories=["DDOS Attack"])
+        mgr = InstallManager(mock_runner, mock_registry, safety=safety)
+        mgr._state = {}
+
+        record = await mgr.install_tool("slowloris")
+
+        assert record.installed is False
+        assert "blocked by safety policy" in record.error
+        mock_runner.run_raw.assert_not_called()

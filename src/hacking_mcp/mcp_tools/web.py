@@ -26,6 +26,7 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
         tool_name: str,
         target: str,
         options: str = "",
+        confirm_authorized: bool = False,
         ctx: Context = None,
     ) -> str:
         """Run a web application testing tool against a target.
@@ -34,12 +35,14 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
             tool_name: Web tool to use (e.g., 'ffuf', 'dirsearch', 'gobuster', 'feroxbuster', 'katana', 'arjun', 'sublist3r')
             target: Target URL (e.g., https://example.com)
             options: Additional CLI options (e.g., '-w wordlist.txt' for ffuf)
+            confirm_authorized: Set true when the selected tool requires explicit authorization confirmation.
         """
         response = await orchestrator.execute(
             ToolRequest(
                 tool_name=tool_name,
                 target=target,
                 options=options,
+                confirm_authorized=confirm_authorized,
                 allowed_tools=WEB_TOOLS,
                 category_label="web audit",
             ),

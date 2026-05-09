@@ -25,6 +25,7 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
         tool_name: str,
         target: str,
         options: str = "",
+        confirm_authorized: bool = False,
         ctx: Context = None,
     ) -> str:
         """Run a forensics/analysis tool against a target.
@@ -33,12 +34,14 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
             tool_name: Forensics tool (e.g., 'binwalk', 'volatility3', 'pspy', 'trufflehog', 'gitleaks', 'haiti', 'steghide')
             target: Target file, directory, hash, or memory dump path
             options: Additional CLI options
+            confirm_authorized: Set true when the selected tool requires explicit authorization confirmation.
         """
         response = await orchestrator.execute(
             ToolRequest(
                 tool_name=tool_name,
                 target=target,
                 options=options,
+                confirm_authorized=confirm_authorized,
                 allowed_tools=FORENSICS_TOOLS_LIST,
                 category_label="forensics",
                 validate_scope=False,  # Targets are local file paths

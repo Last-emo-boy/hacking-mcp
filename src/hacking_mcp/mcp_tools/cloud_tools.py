@@ -20,6 +20,7 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
         tool_name: str,
         target: str = "",
         options: str = "",
+        confirm_authorized: bool = False,
         ctx: Context = None,
     ) -> str:
         """Run a cloud security tool.
@@ -28,12 +29,14 @@ def register(mcp: FastMCP, orchestrator: ToolOrchestrator):
             tool_name: Cloud tool (e.g., 'prowler', 'scoutsuite', 'trivy', 'pacu')
             target: Optional target (AWS account ID, container image, K8s cluster, etc.)
             options: Additional CLI options
+            confirm_authorized: Set true only when you have authorization for this cloud environment.
         """
         response = await orchestrator.execute(
             ToolRequest(
                 tool_name=tool_name,
                 target=target,
                 options=options,
+                confirm_authorized=confirm_authorized,
                 allowed_tools=CLOUD_TOOL_NAMES,
                 category_label="cloud security",
                 target_required=False,

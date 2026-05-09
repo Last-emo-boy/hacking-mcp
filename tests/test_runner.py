@@ -54,6 +54,12 @@ class TestToolRunner:
         assert result.was_blocked
 
     @pytest.mark.asyncio
+    async def test_run_caution_tool_requires_confirmation(self, runner):
+        result = await runner.run("sqlmap", ["http://127.0.0.1:8000"])
+        assert result.was_blocked
+        assert "requires explicit authorization confirmation" in result.stderr
+
+    @pytest.mark.asyncio
     async def test_run_tool_not_installed(self, runner):
         """Running a tool not on PATH should return an informative error."""
         result = await runner.run("rustscan", ["127.0.0.1"])

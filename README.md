@@ -2,16 +2,16 @@
 
 # 🛡 hacking-mcp
 
-**MCP Server — 182 Security Tools for AI-Assisted Pentesting**
+**MCP Server — 184 Security Tools for AI-Assisted Pentesting**
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-1.0-FF61DC?style=for-the-badge&logo=anthropic&logoColor=white)](https://modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/License-MIT-00FF88?style=for-the-badge)](LICENSE)
 
-[![Tools](https://img.shields.io/badge/Tools-182-00FF88?style=flat-square)](.)
+[![Tools](https://img.shields.io/badge/Tools-184-00FF88?style=flat-square)](.)
 [![Categories](https://img.shields.io/badge/Categories-20-7B61FF?style=flat-square)](.)
 [![MCP Endpoints](https://img.shields.io/badge/MCP_Endpoints-22-FF61DC?style=flat-square)](.)
-[![Tests](https://img.shields.io/badge/Tests-176_passing-00FF88?style=flat-square)](.)
+[![Tests](https://img.shields.io/badge/Tests-203_passing-00FF88?style=flat-square)](.)
 [![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-FFA116?style=flat-square)](.)
 
 [![Star](https://img.shields.io/github/stars/Last-emo-boy/hacking-mcp?style=social)](.)
@@ -31,7 +31,7 @@
 |  | Feature | Description |
 |:---:|---|---|
 | 🐍 | **Native MCP Server** | FastMCP-based, stdio transport, works with Claude Code, Claude Desktop, Codex CLI |
-| 🖥 | **182 Security Tools** | Ported from hackingtool across 20 categories — recon, web, forensics, cloud, AD, exploit, and more |
+| 🖥 | **184 Security Tools** | Ported from hackingtool across 20 categories — recon, web, forensics, cloud, AD, exploit, and more |
 | 🔍 | **Progressive Disclosure** | Browse by category → see compact tool list → drill into full detail. Never flood context |
 | 🏷 | **3-Tier Safety** | SAFE (read-only), CAUTION (confirmation required), DANGEROUS (permanently blocked) |
 | 💡 | **Scope Enforcement** | CIDR and domain whitelisting — targets outside scope are auto-rejected |
@@ -121,16 +121,16 @@
 
 | # | Category | | # | Category | |
 |:---:|---|:---:|:---:|---|:---:|
-| 1 | 🟢 **Information Gathering** | 29 | 11 | 🟢 **Wordlist Generator** | 9 |
-| 2 | 🟢 **Web Attack** | 23 | 12 | 🟢 **Steganography** | 5 |
-| 3 | 🟢 **Forensics** | 13 | 13 | 🟡 **Mobile Security** | 7 |
-| 4 | 🟡 **Cloud Security** | 7 | 14 | 🟢 **Reverse Engineering** | 7 |
-| 5 | 🟡 **Active Directory** | 9 | 15 | 🚫 **DDOS Attack** | 8 |
-| 6 | 🟡 **SQL Injection** | 6 | 16 | 🚫 **Phishing Attack** | 17 |
-| 7 | 🟡 **XSS Attack** | 6 | 17 | 🚫 **Payload Creation** | 9 |
-| 8 | 🟡 **Exploit Framework** | 10 | 18 | 🚫 **Wireless Attack** | 6 |
-| 9 | 🟡 **Post Exploitation** | 12 | 19 | 🚫 **Anonymously Hiding** | 5 |
-| 10 | 🟡 **Other Tools** | 5 | 20 | 🚫 **Remote Administration (RAT)** | 4 |
+| 1 | 🟢 **Information Gathering** | 27 | 11 | 🟢 **Wordlist Generator** | 7 |
+| 2 | 🟢 **Web Attack** | 20 | 12 | 🟢 **Steganography** | 4 |
+| 3 | 🟢 **Forensics** | 8 | 13 | 🟡 **Mobile Security** | 3 |
+| 4 | 🟡 **Cloud Security** | 4 | 14 | 🟢 **Reverse Engineering** | 5 |
+| 5 | 🟡 **Active Directory** | 6 | 15 | 🚫 **DDOS Attack** | 6 |
+| 6 | 🟡 **SQL Injection** | 7 | 16 | 🚫 **Phishing Attack** | 17 |
+| 7 | 🟡 **XSS Attack** | 9 | 17 | 🚫 **Payload Creation** | 8 |
+| 8 | 🟡 **Exploit Framework** | 3 | 18 | 🚫 **Wireless Attack** | 13 |
+| 9 | 🟡 **Post Exploitation** | 10 | 19 | 🚫 **Anonymously Hiding** | 2 |
+| 10 | 🟡 **Other Tools** | 24 | 20 | 🚫 **Remote Administration (RAT)** | 1 |
 
 > 🟢 = SAFE (always available) · 🟡 = CAUTION (requires confirmation) · 🚫 = DANGEROUS (disabled by default)
 

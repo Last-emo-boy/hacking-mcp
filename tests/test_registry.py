@@ -2,6 +2,7 @@
 
 import pytest
 from hacking_mcp.registry import ToolRegistry
+from hacking_mcp.environment import Environment, ExecBackend
 
 
 @pytest.fixture
@@ -87,10 +88,10 @@ class TestToolRegistry:
         cmds = registry.get_install_commands("nmap")
         assert len(cmds) > 0
 
-    def test_install_commands_none(self, registry):
-        """Tools without install commands should return empty list."""
+    def test_install_commands_for_runtime_dependency_tool(self, registry):
+        """Built-in helpers should still declare their runtime dependency install path."""
         cmds = registry.get_install_commands("host2ip")
-        assert cmds == []
+        assert cmds == ["sudo apt-get install -y python3"]
 
     def test_list_categories_structure(self, registry):
         """Each category info should have required fields."""
@@ -105,3 +106,178 @@ class TestToolRegistry:
     def test_refresh_does_not_crash(self, registry):
         """refresh() should not raise."""
         registry.refresh()
+
+    def test_windows_wsl_checks_tools_that_also_support_windows(self, monkeypatch):
+        """WSL2 availability should cover Linux tools even if they also support Windows."""
+        import hacking_mcp.registry as registry_mod
+
+        registry_mod._wsl_commands_cache = ({"python3"}, {"python3": "wsl:/usr/bin/python3"})
+        monkeypatch.setattr(registry_mod.platform, "system", lambda: "Windows")
+        monkeypatch.setattr(
+            registry_mod,
+            "detect_environment",
+            lambda: Environment(
+                system="windows",
+                backend=ExecBackend.WSL2,
+                wsl_available=True,
+                wsl_distro="Ubuntu",
+            ),
+        )
+        monkeypatch.setattr(registry_mod.shutil, "which", lambda exe: None)
+
+        reg = ToolRegistry()
+        avail = reg.get_availability("host2ip")
+
+        assert avail.available is True
+        assert avail.path == "wsl:/usr/bin/python3"
+
+    def test_windows_wsl_requires_tool_directory_for_chdir_commands(self, monkeypatch):
+        """Interpreter-backed repo tools require the cloned directory too."""
+        import hacking_mcp.registry as registry_mod
+
+        registry_mod._wsl_commands_cache = ({"python3"}, {"python3": "wsl:/usr/bin/python3"})
+        monkeypatch.setattr(registry_mod.platform, "system", lambda: "Windows")
+        monkeypatch.setattr(
+            registry_mod,
+            "detect_environment",
+            lambda: Environment(
+                system="windows",
+                backend=ExecBackend.WSL2,
+                wsl_available=True,
+                wsl_distro="Ubuntu",
+            ),
+        )
+        monkeypatch.setattr(registry_mod.shutil, "which", lambda exe: None)
+
+        reg = ToolRegistry()
+        avail = reg.get_availability("checkurl")
+
+        assert avail.available is False
+
+    def test_windows_wsl_chdir_tool_available_when_directory_exists(self, monkeypatch):
+        """Repository-backed tools become available when interpreter and repo dir exist."""
+        import hacking_mcp.registry as registry_mod
+
+        monkeypatch.setattr(registry_mod.platform, "system", lambda: "Windows")
+        monkeypatch.setattr(
+            registry_mod,
+            "detect_environment",
+            lambda: Environment(
+                system="windows",
+                backend=ExecBackend.WSL2,
+                wsl_available=True,
+                wsl_distro="Ubuntu",
+            ),
+        )
+        monkeypatch.setattr(registry_mod.shutil, "which", lambda exe: None)
+        monkeypatch.setattr(
+            registry_mod,
+            "get_tools_dir",
+            lambda: registry_mod.Path("C:/Users/test/.hacking-mcp/tools"),
+        )
+        registry_mod._wsl_commands_cache = (
+            {"python3", "dir=/mnt/c/Users/test/.hacking-mcp/tools/checkURL"},
+            {
+                "python3": "wsl:/usr/bin/python3",
+                "dir=/mnt/c/Users/test/.hacking-mcp/tools/checkURL": (
+                    "wsl:/mnt/c/Users/test/.hacking-mcp/tools/checkURL"
+                ),
+            },
+        )
+
+        reg = ToolRegistry()
+        avail = reg.get_availability("checkurl")
+
+        assert avail.available is True
+        assert avail.path == "wsl:/mnt/c/Users/test/.hacking-mcp/tools/checkURL"
+
+    def test_windows_wsl_requires_python_module_for_module_commands(self, monkeypatch):
+        """python -m tools require the Python module to be importable."""
+        import hacking_mcp.registry as registry_mod
+
+        registry_mod._wsl_commands_cache = ({"python3"}, {"python3": "wsl:/usr/bin/python3"})
+        monkeypatch.setattr(registry_mod.platform, "system", lambda: "Windows")
+        monkeypatch.setattr(
+            registry_mod,
+            "detect_environment",
+            lambda: Environment(
+                system="windows",
+                backend=ExecBackend.WSL2,
+                wsl_available=True,
+                wsl_distro="Ubuntu",
+            ),
+        )
+        monkeypatch.setattr(registry_mod.shutil, "which", lambda exe: None)
+
+        reg = ToolRegistry()
+        avail = reg.get_availability("nosqlmap")
+
+        assert avail.available is False
+
+    def test_windows_wsl_module_tool_available_when_module_exists(self, monkeypatch):
+        """python -m tools become available when the module is importable."""
+        import hacking_mcp.registry as registry_mod
+
+        registry_mod._wsl_commands_cache = (
+            {"python3", "py=python3:nosqlmap"},
+            {
+                "python3": "wsl:/usr/bin/python3",
+                "py=python3:nosqlmap": "wsl:nosqlmap",
+            },
+        )
+        monkeypatch.setattr(registry_mod.platform, "system", lambda: "Windows")
+        monkeypatch.setattr(
+            registry_mod,
+            "detect_environment",
+            lambda: Environment(
+                system="windows",
+                backend=ExecBackend.WSL2,
+                wsl_available=True,
+                wsl_distro="Ubuntu",
+            ),
+        )
+        monkeypatch.setattr(registry_mod.shutil, "which", lambda exe: None)
+
+        reg = ToolRegistry()
+        avail = reg.get_availability("nosqlmap")
+
+        assert avail.available is True
+
+    def test_wsl_batch_scan_uses_stdout_even_with_nonzero_exit(self, monkeypatch):
+        """Batch WSL scanning should not drop valid stdout because one command is missing."""
+        import subprocess
+        import hacking_mcp.registry as registry_mod
+
+        registry_mod._wsl_commands_cache = None
+        monkeypatch.setattr(registry_mod.platform, "system", lambda: "Windows")
+        monkeypatch.setattr(
+            registry_mod,
+            "detect_environment",
+            lambda: Environment(
+                system="windows",
+                backend=ExecBackend.WSL2,
+                wsl_available=True,
+                wsl_distro="Ubuntu",
+            ),
+        )
+        monkeypatch.setattr(registry_mod.shutil, "which", lambda exe: None)
+
+        def fake_run(*args, **kwargs):
+            return subprocess.CompletedProcess(
+                args=args[0],
+                returncode=1,
+                stdout=(
+                    b"python3:/usr/bin/python3\n"
+                    b"dir=/mnt/c/Users/test/.hacking-mcp/tools/checkURL:"
+                    b"/mnt/c/Users/test/.hacking-mcp/tools/checkURL\n"
+                ),
+                stderr=b"",
+            )
+
+        monkeypatch.setattr(registry_mod.subprocess, "run", fake_run)
+
+        reg = ToolRegistry()
+        avail = reg.get_availability("host2ip")
+
+        assert avail.available is True
+        assert avail.path == "wsl:/usr/bin/python3"

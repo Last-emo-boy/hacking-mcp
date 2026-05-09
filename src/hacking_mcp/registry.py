@@ -7,10 +7,19 @@ import shutil
 import platform
 import subprocess
 import logging
+import shlex
+from pathlib import Path
 from typing import Optional
 
 from hacking_mcp.models import HackingToolDef, ToolAvailability
-from hacking_mcp.environment import detect_environment, ExecBackend, _decode_wsl_output
+from hacking_mcp.command import parse_command
+from hacking_mcp.environment import (
+    detect_environment,
+    ExecBackend,
+    _decode_wsl_output,
+    get_tools_dir,
+    to_wsl_path,
+)
 from hacking_mcp.providers import ToolProvider
 
 logger = logging.getLogger("hacking-mcp.registry")
@@ -150,12 +159,20 @@ class ToolRegistry:
 
             exe = tool.executable
 
+            if not tool.run_command:
+                self._availability[name] = ToolAvailability(
+                    tool_name=name,
+                    available=False,
+                    platform_supported=True,
+                )
+                continue
+
             # Only check native PATH if the tool actually supports this OS.
             # Otherwise generic names (python3, bash, java) on Windows host
             # cause false positives for Linux-only security tools.
-            if native_supported:
+            if native_supported and not wsl_supported:
                 path = shutil.which(exe)
-                if path:
+                if path and self._tool_chdir_exists_native(tool):
                     self._availability[name] = ToolAvailability(
                         tool_name=name,
                         available=True,
@@ -164,17 +181,19 @@ class ToolRegistry:
                     )
                     continue
 
-            # WSL-only tools: check during init only if cache exists;
-            # otherwise defer to first query (lazy batch scan)
-            if wsl_supported and not native_supported:
+            # WSL-capable tools: check during init only if cache exists;
+            # otherwise defer to first query (lazy batch scan). This includes
+            # tools that also support Windows because the runner uses the WSL2
+            # backend whenever it is available.
+            if wsl_supported:
                 # Check module-level cache first (from previous batch scan)
                 if _wsl_commands_cache is not None:
                     wsl_cmds, wsl_paths = _wsl_commands_cache
-                    if exe in wsl_cmds:
+                    if self._tool_available_in_wsl(tool, wsl_cmds, wsl_paths):
                         self._availability[name] = ToolAvailability(
                             tool_name=name,
                             available=True,
-                            path=wsl_paths.get(exe, f"wsl:{exe}"),
+                            path=self._wsl_availability_path(tool, wsl_paths),
                             platform_supported=True,
                         )
                         continue
@@ -217,18 +236,16 @@ class ToolRegistry:
         for name, tool in self._tools.items():
             if "linux" not in tool.supported_os:
                 continue
-            if self._system in tool.supported_os:
-                continue  # Already handled by native scan
             avail = self._availability.get(name)
             if avail and avail.available:
                 continue  # Already found natively
 
             exe = tool.executable
-            if exe in wsl_cmds:
+            if self._tool_available_in_wsl(tool, wsl_cmds, wsl_paths):
                 self._availability[name] = ToolAvailability(
                     tool_name=name,
                     available=True,
-                    path=wsl_paths.get(exe, f"wsl:{exe}"),
+                    path=self._wsl_availability_path(tool, wsl_paths),
                     platform_supported=True,
                 )
 
@@ -244,31 +261,72 @@ class ToolRegistry:
         if _wsl_commands_cache is not None:
             return _wsl_commands_cache
 
-        # Collect all unique executables to check
+        # Collect all unique executables and repository directories to check.
         executables = set()
+        dirs = set()
+        python_modules: set[tuple[str, str]] = set()
         for tool in self._tools.values():
-            if "linux" in tool.supported_os and self._system not in tool.supported_os:
+            if "linux" in tool.supported_os and tool.run_command:
+                parsed = parse_command(tool.run_command)
                 executables.add(tool.executable)
+                if parsed.chdir:
+                    dirs.add(self._resolve_tool_chdir_wsl(parsed.chdir))
+                module_name = self._python_module_name(parsed)
+                if module_name:
+                    python_modules.add((parsed.executable or tool.executable, module_name))
 
-        if not executables:
+        if not executables and not dirs:
             _wsl_commands_cache = (set(), {})
             return _wsl_commands_cache
 
         # Build a shell command that checks all executables at once
         # Output format: "cmd:/path/to/cmd" for found tools
         checks = "; ".join(
-            f'p=$(command -v {exe} 2>/dev/null) && echo "{exe}:$p"'
+            "if command -v {exe} >/dev/null 2>&1; "
+            'then printf "%s:" {label}; command -v {exe}; fi'.format(
+                exe=shlex.quote(exe),
+                label=shlex.quote(exe),
+            )
             for exe in sorted(executables)
         )
+        dir_checks = "; ".join(
+            'if [ -d {path} ]; then printf "%s:%s\\n" {label} {path}; fi'.format(
+                path=shlex.quote(path),
+                label=shlex.quote(f"dir={path}"),
+            )
+            for path in sorted(dirs)
+        )
+        module_checks = "; ".join(
+            (
+                "if {python} -c {code} >/dev/null 2>&1; "
+                'then printf "%s:%s\\n" {label} {module}; fi'
+            ).format(
+                python=shlex.quote(python),
+                code=shlex.quote(
+                    f"import importlib.util, sys; sys.exit(0 if importlib.util.find_spec({module!r}) else 1)"
+                ),
+                label=shlex.quote(f"py={python}:{module}"),
+                module=shlex.quote(module),
+            )
+            for python, module in sorted(python_modules)
+        )
+        if checks and dir_checks:
+            checks = f"{checks}; {dir_checks}"
+        elif dir_checks:
+            checks = dir_checks
+        if checks and module_checks:
+            checks = f"{checks}; {module_checks}"
+        elif module_checks:
+            checks = module_checks
         try:
             result = subprocess.run(
                 ["wsl", "bash", "-c", checks],
                 capture_output=True,
-                timeout=15,
+                timeout=60,
             )
             commands: set[str] = set()
             paths: dict[str, str] = {}
-            if result.returncode == 0 and result.stdout:
+            if result.stdout:
                 text = _decode_wsl_output(result.stdout)
                 for line in text.strip().split("\n"):
                     line = line.strip()
@@ -279,9 +337,80 @@ class ToolRegistry:
                             paths[cmd] = f"wsl:{path}"
             _wsl_commands_cache = (commands, paths)
             return _wsl_commands_cache
-        except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+        except subprocess.TimeoutExpired:
+            # WSL cold starts can be slow; do not permanently cache a transient timeout.
+            return set(), {}
+        except (OSError, FileNotFoundError):
             _wsl_commands_cache = (set(), {})
             return _wsl_commands_cache
+
+    def _tool_available_in_wsl(
+        self,
+        tool: HackingToolDef,
+        wsl_cmds: set[str],
+        wsl_paths: dict[str, str],
+    ) -> bool:
+        """Return whether a tool can actually start in WSL.
+
+        For repository-backed tools, a generic interpreter such as python3 or
+        bash is not enough. The cloned tool directory must also exist.
+        """
+        parsed = parse_command(tool.run_command)
+        exe = parsed.executable or tool.executable
+        if exe not in wsl_cmds:
+            return False
+        if parsed.chdir:
+            key = self._wsl_chdir_key(parsed.chdir)
+            if key not in wsl_cmds:
+                return False
+        module_name = self._python_module_name(parsed)
+        if module_name and self._wsl_python_module_key(exe, module_name) not in wsl_cmds:
+            return False
+        return True
+
+    def _wsl_availability_path(self, tool: HackingToolDef, wsl_paths: dict[str, str]) -> str:
+        """Build a human-readable WSL availability path for a tool."""
+        parsed = parse_command(tool.run_command)
+        exe = parsed.executable or tool.executable
+        if parsed.chdir:
+            key = self._wsl_chdir_key(parsed.chdir)
+            return wsl_paths.get(key, f"wsl:{parsed.chdir}")
+        return wsl_paths.get(exe, f"wsl:{exe}")
+
+    def _wsl_chdir_key(self, chdir: str) -> str:
+        return f"dir={self._resolve_tool_chdir_wsl(chdir)}"
+
+    def _wsl_python_module_key(self, python_executable: str, module_name: str) -> str:
+        return f"py={python_executable}:{module_name}"
+
+    @staticmethod
+    def _python_module_name(parsed) -> str:
+        if parsed.executable not in ("python", "python3") or len(parsed.args) < 2:
+            return ""
+        if parsed.args[0] != "-m":
+            return ""
+        module_name = parsed.args[1]
+        if module_name == "pip":
+            return ""
+        return module_name
+
+    def _resolve_tool_chdir_wsl(self, chdir: str) -> str:
+        """Resolve a run_command cd target to a WSL-visible path."""
+        if chdir.startswith("/") or chdir.startswith("~"):
+            return chdir
+        native_path = str(get_tools_dir() / chdir)
+        return to_wsl_path(native_path)
+
+    def _tool_chdir_exists_native(self, tool: HackingToolDef) -> bool:
+        parsed = parse_command(tool.run_command)
+        if not parsed.chdir:
+            return True
+        chdir = parsed.chdir
+        if chdir.startswith("~"):
+            return bool(Path(chdir).expanduser().is_dir())
+        if chdir.startswith("/"):
+            return bool(Path(chdir).is_dir())
+        return bool((get_tools_dir() / chdir).is_dir())
 
     def get_tool(self, name: str) -> Optional[HackingToolDef]:
         """Get a tool definition by name."""

@@ -133,6 +133,7 @@ class TaskRecord:
     created_at: str = ""  # ISO 8601 UTC
     options: str = ""
     category: str = ""
+    confirm_authorized: bool = False
     started_at: str = ""
     completed_at: str = ""
     duration_ms: int = 0
