@@ -820,6 +820,30 @@ def _adapter_parameters(
             AdapterParameterSpec("report_format", str, "", "Report format."),
             AdapterParameterSpec("silence", bool, False, "Enable silent output."),
         ])
+    elif tool.name == "xsstrike":
+        params.extend([
+            AdapterParameterSpec("data", str, "", "POST data to test."),
+            AdapterParameterSpec("encode", str, "", "Payload encoding mode."),
+            AdapterParameterSpec("fuzzer", bool, False, "Run the fuzzer."),
+            AdapterParameterSpec("update", bool, False, "Update XSStrike."),
+            AdapterParameterSpec("timeout", int, 0, "Request timeout; 0 leaves default."),
+            AdapterParameterSpec("use_proxy", bool, False, "Use configured proxy/proxies."),
+            AdapterParameterSpec("crawl", bool, False, "Enable crawling."),
+            AdapterParameterSpec("json_data", bool, False, "Treat POST data as JSON."),
+            AdapterParameterSpec("path_injection", bool, False, "Inject payloads into the URL path."),
+            AdapterParameterSpec("seeds_file", str, "", "File containing crawling seeds."),
+            AdapterParameterSpec("payload_file", str, "", "File containing payloads."),
+            AdapterParameterSpec("level", int, 0, "Crawling level; 0 leaves default."),
+            AdapterParameterSpec("headers", str, "", "Additional headers."),
+            AdapterParameterSpec("threads", int, 0, "Number of threads; 0 leaves default."),
+            AdapterParameterSpec("delay", int, 0, "Delay between requests; 0 leaves default."),
+            AdapterParameterSpec("skip", bool, False, "Do not prompt before continuing."),
+            AdapterParameterSpec("skip_dom", bool, False, "Skip DOM checks."),
+            AdapterParameterSpec("blind", bool, False, "Inject blind XSS payload while crawling."),
+            AdapterParameterSpec("console_log_level", str, "", "Console logging level."),
+            AdapterParameterSpec("file_log_level", str, "", "File logging level."),
+            AdapterParameterSpec("log_file", str, "", "Log file name."),
+        ])
     elif tool.name == "testssl":
         params.extend([
             AdapterParameterSpec("input_file", str, "", "Mass testing input file."),
@@ -919,7 +943,7 @@ def _adapter_parameters(
             AdapterParameterSpec("enumerate_databases", bool, False, "Request database enumeration when supported."),
         ])
 
-    if "xss" in tags and tool.name not in {"dalfox"}:
+    if "xss" in tags and tool.name not in {"dalfox", "xsstrike"}:
         params.extend([
             AdapterParameterSpec("parameter", str, "", "Parameter name to test when supported."),
             AdapterParameterSpec("cookies", str, "", "Cookie header value when supported."),
@@ -1065,7 +1089,7 @@ def _adapter_parameters(
             AdapterParameterSpec("output_dir", str, "", "Output directory when supported."),
         ])
 
-    if "payload" in tags or tool.category == "Payload Creation":
+    if ("payload" in tags or tool.category == "Payload Creation") and tool.name not in {"xsstrike"}:
         params.extend([
             AdapterParameterSpec("payload_type", str, "", "Payload identifier when supported."),
             AdapterParameterSpec("platform", str, "", "Target platform when supported."),
@@ -1230,7 +1254,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "xsstrike", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -1270,15 +1294,6 @@ def _adapter_parameters(
             AdapterParameterSpec("exclude_templates", str, "", "Comma-separated templates to exclude."),
             AdapterParameterSpec("headless", bool, False, "Enable headless browser templates."),
             AdapterParameterSpec("interactsh", bool, False, "Enable interactsh/OAST interaction support."),
-        ])
-
-    if tool.name == "xsstrike":
-        params.extend([
-            AdapterParameterSpec("method", str, "", "HTTP method when supported."),
-            AdapterParameterSpec("data", str, "", "POST body/data when supported."),
-            AdapterParameterSpec("headers", str, "", "Additional HTTP headers."),
-            AdapterParameterSpec("payload", str, "", "Payload or payload file when supported."),
-            AdapterParameterSpec("skip_bav", bool, False, "Skip basic another verification when supported."),
         ])
 
     if tool.name == "theHarvester":
@@ -1854,6 +1869,28 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "report", "--report")
         _add_value(tokens, kwargs, "report_format", "--report-format")
         _add_bool(tokens, kwargs, "silence", "--silence")
+    elif tool.name == "xsstrike":
+        _add_value(tokens, kwargs, "data", "--data")
+        _add_value(tokens, kwargs, "encode", "-e")
+        _add_bool(tokens, kwargs, "fuzzer", "--fuzzer")
+        _add_bool(tokens, kwargs, "update", "--update")
+        _add_value(tokens, kwargs, "timeout", "--timeout")
+        _add_bool(tokens, kwargs, "use_proxy", "--proxy")
+        _add_bool(tokens, kwargs, "crawl", "--crawl")
+        _add_bool(tokens, kwargs, "json_data", "--json")
+        _add_bool(tokens, kwargs, "path_injection", "--path")
+        _add_value(tokens, kwargs, "seeds_file", "--seeds")
+        _add_value(tokens, kwargs, "payload_file", "-f")
+        _add_value(tokens, kwargs, "level", "-l")
+        _add_value(tokens, kwargs, "headers", "--headers")
+        _add_value(tokens, kwargs, "threads", "-t")
+        _add_value(tokens, kwargs, "delay", "-d")
+        _add_bool(tokens, kwargs, "skip", "--skip")
+        _add_bool(tokens, kwargs, "skip_dom", "--skip-dom")
+        _add_bool(tokens, kwargs, "blind", "--blind")
+        _add_value(tokens, kwargs, "console_log_level", "--console-log-level")
+        _add_value(tokens, kwargs, "file_log_level", "--file-log-level")
+        _add_value(tokens, kwargs, "log_file", "--log-file")
     elif tool.name == "testssl":
         _add_value(tokens, kwargs, "input_file", "--file")
         _add_value(tokens, kwargs, "mode", "--mode")
@@ -1947,7 +1984,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "level", "--level")
         _add_bool(tokens, kwargs, "enumerate_databases", "--dbs")
 
-    if "xss" in tags and tool.name not in {"dalfox"}:
+    if "xss" in tags and tool.name not in {"dalfox", "xsstrike"}:
         _add_value(tokens, kwargs, "parameter", "-p")
         _add_value(tokens, kwargs, "cookies", "--cookie")
         _add_value(tokens, kwargs, "blind_callback", "-b")
@@ -2064,7 +2101,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "domain", "--domain")
         _add_value(tokens, kwargs, "output_dir", "-o")
 
-    if "payload" in tags or tool.category == "Payload Creation":
+    if ("payload" in tags or tool.category == "Payload Creation") and tool.name not in {"xsstrike"}:
         _add_value(tokens, kwargs, "payload_type", "-p")
         _add_value(tokens, kwargs, "platform", "--platform")
         _add_value(tokens, kwargs, "architecture", "-a")
@@ -2205,7 +2242,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "xsstrike", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
@@ -2235,13 +2272,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "exclude_templates", "-exclude-templates")
         _add_bool(tokens, kwargs, "headless", "-headless")
         _add_bool(tokens, kwargs, "interactsh", "-interactsh-server")
-
-    if tool.name == "xsstrike":
-        _add_value(tokens, kwargs, "method", "--method")
-        _add_value(tokens, kwargs, "data", "--data")
-        _add_value(tokens, kwargs, "headers", "--headers")
-        _add_value(tokens, kwargs, "payload", "--payload")
-        _add_bool(tokens, kwargs, "skip_bav", "--skip-bav")
 
     if tool.name == "theHarvester":
         _add_value(tokens, kwargs, "limit", "-l")

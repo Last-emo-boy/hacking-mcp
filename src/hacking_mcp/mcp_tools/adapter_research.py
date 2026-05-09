@@ -749,6 +749,41 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "silence",
         ),
     ),
+    "xsstrike": SourceReview(
+        note=(
+            "Reviewed against upstream XSStrike argparse definitions for POST "
+            "data, encoding, fuzzer/update modes, timeout/proxy/crawl/JSON/path "
+            "controls, seed and payload files, crawl level, headers, threads, "
+            "delay, skip/DOM/blind toggles, and logging controls."
+        ),
+        references=(
+            "https://github.com/UltimateHackers/XSStrike",
+            "https://raw.githubusercontent.com/UltimateHackers/XSStrike/master/xsstrike.py",
+        ),
+        verified_parameters=(
+            "data",
+            "encode",
+            "fuzzer",
+            "update",
+            "timeout",
+            "use_proxy",
+            "crawl",
+            "json_data",
+            "path_injection",
+            "seeds_file",
+            "payload_file",
+            "level",
+            "headers",
+            "threads",
+            "delay",
+            "skip",
+            "skip_dom",
+            "blind",
+            "console_log_level",
+            "file_log_level",
+            "log_file",
+        ),
+    ),
     "wafw00f": SourceReview(
         note=(
             "Reviewed against upstream wafw00f OptionParser definitions for "

@@ -188,6 +188,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["dalfox"].unverified_parameters == ()
     assert any("dalfox.hahwul.com" in item for item in records["dalfox"].evidence)
 
+    assert records["xsstrike"].source_status == "source-reviewed"
+    assert records["xsstrike"].unverified_parameters == ()
+    assert any("UltimateHackers/XSStrike" in item for item in records["xsstrike"].evidence)
+
     assert records["wafw00f"].source_status == "source-reviewed"
     assert records["wafw00f"].unverified_parameters == ()
     assert any("EnableSecurity/wafw00f" in item for item in records["wafw00f"].evidence)
@@ -387,6 +391,14 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "output_request", "output_response", "poc_type", "report",
         "report_format", "silence",
     }.issubset(dalfox_schema)
+
+    xsstrike_schema = tools["security_tool_xsstrike"].inputSchema["properties"]
+    assert {
+        "data", "encode", "fuzzer", "update", "timeout", "use_proxy", "crawl",
+        "json_data", "path_injection", "seeds_file", "payload_file", "level",
+        "headers", "threads", "delay", "skip", "skip_dom", "blind",
+        "console_log_level", "file_log_level", "log_file",
+    }.issubset(xsstrike_schema)
 
     wafw00f_schema = tools["security_tool_wafw00f"].inputSchema["properties"]
     assert {
@@ -1118,6 +1130,59 @@ async def test_nikto_source_reviewed_parameters_build_cli_options(registry, safe
         "-Pause 1 -Plugins tests -port 443 -root /app -ssl -Tuning x "
         "-timeout 10 -useragent hacking-mcp -useproxy -vhost example.test "
         "-404code 404 -404string 'not found'"
+    )
+
+
+@pytest.mark.asyncio
+async def test_xsstrike_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_xsstrike",
+        {
+            "target": "https://example.test/?q=1",
+            "confirm_authorized": True,
+            "data": "q=1",
+            "encode": "base64",
+            "fuzzer": True,
+            "update": True,
+            "timeout": 10,
+            "use_proxy": True,
+            "crawl": True,
+            "json_data": True,
+            "path_injection": True,
+            "seeds_file": "seeds.txt",
+            "payload_file": "payloads.txt",
+            "level": 3,
+            "headers": "X-Test: 1",
+            "threads": 8,
+            "delay": 2,
+            "skip": True,
+            "skip_dom": True,
+            "blind": True,
+            "console_log_level": "DEBUG",
+            "file_log_level": "INFO",
+            "log_file": "xsstrike.log",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "xsstrike"
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+    assert request.options == (
+        "--data q=1 -e base64 --fuzzer --update --timeout 10 --proxy "
+        "--crawl --json --path --seeds seeds.txt -f payloads.txt -l 3 "
+        "--headers 'X-Test: 1' -t 8 -d 2 --skip --skip-dom --blind "
+        "--console-log-level DEBUG --file-log-level INFO --log-file xsstrike.log"
     )
 
 
