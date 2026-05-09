@@ -10,8 +10,8 @@
 
 [![Tools](https://img.shields.io/badge/Tools-184-00FF88?style=flat-square)](.)
 [![Categories](https://img.shields.io/badge/Categories-20-7B61FF?style=flat-square)](.)
-[![MCP Endpoints](https://img.shields.io/badge/MCP_Endpoints-212-FF61DC?style=flat-square)](.)
-[![Tests](https://img.shields.io/badge/Tests-229_passing-00FF88?style=flat-square)](.)
+[![MCP Endpoints](https://img.shields.io/badge/MCP_Endpoints-213-FF61DC?style=flat-square)](.)
+[![Tests](https://img.shields.io/badge/Tests-232_passing-00FF88?style=flat-square)](.)
 [![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-FFA116?style=flat-square)](.)
 
 [![Star](https://img.shields.io/github/stars/Last-emo-boy/hacking-mcp?style=social)](.)
@@ -140,15 +140,16 @@
 
 ---
 
-## 📡 MCP Tool Reference (212 endpoints)
+## 📡 MCP Tool Reference (213 endpoints)
 
-The server exposes 28 base workflow endpoints plus 184 generated per-tool adapters under
+The server exposes 29 base workflow endpoints plus 184 generated per-tool adapters under
 `security_tool_<tool_name>`. Safety-eligible adapters execute through the normal
 orchestrator gates; dangerous, archived, no-command, or policy-disabled adapters return
 policy information only and never execute the underlying tool.
 Adapters expose generated tool-specific parameters such as `ports`, `wordlist`,
 `severity`, `risk`, and `profile` where applicable, while keeping `options` for raw
-CLI flags.
+CLI flags. Adapter research status is also tracked so registry-derived, named-override,
+and source-reviewed coverage can be audited separately.
 
 ### Discovery
 
@@ -159,6 +160,7 @@ CLI flags.
 | `security_get_tool_adapter_info` | Detail one generated adapter: endpoint, execution state, parameters, policy |
 | `security_preview_tool_adapter` | Preview generated target/options from adapter parameters without executing |
 | `security_audit_tool_adapters` | Audit all generated adapters for coverage, parameters, and previewability |
+| `security_get_adapter_research_status` | Audit adapter evidence: registry-derived, named override, or source-reviewed |
 | `security_get_tool_info` | Full detail (L3): description, install commands, safety tier, project URL |
 | `security_get_environment` | OS, execution backend (native/WSL2), WSL distro, tools directory |
 | `security_get_policy` | Disabled categories, confirmation categories, scope, execution limits |

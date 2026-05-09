@@ -52,6 +52,7 @@ class TestServerCreation:
         assert "security_get_tool_adapter_info" in names
         assert "security_preview_tool_adapter" in names
         assert "security_audit_tool_adapters" in names
+        assert "security_get_adapter_research_status" in names
         assert len(adapter_names) == len(registry.get_tool_names())
 
     @pytest.mark.asyncio
@@ -97,6 +98,8 @@ class TestServerCreation:
         assert "**Endpoint:** `security_tool_vegil`" in vegil_metadata["result"]
         assert "`lhost`" in vegil_metadata["result"]
         assert "**Execution:** policy/info-only" in vegil_metadata["result"]
+        assert "## Research Status" in vegil_metadata["result"]
+        assert "Source reviewed: False" in vegil_metadata["result"]
         assert '"lhost": "127.0.0.1"' in vegil_metadata["result"]
         assert "does not execute" in vegil_metadata["result"]
 
@@ -153,6 +156,33 @@ class TestServerCreation:
         assert "Missing adapter specs: 0" in result
         assert "Missing tool-specific parameters: 0" in result
         assert "Preview generation errors: 0" in result
+
+    @pytest.mark.asyncio
+    async def test_adapter_research_status_reports_source_review_gaps(self):
+        """Research status should expose current evidence and source-review gaps."""
+        from hacking_mcp.server import create_server
+
+        server = create_server()
+        _, summary_metadata = await server.call_tool(
+            "security_get_adapter_research_status",
+            {"status": "source-review-gap", "limit": 3},
+        )
+        _, nmap_metadata = await server.call_tool(
+            "security_get_adapter_research_status",
+            {"tool_name": "nmap"},
+        )
+
+        result = summary_metadata["result"]
+        assert "Total adapters: 184" in result
+        assert "Source-reviewed: 0" in result
+        assert "Open source-review gaps: 184" in result
+        assert "Showing: 3/184" in result
+
+        nmap = nmap_metadata["result"]
+        assert "**Tool:** `nmap`" in nmap
+        assert "**Source status:** `named-override`" in nmap
+        assert "tool-specific named override exists" in nmap
+        assert "upstream source/docs have not been manually reviewed" in nmap
 
 
 class TestToolCoherence:

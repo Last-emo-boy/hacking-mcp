@@ -7,6 +7,10 @@ from hacking_mcp.mcp_tools.tool_adapters import (
     build_adapter_specs,
     register,
 )
+from hacking_mcp.mcp_tools.adapter_research import (
+    build_adapter_research_records,
+    summarize_adapter_research,
+)
 from hacking_mcp.registry import ToolRegistry
 from hacking_mcp.safety import SafetyPolicy
 from hacking_mcp.models import SafetyTier
@@ -94,6 +98,37 @@ def test_every_adapter_has_tool_specific_parameters(registry, safety):
             missing.append(tool.name)
 
     assert missing == []
+
+
+def test_adapter_research_records_cover_every_registry_tool(registry, safety):
+    records = build_adapter_research_records(registry, safety)
+    summary = summarize_adapter_research(records)
+
+    assert len(records) == len(registry.get_tool_names())
+    assert {record.tool_name for record in records} == set(registry.get_tool_names())
+    assert summary["total"] == len(registry.get_tool_names())
+    assert (
+        summary["registry_derived"]
+        + summary["named_override"]
+        + summary["source_reviewed"]
+        == summary["total"]
+    )
+    assert summary["source_review_gaps"] == summary["total"]
+
+
+def test_adapter_research_distinguishes_named_overrides(registry, safety):
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["nmap"].source_status == "named-override"
+    assert records["nmap"].named_override is True
+    assert records["nmap"].gap
+
+    assert records["dracnmap"].source_status == "registry-derived"
+    assert records["dracnmap"].named_override is False
+    assert records["dracnmap"].gap
 
 
 @pytest.mark.asyncio

@@ -22,6 +22,11 @@ from hacking_mcp.mcp_tools.tool_adapters import (
     adapter_request_preview,
     build_adapter_specs,
 )
+from hacking_mcp.mcp_tools.adapter_research import (
+    build_adapter_research_records,
+    find_adapter_research_record,
+    summarize_adapter_research,
+)
 
 
 def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
@@ -267,6 +272,18 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
         if not spec.exposed:
             lines.append(f"**Blocked reason:** {spec.blocked_reason or 'not exposed by policy'}")
 
+        research = find_adapter_research_record(registry, safety, tool_name)
+        if research:
+            lines.extend([
+                "",
+                "## Research Status",
+                f"- Source status: `{research.source_status}`",
+                f"- Named override: {research.named_override}",
+                f"- Source reviewed: {research.source_reviewed}",
+            ])
+            if research.gap:
+                lines.append(f"- Gap: {research.gap}")
+
         lines.extend(["", "## Parameters"])
         for param in adapter_parameter_specs(tool, spec):
             default = "" if param.default == "" else f" default={param.default!r}"
@@ -429,6 +446,104 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
             if passed:
                 lines.append("All registry tools have adapter specs, unique endpoint names, "
                              "tool-specific parameters, and previewable examples.")
+
+        return "\n".join(lines)
+
+    @mcp.tool(
+        name="security_get_adapter_research_status",
+        description="Show per-tool adapter research status. "
+        "Tracks whether adapters are registry-derived, have named overrides, "
+        "or have been manually source-reviewed. Optional filters: tool_name, "
+        "category, status, and limit.",
+    )
+    async def security_get_adapter_research_status(
+        tool_name: str = "",
+        category: str = "",
+        status: str = "",
+        limit: int = 200,
+        include_details: bool = False,
+        ctx: Context = None,
+    ) -> str:
+        """Report adapter evidence and source-review gaps."""
+        records = build_adapter_research_records(registry, safety)
+
+        if tool_name:
+            record = next((item for item in records if item.tool_name == tool_name), None)
+            if record is None:
+                similar = [t.name for t in registry.search_tools(tool_name)[:5]]
+                msg = f"Tool '{tool_name}' not found."
+                if similar:
+                    msg += f"\nDid you mean: {', '.join(similar)}?"
+                return msg
+            return _format_adapter_research_record(record)
+
+        category_filter = category.strip().lower()
+        status_filter = status.strip().lower()
+
+        if category_filter:
+            records = [
+                record for record in records
+                if record.category.lower() == category_filter
+            ]
+
+        if status_filter in {"registry-derived", "registry"}:
+            records = [
+                record for record in records
+                if record.source_status == "registry-derived"
+            ]
+        elif status_filter in {"named-override", "override", "named"}:
+            records = [
+                record for record in records
+                if record.source_status == "named-override"
+            ]
+        elif status_filter in {"source-reviewed", "reviewed"}:
+            records = [
+                record for record in records
+                if record.source_status == "source-reviewed"
+            ]
+        elif status_filter in {"source-review-gap", "gap", "gaps"}:
+            records = [record for record in records if not record.source_reviewed]
+        elif status_filter and status_filter != "all":
+            return (
+                "Unknown status filter. Use one of: all, registry-derived, "
+                "named-override, source-reviewed, source-review-gap."
+            )
+
+        summary = summarize_adapter_research(
+            build_adapter_research_records(registry, safety)
+        )
+        limit = max(1, min(limit, 500))
+
+        lines = [
+            "# Adapter Research Status",
+            "",
+            f"Total adapters: {summary['total']}",
+            f"Registry-derived only: {summary['registry_derived']}",
+            f"Named overrides: {summary['named_override']}",
+            f"Source-reviewed: {summary['source_reviewed']}",
+            f"Open source-review gaps: {summary['source_review_gaps']}",
+            f"Showing: {min(len(records), limit)}/{len(records)}",
+            "",
+        ]
+
+        for record in records[:limit]:
+            review = "source-reviewed" if record.source_reviewed else "gap"
+            lines.append(
+                f"- `{record.tool_name}` -> `{record.endpoint}` "
+                f"({record.category}, {record.safety_tier}, "
+                f"{record.execution_state}) status: `{record.source_status}`; "
+                f"params: {record.parameter_count}; {review}"
+            )
+            if include_details:
+                lines.extend(f"  - evidence: {item}" for item in record.evidence)
+                if record.gap:
+                    lines.append(f"  - gap: {record.gap}")
+
+        if len(records) > limit:
+            lines.append("")
+            lines.append(
+                f"Use a higher limit or narrower filters to see {len(records) - limit} more."
+            )
 
         return "\n".join(lines)
 
@@ -674,3 +789,26 @@ def _format_adapter_info(
         f"**Endpoint:** `{spec.mcp_name}`\n"
         f"**Execution:** blocked: {spec.blocked_reason or 'not exposed by policy'}"
     )
+
+
+def _format_adapter_research_record(record) -> str:
+    lines = [
+        f"# Adapter Research: {record.title}",
+        "",
+        f"**Tool:** `{record.tool_name}`",
+        f"**Endpoint:** `{record.endpoint}`",
+        f"**Category:** {record.category}",
+        f"**Safety tier:** {record.safety_tier}",
+        f"**Execution:** {record.execution_state}",
+        f"**Source status:** `{record.source_status}`",
+        f"**Named override:** {record.named_override}",
+        f"**Source reviewed:** {record.source_reviewed}",
+        f"**Parameter count:** {record.parameter_count}",
+    ]
+    if record.project_url:
+        lines.append(f"**Project URL:** {record.project_url}")
+    lines.extend(["", "## Evidence"])
+    lines.extend(f"- {item}" for item in record.evidence)
+    if record.gap:
+        lines.extend(["", "## Gap", f"- {record.gap}"])
+    return "\n".join(lines)
