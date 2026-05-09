@@ -203,6 +203,32 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "verbose",
         ),
     ),
+    "trufflehog": SourceReview(
+        note=(
+            "Reviewed against the upstream TruffleHog README for filesystem "
+            "scans and global flags covering JSON/GitHub output, concurrency, "
+            "verification controls, result filtering, entropy/config/logging, "
+            "and fail-on-result behavior."
+        ),
+        references=(
+            "https://github.com/trufflesecurity/trufflehog",
+        ),
+        verified_parameters=(
+            "json_output",
+            "github_actions",
+            "concurrency",
+            "no_verification",
+            "results",
+            "no_color",
+            "allow_verification_overlap",
+            "filter_unverified",
+            "filter_entropy",
+            "config_path",
+            "print_avg_detector_time",
+            "fail",
+            "log_level",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}

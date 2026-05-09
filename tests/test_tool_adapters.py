@@ -148,6 +148,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["gitleaks"].unverified_parameters == ()
     assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
 
+    assert records["trufflehog"].source_status == "source-reviewed"
+    assert records["trufflehog"].unverified_parameters == ()
+    assert any("trufflesecurity/trufflehog" in item for item in records["trufflehog"].evidence)
+
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
     assert records["dracnmap"].gap
@@ -216,9 +220,10 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     assert {"limit", "start", "takeover", "dns_lookup"}.issubset(harvester_schema)
 
     trufflehog_schema = tools["security_tool_trufflehog"].inputSchema["properties"]
-    assert {"source_type", "branch", "max_depth", "report_format"}.issubset(
-        trufflehog_schema
-    )
+    assert {
+        "json_output", "github_actions", "concurrency", "no_verification",
+        "results", "filter_entropy", "config_path", "fail", "log_level",
+    }.issubset(trufflehog_schema)
 
     gitleaks_schema = tools["security_tool_gitleaks"].inputSchema["properties"]
     assert {
@@ -564,6 +569,48 @@ async def test_gitleaks_source_reviewed_parameters_build_cli_options(registry, s
         "--max-target-megabytes 5 --report-format json --report-path gitleaks.json "
         "--report-template template.tmpl --log-level debug --no-banner --no-color "
         "--verbose"
+    )
+
+
+@pytest.mark.asyncio
+async def test_trufflehog_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_trufflehog",
+        {
+            "target": "repo",
+            "json_output": True,
+            "github_actions": True,
+            "concurrency": 12,
+            "no_verification": True,
+            "results": "verified,unknown",
+            "no_color": True,
+            "allow_verification_overlap": True,
+            "filter_unverified": True,
+            "filter_entropy": 3.0,
+            "config_path": "trufflehog.yaml",
+            "print_avg_detector_time": True,
+            "fail": True,
+            "log_level": "info",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "trufflehog"
+    assert request.options == (
+        "--json --github-actions --concurrency 12 --no-verification "
+        "--results verified,unknown --no-color --allow-verification-overlap "
+        "--filter-unverified --filter-entropy 3.0 --config trufflehog.yaml "
+        "--print-avg-detector-time --fail --log-level info"
     )
 
 

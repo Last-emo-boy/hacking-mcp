@@ -412,6 +412,9 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "report_format": "json",
         "report_path": "report.json",
         "log_level": "info",
+        "results": "verified,unknown",
+        "concurrency": 12,
+        "filter_entropy": 3.0,
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -520,7 +523,23 @@ def _adapter_parameters(
     if tags & {"username", "social", "social-media"}:
         params.append(AdapterParameterSpec("timeout", int, 0, "Per-site timeout in seconds when supported."))
 
-    if tool.name == "gitleaks":
+    if tool.name == "trufflehog":
+        params.extend([
+            AdapterParameterSpec("json_output", bool, False, "Output in JSON format."),
+            AdapterParameterSpec("github_actions", bool, False, "Output in GitHub Actions format."),
+            AdapterParameterSpec("concurrency", int, 0, "Number of concurrent workers; 0 leaves default."),
+            AdapterParameterSpec("no_verification", bool, False, "Do not verify discovered results."),
+            AdapterParameterSpec("results", str, "", "Result statuses to output, for example verified,unknown."),
+            AdapterParameterSpec("no_color", bool, False, "Disable colorized output."),
+            AdapterParameterSpec("allow_verification_overlap", bool, False, "Allow verification overlap across detectors."),
+            AdapterParameterSpec("filter_unverified", bool, False, "Only output first unverified result per chunk/detector."),
+            AdapterParameterSpec("filter_entropy", float, 0.0, "Filter unverified results by Shannon entropy; 0 leaves default."),
+            AdapterParameterSpec("config_path", str, "", "Path to TruffleHog configuration file."),
+            AdapterParameterSpec("print_avg_detector_time", bool, False, "Print average time spent on each detector."),
+            AdapterParameterSpec("fail", bool, False, "Return TruffleHog leak-detected exit code when results are found."),
+            AdapterParameterSpec("log_level", str, "", "Logging verbosity level; empty leaves default."),
+        ])
+    elif tool.name == "gitleaks":
         params.extend([
             AdapterParameterSpec("redact", bool, True, "Redact secrets in output."),
             AdapterParameterSpec("log_opts", str, "", "Git log options for detect scans."),
@@ -826,16 +845,6 @@ def _adapter_parameters(
             AdapterParameterSpec("csv_output", bool, False, "Request CSV output when supported."),
             AdapterParameterSpec("print_found", bool, False, "Only print found accounts when supported."),
             AdapterParameterSpec("browse", bool, False, "Open found results in browser when supported."),
-        ])
-
-    if tool.name == "trufflehog":
-        params.extend([
-            AdapterParameterSpec("source_type", str, "", "Source type such as git, filesystem, github, or docker."),
-            AdapterParameterSpec("branch", str, "", "Git branch when supported."),
-            AdapterParameterSpec("max_depth", int, 0, "Maximum git history depth when supported; 0 leaves default."),
-            AdapterParameterSpec("report_format", str, "", "Report format such as json or sarif when supported."),
-            AdapterParameterSpec("report_path", str, "", "Report output path when supported."),
-            AdapterParameterSpec("verbose", bool, False, "Enable verbose output when supported."),
         ])
 
     if tool.name in {"prowler", "trivy"}:
@@ -1167,7 +1176,21 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
     if tags & {"username", "social", "social-media"}:
         _add_value(tokens, kwargs, "timeout", "--timeout")
 
-    if tool.name == "gitleaks":
+    if tool.name == "trufflehog":
+        _add_bool(tokens, kwargs, "json_output", "--json")
+        _add_bool(tokens, kwargs, "github_actions", "--github-actions")
+        _add_value(tokens, kwargs, "concurrency", "--concurrency")
+        _add_bool(tokens, kwargs, "no_verification", "--no-verification")
+        _add_value(tokens, kwargs, "results", "--results")
+        _add_bool(tokens, kwargs, "no_color", "--no-color")
+        _add_bool(tokens, kwargs, "allow_verification_overlap", "--allow-verification-overlap")
+        _add_bool(tokens, kwargs, "filter_unverified", "--filter-unverified")
+        _add_value(tokens, kwargs, "filter_entropy", "--filter-entropy")
+        _add_value(tokens, kwargs, "config_path", "--config")
+        _add_bool(tokens, kwargs, "print_avg_detector_time", "--print-avg-detector-time")
+        _add_bool(tokens, kwargs, "fail", "--fail")
+        _add_value(tokens, kwargs, "log_level", "--log-level")
+    elif tool.name == "gitleaks":
         if kwargs.get("redact", True):
             tokens.append("--redact")
         _add_value(tokens, kwargs, "log_opts", "--log-opts")
@@ -1408,14 +1431,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "csv_output", "--csv")
         _add_bool(tokens, kwargs, "print_found", "--print-found")
         _add_bool(tokens, kwargs, "browse", "--browse")
-
-    if tool.name == "trufflehog":
-        _add_value(tokens, kwargs, "source_type", "--source-type")
-        _add_value(tokens, kwargs, "branch", "--branch")
-        _add_value(tokens, kwargs, "max_depth", "--max-depth")
-        _add_value(tokens, kwargs, "report_format", "--report-format")
-        _add_value(tokens, kwargs, "report_path", "--report-path")
-        _add_bool(tokens, kwargs, "verbose", "--verbose")
 
     if tool.name in {"prowler", "trivy"}:
         _add_value(tokens, kwargs, "provider", "--provider")
