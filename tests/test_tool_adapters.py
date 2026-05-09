@@ -113,7 +113,8 @@ def test_adapter_research_records_cover_every_registry_tool(registry, safety):
         + summary["source_reviewed"]
         == summary["total"]
     )
-    assert summary["source_review_gaps"] == summary["total"]
+    assert summary["source_reviewed"] == 3
+    assert summary["source_review_gaps"] == summary["total"] - 3
 
 
 def test_adapter_research_distinguishes_named_overrides(registry, safety):
@@ -122,9 +123,11 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
         for record in build_adapter_research_records(registry, safety)
     }
 
-    assert records["nmap"].source_status == "named-override"
+    assert records["nmap"].source_status == "source-reviewed"
     assert records["nmap"].named_override is True
-    assert records["nmap"].gap
+    assert records["nmap"].source_reviewed is True
+    assert records["nmap"].gap == ""
+    assert any("nmap.org" in item for item in records["nmap"].evidence)
 
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False

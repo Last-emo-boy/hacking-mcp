@@ -174,15 +174,15 @@ class TestServerCreation:
 
         result = summary_metadata["result"]
         assert "Total adapters: 184" in result
-        assert "Source-reviewed: 0" in result
-        assert "Open source-review gaps: 184" in result
-        assert "Showing: 3/184" in result
+        assert "Source-reviewed: 3" in result
+        assert "Open source-review gaps: 181" in result
+        assert "Showing: 3/181" in result
 
         nmap = nmap_metadata["result"]
         assert "**Tool:** `nmap`" in nmap
-        assert "**Source status:** `named-override`" in nmap
+        assert "**Source status:** `source-reviewed`" in nmap
         assert "tool-specific named override exists" in nmap
-        assert "upstream source/docs have not been manually reviewed" in nmap
+        assert "source reference: https://nmap.org/book/man.html" in nmap
 
 
 class TestToolCoherence:

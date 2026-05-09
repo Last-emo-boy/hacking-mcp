@@ -20,9 +20,47 @@ SOURCE_STATUS_REGISTRY_DERIVED = "registry-derived"
 SOURCE_STATUS_NAMED_OVERRIDE = "named-override"
 SOURCE_STATUS_SOURCE_REVIEWED = "source-reviewed"
 
-# Upstream-source review is intentionally opt-in evidence. Empty means no tool
-# has yet been manually verified against upstream docs/source in this repo.
-SOURCE_REVIEWED_TOOL_NOTES: dict[str, str] = {}
+@dataclass(frozen=True)
+class SourceReview:
+    """Manual upstream-source review evidence for one adapter."""
+
+    note: str
+    references: tuple[str, ...]
+
+
+SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
+    "nmap": SourceReview(
+        note=(
+            "Reviewed against the official Nmap reference guide for target "
+            "syntax and adapter flags: -p, -sS, -sT, -sU, -sn, -sV, -O, -sC, "
+            "-T, --top-ports, --min-rate, --script, --script-args, --exclude."
+        ),
+        references=(
+            "https://nmap.org/book/man.html",
+            "https://nmap.org/book/man-briefoptions.html",
+        ),
+    ),
+    "nuclei": SourceReview(
+        note=(
+            "Reviewed against official ProjectDiscovery Nuclei docs for "
+            "template path/workflow, tags, severity, rate-limit, proxy, "
+            "headless, and exclude-template flags."
+        ),
+        references=(
+            "https://docs.projectdiscovery.io/opensource/nuclei/running",
+        ),
+    ),
+    "ffuf": SourceReview(
+        note=(
+            "Reviewed against the upstream ffuf README usage/help for target "
+            "URL, wordlist, thread, extension, redirect, proxy, match/filter, "
+            "and recursion flags."
+        ),
+        references=(
+            "https://github.com/ffuf/ffuf",
+        ),
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -55,8 +93,8 @@ def build_adapter_research_records(
     for tool in registry.list_all_tools():
         spec = specs[tool.name]
         params = adapter_parameter_names(tool, spec)
-        source_note = SOURCE_REVIEWED_TOOL_NOTES.get(tool.name, "")
-        source_reviewed = bool(source_note)
+        source_review = SOURCE_REVIEWED_TOOLS.get(tool.name)
+        source_reviewed = source_review is not None
         named_override = tool.name in NAMED_OVERRIDE_TOOL_NAMES
 
         if source_reviewed:
@@ -76,8 +114,12 @@ def build_adapter_research_records(
             evidence.append("parameters are derived from category/tag adapter rules")
         if tool.project_url:
             evidence.append(f"registry project_url: {tool.project_url}")
-        if source_note:
-            evidence.append(f"source review note: {source_note}")
+        if source_review:
+            evidence.append(f"source review note: {source_review.note}")
+            evidence.extend(
+                f"source reference: {reference}"
+                for reference in source_review.references
+            )
 
         gap = ""
         if not source_reviewed:
