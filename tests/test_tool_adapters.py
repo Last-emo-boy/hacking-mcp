@@ -128,6 +128,7 @@ def test_split_adapter_registry_includes_migrated_tools():
     migrated = {
         "binwalk",
         "owasp-zap",
+        "pspy",
         "sherlock",
         "theHarvester",
         "volatility3",
@@ -165,6 +166,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["volatility3"].source_status == "source-reviewed"
     assert records["volatility3"].unverified_parameters == ()
     assert any("volatilityfoundation/volatility3" in item for item in records["volatility3"].evidence)
+
+    assert records["pspy"].source_status == "source-reviewed"
+    assert records["pspy"].unverified_parameters == ()
+    assert any("DominicBreuker/pspy" in item for item in records["pspy"].evidence)
 
     assert records["subfinder"].source_status == "source-reviewed"
     assert records["subfinder"].unverified_parameters == ()
@@ -401,6 +406,12 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "matryoshka", "search_all", "entropy", "png_output", "log_file",
         "threads", "exclude", "include", "output_dir",
     }.issubset(binwalk_schema)
+
+    pspy_schema = tools["security_tool_pspy"].inputSchema["properties"]
+    assert {
+        "procevents", "fsevents", "recursive_dirs", "dirs", "interval",
+        "color", "debug", "ppid", "truncate",
+    }.issubset(pspy_schema)
 
     hashcat_schema = tools["security_tool_hashcat"].inputSchema["properties"]
     assert {"rules", "mask", "session", "show", "potfile_path"}.issubset(
@@ -2165,6 +2176,43 @@ async def test_volatility3_source_reviewed_parameters_build_cli_options(registry
         "--hide-columns 'Offset Hex' --single-location file:///memory.dmp "
         "--stackers windows.WindowsIntel32e --single-swap-locations "
         "swap.sys,pagefile.sys windows.info --dump"
+    )
+
+
+@pytest.mark.asyncio
+async def test_pspy_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_pspy",
+        {
+            "procevents": False,
+            "fsevents": True,
+            "recursive_dirs": "/usr,/tmp",
+            "dirs": "/opt/app",
+            "interval": 1000,
+            "color": False,
+            "debug": True,
+            "ppid": True,
+            "truncate": 4096,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "pspy"
+    assert request.target == ""
+    assert request.options == (
+        "--procevents=false --fsevents --recursive_dirs /usr "
+        "--recursive_dirs /tmp --dirs /opt/app --interval 1000 "
+        "--color=false --debug --ppid --truncate 4096"
     )
 
 

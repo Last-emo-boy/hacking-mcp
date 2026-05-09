@@ -6,6 +6,7 @@ from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 from hacking_mcp.mcp_tools.adapters import (
     binwalk,
     owasp_zap,
+    pspy,
     sherlock,
     theharvester,
     volatility3,
@@ -20,6 +21,7 @@ OptionsBuilder = Callable[[dict], list[str]]
 PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
     "binwalk": binwalk.parameters,
     "owasp-zap": owasp_zap.parameters,
+    "pspy": pspy.parameters,
     "sherlock": sherlock.parameters,
     "theHarvester": theharvester.parameters,
     "volatility3": volatility3.parameters,
@@ -29,6 +31,7 @@ PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
 OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
     "binwalk": binwalk.build_options,
     "owasp-zap": owasp_zap.build_options,
+    "pspy": pspy.build_options,
     "sherlock": sherlock.build_options,
     "theHarvester": theharvester.build_options,
     "volatility3": volatility3.build_options,

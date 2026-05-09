@@ -100,6 +100,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "plugin",
         ),
     ),
+    "pspy": SourceReview(
+        note=(
+            "Reviewed against upstream pspy README usage summary and Cobra "
+            "flag definitions for process/file-system event output, recursive "
+            "and non-recursive watch directories, procfs scan interval, color, "
+            "debug, parent PID recording, and command truncation controls."
+        ),
+        references=(
+            "https://github.com/DominicBreuker/pspy",
+            "https://raw.githubusercontent.com/DominicBreuker/pspy/master/README.md",
+            "https://raw.githubusercontent.com/DominicBreuker/pspy/master/cmd/root.go",
+        ),
+        verified_parameters=(
+            "procevents",
+            "fsevents",
+            "recursive_dirs",
+            "dirs",
+            "interval",
+            "color",
+            "debug",
+            "ppid",
+            "truncate",
+        ),
+    ),
     "nmap": SourceReview(
         note=(
             "Reviewed against the official Nmap reference guide for target "
