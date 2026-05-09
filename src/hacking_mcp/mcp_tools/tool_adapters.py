@@ -500,6 +500,45 @@ def _adapter_parameters(
             AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
         ])
 
+    if tool.name == "nmap":
+        params.extend([
+            AdapterParameterSpec("scripts", str, "", "Nmap NSE script selector, for example default,vuln."),
+            AdapterParameterSpec("script_args", str, "", "Nmap NSE script arguments."),
+            AdapterParameterSpec("exclude_hosts", str, "", "Comma-separated hosts to exclude."),
+        ])
+
+    if tool.name == "sqlmap":
+        params.extend([
+            AdapterParameterSpec("cookie", str, "", "Cookie header for authorized testing."),
+            AdapterParameterSpec("headers", str, "", "Additional HTTP headers, newline or semicolon separated."),
+            AdapterParameterSpec("tamper", str, "", "Comma-separated sqlmap tamper scripts."),
+            AdapterParameterSpec("technique", str, "", "SQLi techniques, for example BEUSTQ."),
+            AdapterParameterSpec("proxy", str, "", "HTTP proxy URL."),
+            AdapterParameterSpec("random_agent", bool, False, "Use a random User-Agent."),
+        ])
+
+    if tool.name in {"ffuf", "gobuster", "dirsearch"}:
+        params.extend([
+            AdapterParameterSpec("fuzz_keyword", str, "", "Fuzz marker keyword when supported, for example FUZZ."),
+            AdapterParameterSpec("host_header", str, "", "Host header for vhost fuzzing when supported."),
+            AdapterParameterSpec("recursion_depth", int, 0, "Recursive discovery depth when supported; 0 leaves default."),
+        ])
+
+    if tool.name in {"subfinder", "amass"}:
+        params.extend([
+            AdapterParameterSpec("active", bool, False, "Enable active enumeration when supported."),
+            AdapterParameterSpec("all_sources", bool, False, "Use all configured sources when supported."),
+            AdapterParameterSpec("exclude_sources", str, "", "Comma-separated sources to exclude."),
+        ])
+
+    if tool.name == "httpx":
+        params.extend([
+            AdapterParameterSpec("status_code", bool, False, "Show HTTP status code."),
+            AdapterParameterSpec("title", bool, False, "Show page title."),
+            AdapterParameterSpec("tech_detect", bool, False, "Show technology detection."),
+            AdapterParameterSpec("content_length", bool, False, "Show response content length."),
+        ])
+
     params.extend([
         AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
         AdapterParameterSpec(
@@ -726,6 +765,34 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "user_agent", "--user-agent")
         _add_value(tokens, kwargs, "output_file", "-o")
         _add_bool(tokens, kwargs, "json_output", "--json")
+
+    if tool.name == "nmap":
+        _add_value(tokens, kwargs, "scripts", "--script")
+        _add_value(tokens, kwargs, "script_args", "--script-args")
+        _add_value(tokens, kwargs, "exclude_hosts", "--exclude")
+
+    if tool.name == "sqlmap":
+        _add_value(tokens, kwargs, "cookie", "--cookie")
+        _add_value(tokens, kwargs, "headers", "--headers")
+        _add_value(tokens, kwargs, "tamper", "--tamper")
+        _add_value(tokens, kwargs, "technique", "--technique")
+        _add_value(tokens, kwargs, "proxy", "--proxy")
+        _add_bool(tokens, kwargs, "random_agent", "--random-agent")
+
+    if tool.name in {"ffuf", "gobuster", "dirsearch"}:
+        _add_value(tokens, kwargs, "host_header", "-H")
+        _add_value(tokens, kwargs, "recursion_depth", "-recursion-depth")
+
+    if tool.name in {"subfinder", "amass"}:
+        _add_bool(tokens, kwargs, "active", "-active")
+        _add_bool(tokens, kwargs, "all_sources", "-all")
+        _add_value(tokens, kwargs, "exclude_sources", "-es")
+
+    if tool.name == "httpx":
+        _add_bool(tokens, kwargs, "status_code", "-status-code")
+        _add_bool(tokens, kwargs, "title", "-title")
+        _add_bool(tokens, kwargs, "tech_detect", "-tech-detect")
+        _add_bool(tokens, kwargs, "content_length", "-content-length")
 
     return tokens
 

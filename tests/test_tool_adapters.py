@@ -128,13 +128,20 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     tools = {tool.name: tool for tool in await mcp.list_tools()}
 
     nmap_schema = tools["security_tool_nmap"].inputSchema["properties"]
-    assert {"target", "ports", "scan_type", "service_version", "timing"}.issubset(
-        nmap_schema
-    )
+    assert {
+        "target", "ports", "scan_type", "service_version", "timing", "scripts",
+        "script_args", "exclude_hosts",
+    }.issubset(nmap_schema)
 
     sqlmap_schema = tools["security_tool_sqlmap"].inputSchema["properties"]
-    assert {"target", "data", "dbms", "risk", "level", "enumerate_databases"}.issubset(
-        sqlmap_schema
+    assert {
+        "target", "data", "dbms", "risk", "level", "enumerate_databases",
+        "cookie", "tamper", "technique", "random_agent",
+    }.issubset(sqlmap_schema)
+
+    httpx_schema = tools["security_tool_httpx"].inputSchema["properties"]
+    assert {"status_code", "title", "tech_detect", "content_length"}.issubset(
+        httpx_schema
     )
 
     bloodhound_schema = tools["security_tool_bloodhound"].inputSchema["properties"]
@@ -194,6 +201,39 @@ async def test_structured_parameters_build_cli_options(registry, safety):
     assert request.tool_name == "nmap"
     assert request.target == "127.0.0.1"
     assert request.options == "-p 80,443 -sV -T4 --reason"
+
+
+@pytest.mark.asyncio
+async def test_tool_specific_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_sqlmap",
+        {
+            "target": "https://example.test/item?id=1",
+            "data": "id=1",
+            "risk": 2,
+            "level": 3,
+            "tamper": "space2comment",
+            "technique": "BEUSTQ",
+            "random_agent": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "sqlmap"
+    assert request.options == (
+        "--data id=1 --risk 2 --level 3 --tamper space2comment "
+        "--technique BEUSTQ --random-agent"
+    )
 
 
 @pytest.mark.asyncio
