@@ -1383,7 +1383,7 @@ def _adapter_parameters(
             AdapterParameterSpec("runtime_command", str, "", "Runtime command when supported."),
         ])
 
-    if tool.name in {"jadx", "radare2", "ghidra"}:
+    if tool.name in {"radare2", "ghidra"}:
         params.extend([
             AdapterParameterSpec("project_name", str, "", "Project name when supported."),
             AdapterParameterSpec("analysis_level", str, "", "Analysis depth/profile when supported."),
@@ -2350,7 +2350,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "frida_script", "-l")
         _add_value(tokens, kwargs, "runtime_command", "-c")
 
-    if tool.name in {"jadx", "radare2", "ghidra"}:
+    if tool.name in {"radare2", "ghidra"}:
         _add_value(tokens, kwargs, "project_name", "--project")
         _add_value(tokens, kwargs, "analysis_level", "--analysis")
         _add_value(tokens, kwargs, "entrypoint", "--entrypoint")
@@ -2518,4 +2518,4 @@ def _should_validate_scope(tool: HackingToolDef) -> bool:
 
 
 def _options_before_target(tool: HackingToolDef) -> bool:
-    return tool.name == "testssl"
+    return tool.name in {"jadx", "testssl"}

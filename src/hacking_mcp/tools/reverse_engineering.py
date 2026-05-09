@@ -37,7 +37,7 @@ REVERSE_ENGINEERING_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/skylot/jadx.git",
             "cd jadx && ./gradlew dist",
         ],
-        run_command="cd jadx && ./build/jadx/bin/jadx -d output {target}",
+        run_command="cd jadx && ./build/jadx/bin/jadx {target}",
         project_url="https://github.com/skylot/jadx",
         tags=["reverse-engineering", "android", "dex", "java", "decompile"],
         safety_tier=SafetyTier.SAFE,

@@ -666,7 +666,27 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     )
 
     jadx_schema = tools["security_tool_jadx"].inputSchema["properties"]
-    assert {"binary_path", "output_dir", "decompile"}.issubset(jadx_schema)
+    assert {
+        "output_dir", "output_dir_src", "output_dir_res", "no_resources",
+        "no_sources", "threads_count", "single_class", "single_class_output",
+        "output_format", "export_gradle", "export_gradle_type",
+        "decompilation_mode", "show_bad_code", "no_xml_pretty_print",
+        "no_imports", "no_debug_info", "add_debug_lines",
+        "no_inline_anonymous", "no_inline_methods", "no_move_inner_classes",
+        "no_inline_kotlin_lambda", "no_finally",
+        "no_restore_switch_over_string", "no_replace_consts",
+        "escape_unicode", "respect_bytecode_access_modifiers",
+        "mappings_path", "mappings_mode", "deobf", "deobf_min",
+        "deobf_max", "deobf_whitelist", "deobf_cfg_file",
+        "deobf_cfg_file_mode", "deobf_res_name_source",
+        "use_source_name_as_class_name_alias", "source_name_repeat_limit",
+        "use_kotlin_methods_for_var_names",
+        "use_headers_for_detect_resource_extensions", "rename_flags",
+        "integer_format", "type_update_limit", "fs_case_sensitive", "cfg",
+        "raw_cfg", "fallback", "use_dx", "comments_level", "log_level",
+        "verbose", "quiet", "disable_plugins", "config", "save_config",
+        "print_files", "plugin_options", "version", "help",
+    }.issubset(jadx_schema)
 
     setoolkit_schema = tools["security_tool_setoolkit"].inputSchema["properties"]
     assert {"template", "listener_host", "listener_port", "tunnel"}.issubset(
@@ -2434,6 +2454,75 @@ async def test_john_source_reviewed_parameters_build_cli_options(registry, safet
         "--min-length 4 --max-length 12 --max-run-time -60 --fork 2 "
         "--node 1-2/4 --devices 1,2 --verbosity 4 --no-log --log-stderr "
         "--keep-guessing --force-tty"
+    )
+
+
+@pytest.mark.asyncio
+async def test_jadx_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_jadx",
+        {
+            "target": "app.apk",
+            "output_dir": "out",
+            "output_dir_src": "src-out",
+            "output_dir_res": "res-out",
+            "no_resources": True,
+            "threads_count": 4,
+            "single_class": "com.example.Main",
+            "single_class_output": "Main.java",
+            "output_format": "json",
+            "export_gradle": True,
+            "export_gradle_type": "simple-java",
+            "decompilation_mode": "simple",
+            "show_bad_code": True,
+            "no_imports": True,
+            "no_debug_info": True,
+            "add_debug_lines": True,
+            "escape_unicode": True,
+            "respect_bytecode_access_modifiers": True,
+            "deobf": True,
+            "deobf_min": 2,
+            "deobf_max": 32,
+            "deobf_whitelist": "com.keep.*",
+            "rename_flags": "case,valid",
+            "integer_format": "hexadecimal",
+            "cfg": True,
+            "raw_cfg": True,
+            "use_dx": True,
+            "comments_level": "debug",
+            "log_level": "info",
+            "verbose": True,
+            "disable_plugins": "plugin.one,plugin.two",
+            "config": "none",
+            "plugin_options": "foo=bar;baz=qux",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "jadx"
+    assert request.target == "app.apk"
+    assert request.options_before_target is True
+    assert request.options == (
+        "-d out -ds src-out -dr res-out -r -j 4 "
+        "--single-class com.example.Main --single-class-output Main.java "
+        "--output-format json -e --export-gradle-type simple-java -m simple "
+        "--show-bad-code --no-imports --no-debug-info --add-debug-lines "
+        "--escape-unicode --respect-bytecode-access-modifiers --deobf "
+        "--deobf-min 2 --deobf-max 32 --deobf-whitelist 'com.keep.*' "
+        "--rename-flags case,valid --integer-format hexadecimal --cfg "
+        "--raw-cfg --use-dx --comments-level debug --log-level info -v "
+        "--disable-plugins plugin.one,plugin.two --config none "
+        "-Pfoo=bar -Pbaz=qux"
     )
 
 
