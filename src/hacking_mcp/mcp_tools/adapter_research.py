@@ -415,6 +415,34 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "headers",
         ),
     ),
+    "gobuster": SourceReview(
+        note=(
+            "Reviewed against the upstream Gobuster README for dir mode "
+            "wordlist/extensions, custom headers/cookies, length/status output, "
+            "threads/delay/user-agent/timeout, file output, quiet/progress, "
+            "expanded URLs, and slash-appending flags."
+        ),
+        references=(
+            "https://github.com/OJ/gobuster",
+        ),
+        verified_parameters=(
+            "wordlist",
+            "extensions",
+            "headers",
+            "cookies",
+            "show_length",
+            "status_codes",
+            "threads",
+            "delay",
+            "user_agent",
+            "timeout",
+            "output_file",
+            "quiet",
+            "no_progress",
+            "expanded",
+            "add_slash",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}

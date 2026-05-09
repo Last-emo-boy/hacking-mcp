@@ -431,6 +431,8 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "include_data": "api_key=test",
         "chunk_size": 250,
         "casing": "foo_bar",
+        "cookies": "session=value",
+        "status_codes": "200,301,302",
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -572,6 +574,24 @@ def _adapter_parameters(
             AdapterParameterSpec("passive", str, "", "Passive discovery domain, or '-' to use target URL domain."),
             AdapterParameterSpec("casing", str, "", "Parameter casing style."),
             AdapterParameterSpec("headers", str, "", "Custom HTTP headers."),
+        ])
+    elif tool.name == "gobuster":
+        params.extend([
+            AdapterParameterSpec("wordlist", str, "", "Wordlist path for directory enumeration."),
+            AdapterParameterSpec("extensions", str, "", "Comma-separated extensions to append."),
+            AdapterParameterSpec("headers", str, "", "Custom HTTP header."),
+            AdapterParameterSpec("cookies", str, "", "Cookie header value."),
+            AdapterParameterSpec("show_length", bool, False, "Show response length."),
+            AdapterParameterSpec("status_codes", str, "", "Positive status codes or ranges."),
+            AdapterParameterSpec("threads", int, 0, "Number of concurrent threads; 0 leaves default."),
+            AdapterParameterSpec("delay", str, "", "Delay between requests, for example 1s."),
+            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value."),
+            AdapterParameterSpec("timeout", str, "", "HTTP timeout, for example 10s."),
+            AdapterParameterSpec("output_file", str, "", "Output file path."),
+            AdapterParameterSpec("quiet", bool, False, "Quiet output mode."),
+            AdapterParameterSpec("no_progress", bool, False, "Disable progress output."),
+            AdapterParameterSpec("expanded", bool, False, "Expanded mode: print full URLs."),
+            AdapterParameterSpec("add_slash", bool, False, "Append slash to each request."),
         ])
     elif tool.name == "httpx":
         params.extend([
@@ -880,7 +900,10 @@ def _adapter_parameters(
             AdapterParameterSpec("wordlist", str, "", "Wordlist file for brute forcing."),
             AdapterParameterSpec("wordlist_masks", str, "", "Hashcat-style masks for DNS brute forcing."),
         ])
-    elif tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}:
+    elif (
+        tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}
+        and tool.name not in {"gobuster"}
+    ):
         params.extend([
             AdapterParameterSpec("sources", str, "", "Comma-separated OSINT sources when supported."),
             AdapterParameterSpec("passive", bool, False, "Use passive enumeration when supported."),
@@ -950,7 +973,7 @@ def _adapter_parameters(
             AdapterParameterSpec("random_agent", bool, False, "Use a random User-Agent."),
         ])
 
-    if tool.name in {"ffuf", "gobuster", "dirsearch"}:
+    if tool.name in {"ffuf", "dirsearch"}:
         params.extend([
             AdapterParameterSpec("fuzz_keyword", str, "", "Fuzz marker keyword when supported, for example FUZZ."),
             AdapterParameterSpec("host_header", str, "", "Host header for vhost fuzzing when supported."),
@@ -1065,7 +1088,7 @@ def _adapter_parameters(
             AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value when supported."),
         ])
 
-    if tool.name in {"ffuf", "gobuster", "dirsearch", "feroxbuster"}:
+    if tool.name in {"ffuf", "dirsearch", "feroxbuster"}:
         params.extend([
             AdapterParameterSpec("filter_codes", str, "", "HTTP status codes to filter out."),
             AdapterParameterSpec("filter_size", str, "", "Response size filter when supported."),
@@ -1338,6 +1361,22 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "passive", "--passive")
         _add_value(tokens, kwargs, "casing", "--casing")
         _add_value(tokens, kwargs, "headers", "--headers")
+    elif tool.name == "gobuster":
+        _add_value(tokens, kwargs, "wordlist", "-w")
+        _add_value(tokens, kwargs, "extensions", "-x")
+        _add_value(tokens, kwargs, "headers", "-H")
+        _add_value(tokens, kwargs, "cookies", "-c")
+        _add_bool(tokens, kwargs, "show_length", "-l")
+        _add_value(tokens, kwargs, "status_codes", "-s")
+        _add_value(tokens, kwargs, "threads", "-t")
+        _add_value(tokens, kwargs, "delay", "--delay")
+        _add_value(tokens, kwargs, "user_agent", "-a")
+        _add_value(tokens, kwargs, "timeout", "--timeout")
+        _add_value(tokens, kwargs, "output_file", "-o")
+        _add_bool(tokens, kwargs, "quiet", "-q")
+        _add_bool(tokens, kwargs, "no_progress", "--no-progress")
+        _add_bool(tokens, kwargs, "expanded", "-e")
+        _add_bool(tokens, kwargs, "add_slash", "-f")
     elif tool.name == "httpx":
         _add_value(tokens, kwargs, "input_file", "-l")
         _add_bool(tokens, kwargs, "status_code", "-sc")
@@ -1598,7 +1637,10 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "verbose", "-v")
         _add_value(tokens, kwargs, "wordlist", "-w")
         _add_value(tokens, kwargs, "wordlist_masks", "-wm")
-    elif tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}:
+    elif (
+        tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}
+        and tool.name not in {"gobuster"}
+    ):
         if "email" not in tags:
             _add_value(tokens, kwargs, "sources", "-sources")
         _add_bool(tokens, kwargs, "passive", "-passive")
@@ -1650,7 +1692,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "proxy", "--proxy")
         _add_bool(tokens, kwargs, "random_agent", "--random-agent")
 
-    if tool.name in {"ffuf", "gobuster", "dirsearch"}:
+    if tool.name in {"ffuf", "dirsearch"}:
         _add_value(tokens, kwargs, "host_header", "-H")
         _add_value(tokens, kwargs, "recursion_depth", "-recursion-depth")
 
@@ -1736,7 +1778,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "no_color", "--color=0")
         _add_value(tokens, kwargs, "user_agent", "-useragent")
 
-    if tool.name in {"ffuf", "gobuster", "dirsearch", "feroxbuster"}:
+    if tool.name in {"ffuf", "dirsearch", "feroxbuster"}:
         _add_value(tokens, kwargs, "filter_codes", "-fc")
         _add_value(tokens, kwargs, "filter_size", "-fs")
         _add_value(tokens, kwargs, "filter_words", "-fw")

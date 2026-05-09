@@ -164,6 +164,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["arjun"].unverified_parameters == ()
     assert any("Arjun/wiki/Usage" in item for item in records["arjun"].evidence)
 
+    assert records["gobuster"].source_status == "source-reviewed"
+    assert records["gobuster"].unverified_parameters == ()
+    assert any("OJ/gobuster" in item for item in records["gobuster"].evidence)
+
     assert records["gitleaks"].source_status == "source-reviewed"
     assert records["gitleaks"].unverified_parameters == ()
     assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
@@ -304,6 +308,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     assert {"filter_codes", "filter_size", "filter_words", "add_slash"}.issubset(
         ffuf_schema
     )
+
+    gobuster_schema = tools["security_tool_gobuster"].inputSchema["properties"]
+    assert {
+        "wordlist", "extensions", "headers", "cookies", "show_length",
+        "status_codes", "threads", "delay", "user_agent", "timeout",
+        "output_file", "quiet", "no_progress", "expanded", "add_slash",
+    }.issubset(gobuster_schema)
 
     katana_schema = tools["security_tool_katana"].inputSchema["properties"]
     assert {
@@ -805,6 +816,49 @@ async def test_arjun_source_reviewed_parameters_build_cli_options(registry, safe
         "-m POST --include api_key=test -t 20 -d 1 -T 10 --stable "
         "--ratelimit 5 -w large -c 250 --disable-redirects --passive - "
         "--casing foo_bar --headers 'X-Test: 1'"
+    )
+
+
+@pytest.mark.asyncio
+async def test_gobuster_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_gobuster",
+        {
+            "target": "https://example.test",
+            "wordlist": "words.txt",
+            "extensions": "php,txt",
+            "headers": "X-Test: 1",
+            "cookies": "session=value",
+            "show_length": True,
+            "status_codes": "200,301,302",
+            "threads": 20,
+            "delay": "1s",
+            "user_agent": "hacking-mcp",
+            "timeout": "10s",
+            "output_file": "gobuster.txt",
+            "quiet": True,
+            "no_progress": True,
+            "expanded": True,
+            "add_slash": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "gobuster"
+    assert request.options == (
+        "-w words.txt -x php,txt -H 'X-Test: 1' -c session=value -l "
+        "-s 200,301,302 -t 20 --delay 1s -a hacking-mcp --timeout 10s "
+        "-o gobuster.txt -q --no-progress -e -f"
     )
 
 
