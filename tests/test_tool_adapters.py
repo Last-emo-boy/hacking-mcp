@@ -198,6 +198,19 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     katana_schema = tools["security_tool_katana"].inputSchema["properties"]
     assert {"depth", "scope", "known_files", "headless"}.issubset(katana_schema)
 
+    evil_winrm_schema = tools["security_tool_evil_winrm"].inputSchema["properties"]
+    assert {"ssl", "key_file", "cert_file", "upload", "download"}.issubset(
+        evil_winrm_schema
+    )
+
+    commix_schema = tools["security_tool_commix"].inputSchema["properties"]
+    assert {"parameter", "method", "delay", "os_shell", "batch"}.issubset(
+        commix_schema
+    )
+
+    pacu_schema = tools["security_tool_pacu"].inputSchema["properties"]
+    assert {"session", "module", "regions", "report_dir"}.issubset(pacu_schema)
+
     bloodhound_schema = tools["security_tool_bloodhound"].inputSchema["properties"]
     assert {"domain", "username", "dc_ip", "collection_method"}.issubset(
         bloodhound_schema
@@ -374,6 +387,34 @@ async def test_web_discovery_named_parameters_build_cli_options(registry, safety
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "ffuf"
     assert request.options == "-w words.txt -t 20 -fc 404,403 -fs 1234"
+
+
+@pytest.mark.asyncio
+async def test_offensive_named_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_commix",
+        {
+            "target": "https://example.test/vuln?x=1",
+            "parameter": "x",
+            "method": "POST",
+            "delay": 5,
+            "os_shell": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "commix"
+    assert request.options == "-p x --method POST --time-sec 5 --os-shell --batch"
 
 
 @pytest.mark.asyncio

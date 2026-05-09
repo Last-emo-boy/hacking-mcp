@@ -691,6 +691,65 @@ def _adapter_parameters(
             AdapterParameterSpec("report_path", str, "", "Report output path when supported."),
         ])
 
+    if tool.name in {"bloodhound", "impacket", "responder"}:
+        params.extend([
+            AdapterParameterSpec("ldap", bool, False, "Use LDAP collection/protocol mode when supported."),
+            AdapterParameterSpec("smb", bool, False, "Use SMB protocol mode when supported."),
+            AdapterParameterSpec("no_pass", bool, False, "Use no-password auth mode when supported."),
+            AdapterParameterSpec("output_prefix", str, "", "Output prefix/path when supported."),
+            AdapterParameterSpec("disable_llmnr", bool, False, "Disable LLMNR poisoning when supported."),
+        ])
+
+    if tool.name in {"evil-winrm", "pwncat-cs"}:
+        params.extend([
+            AdapterParameterSpec("ssl", bool, False, "Use SSL/TLS when supported."),
+            AdapterParameterSpec("key_file", str, "", "Private key path when supported."),
+            AdapterParameterSpec("cert_file", str, "", "Certificate path when supported."),
+            AdapterParameterSpec("upload", str, "", "Upload file path when supported."),
+            AdapterParameterSpec("download", str, "", "Download path when supported."),
+        ])
+
+    if tool.name in {"sliver", "havoc", "ligolo-ng", "chisel"}:
+        params.extend([
+            AdapterParameterSpec("mode", str, "", "Mode such as server/client/proxy/agent when supported."),
+            AdapterParameterSpec("listen_addr", str, "", "Listen address when supported."),
+            AdapterParameterSpec("connect_addr", str, "", "Connect address when supported."),
+            AdapterParameterSpec("auth_token", str, "", "Auth token/profile when supported."),
+            AdapterParameterSpec("tun_name", str, "", "Tunnel interface name when supported."),
+        ])
+
+    if tool.name == "peass-ng":
+        params.extend([
+            AdapterParameterSpec("peas_variant", str, "", "PEASS variant such as linpeas or winpeas."),
+            AdapterParameterSpec("checks", str, "", "Checks/profile selector when supported."),
+            AdapterParameterSpec("quiet", bool, False, "Reduce output when supported."),
+        ])
+
+    if tool.name in {"commix", "nosqlmap", "blisqy", "leviathan", "explo"}:
+        params.extend([
+            AdapterParameterSpec("parameter", str, "", "Parameter to test when supported."),
+            AdapterParameterSpec("method", str, "", "HTTP method when supported."),
+            AdapterParameterSpec("delay", int, 0, "Time delay for blind testing when supported; 0 leaves default."),
+            AdapterParameterSpec("os_shell", bool, False, "Request OS shell mode when supported."),
+            AdapterParameterSpec("batch", bool, True, "Non-interactive/batch mode when supported."),
+        ])
+
+    if tool.name in {"routersploit", "websploit"}:
+        params.extend([
+            AdapterParameterSpec("module", str, "", "Framework module path when supported."),
+            AdapterParameterSpec("set_options", str, "", "Comma/semicolon-separated framework option assignments."),
+            AdapterParameterSpec("check_only", bool, False, "Check vulnerability without exploitation when supported."),
+            AdapterParameterSpec("resource_file", str, "", "Resource/script file when supported."),
+        ])
+
+    if tool.name in {"pacu", "scoutsuite"}:
+        params.extend([
+            AdapterParameterSpec("session", str, "", "Cloud assessment session/profile when supported."),
+            AdapterParameterSpec("module", str, "", "Cloud module/service module when supported."),
+            AdapterParameterSpec("regions", str, "", "Comma-separated cloud regions when supported."),
+            AdapterParameterSpec("report_dir", str, "", "Report directory when supported."),
+        ])
+
     params.extend([
         AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
         AdapterParameterSpec(
@@ -1062,6 +1121,52 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "ajax_spider", "--ajax-spider")
         _add_value(tokens, kwargs, "auth_header", "-H")
         _add_value(tokens, kwargs, "report_path", "-o")
+
+    if tool.name in {"bloodhound", "impacket", "responder"}:
+        _add_bool(tokens, kwargs, "ldap", "--ldap")
+        _add_bool(tokens, kwargs, "smb", "--smb")
+        _add_bool(tokens, kwargs, "no_pass", "--no-pass")
+        _add_value(tokens, kwargs, "output_prefix", "-o")
+        _add_bool(tokens, kwargs, "disable_llmnr", "-d")
+
+    if tool.name in {"evil-winrm", "pwncat-cs"}:
+        _add_bool(tokens, kwargs, "ssl", "-S")
+        _add_value(tokens, kwargs, "key_file", "-k")
+        _add_value(tokens, kwargs, "cert_file", "-c")
+        _add_value(tokens, kwargs, "upload", "--upload")
+        _add_value(tokens, kwargs, "download", "--download")
+
+    if tool.name in {"sliver", "havoc", "ligolo-ng", "chisel"}:
+        _add_value(tokens, kwargs, "mode", "--mode")
+        _add_value(tokens, kwargs, "listen_addr", "--listen")
+        _add_value(tokens, kwargs, "connect_addr", "--connect")
+        _add_value(tokens, kwargs, "auth_token", "--auth")
+        _add_value(tokens, kwargs, "tun_name", "--tun")
+
+    if tool.name == "peass-ng":
+        _add_value(tokens, kwargs, "peas_variant", "--variant")
+        _add_value(tokens, kwargs, "checks", "--checks")
+        _add_bool(tokens, kwargs, "quiet", "-q")
+
+    if tool.name in {"commix", "nosqlmap", "blisqy", "leviathan", "explo"}:
+        _add_value(tokens, kwargs, "parameter", "-p")
+        _add_value(tokens, kwargs, "method", "--method")
+        _add_value(tokens, kwargs, "delay", "--time-sec")
+        _add_bool(tokens, kwargs, "os_shell", "--os-shell")
+        if kwargs.get("batch", True):
+            tokens.append("--batch")
+
+    if tool.name in {"routersploit", "websploit"}:
+        _add_value(tokens, kwargs, "set_options", "--set")
+        _add_bool(tokens, kwargs, "check_only", "--check")
+        _add_value(tokens, kwargs, "resource_file", "-r")
+
+    if tool.name in {"pacu", "scoutsuite"}:
+        _add_value(tokens, kwargs, "session", "--session")
+        if tool.name != "pacu":
+            _add_value(tokens, kwargs, "module", "--module")
+        _add_value(tokens, kwargs, "regions", "--regions")
+        _add_value(tokens, kwargs, "report_dir", "--report-dir")
 
     return tokens
 
