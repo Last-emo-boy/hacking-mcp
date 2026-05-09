@@ -230,6 +230,14 @@ def adapter_parameter_names(tool: HackingToolDef, spec: ToolAdapterSpec) -> list
     return [param.name for param in _adapter_parameters(tool, spec)]
 
 
+def adapter_parameter_specs(
+    tool: HackingToolDef,
+    spec: ToolAdapterSpec,
+) -> list[AdapterParameterSpec]:
+    """Return generated MCP argument specs for inventory/reporting."""
+    return _adapter_parameters(tool, spec)
+
+
 def _adapter_parameters(
     tool: HackingToolDef,
     spec: ToolAdapterSpec,

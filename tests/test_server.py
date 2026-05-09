@@ -49,6 +49,7 @@ class TestServerCreation:
         assert "security_tool_vegil" in names
         assert "security_run_recon" in names
         assert "security_list_tool_adapters" in names
+        assert "security_get_tool_adapter_info" in names
         assert len(adapter_names) == len(registry.get_tool_names())
 
     @pytest.mark.asyncio
@@ -69,6 +70,30 @@ class TestServerCreation:
         assert "policy/info-only" in result
         assert "params:" in result
         assert content
+
+    @pytest.mark.asyncio
+    async def test_tool_adapter_info_reports_parameters_and_policy_state(self):
+        """Single-tool adapter info should expose generated parameter details."""
+        from hacking_mcp.server import create_server
+
+        server = create_server()
+        _, nmap_metadata = await server.call_tool(
+            "security_get_tool_adapter_info",
+            {"tool_name": "nmap"},
+        )
+        _, vegil_metadata = await server.call_tool(
+            "security_get_tool_adapter_info",
+            {"tool_name": "vegil"},
+        )
+
+        assert "**Endpoint:** `security_tool_nmap`" in nmap_metadata["result"]
+        assert "`ports`" in nmap_metadata["result"]
+        assert "**Execution:** executable" in nmap_metadata["result"]
+
+        assert "**Endpoint:** `security_tool_vegil`" in vegil_metadata["result"]
+        assert "`lhost`" in vegil_metadata["result"]
+        assert "**Execution:** policy/info-only" in vegil_metadata["result"]
+        assert "does not execute" in vegil_metadata["result"]
 
 
 class TestToolCoherence:

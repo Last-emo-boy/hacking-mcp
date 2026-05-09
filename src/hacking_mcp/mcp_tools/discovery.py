@@ -15,6 +15,7 @@ from hacking_mcp.environment import get_tools_dir
 from hacking_mcp.ai_help import format_ai_help
 from hacking_mcp.mcp_tools.tool_adapters import (
     adapter_parameter_names,
+    adapter_parameter_specs,
     build_adapter_specs,
 )
 
@@ -220,6 +221,68 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
             lines.append("")
             remaining = len(specs) - limit
             lines.append(f"Use a higher limit or narrower filters to see {remaining} more.")
+
+        return "\n".join(lines)
+
+    @mcp.tool(
+        name="security_get_tool_adapter_info",
+        description="Get dedicated MCP adapter details for one tool, including endpoint, "
+        "execution state, generated parameters, and policy reason when blocked.",
+    )
+    async def security_get_tool_adapter_info(
+        tool_name: str,
+        ctx: Context = None,
+    ) -> str:
+        """Get generated adapter details for a single tool."""
+        tool = registry.get_tool(tool_name)
+        if not tool:
+            similar = [t.name for t in registry.search_tools(tool_name)[:5]]
+            msg = f"Tool '{tool_name}' not found."
+            if similar:
+                msg += f"\nDid you mean: {', '.join(similar)}?"
+            return msg
+
+        specs = build_adapter_specs(registry, safety)
+        spec = next((item for item in specs if item.tool_name == tool_name), None)
+        if spec is None:
+            return f"No adapter spec found for '{tool_name}'."
+
+        state = "executable" if spec.exposed else "policy/info-only"
+        lines = [
+            f"# Adapter: {tool.title}",
+            "",
+            f"**Tool:** `{tool.name}`",
+            f"**Endpoint:** `{spec.mcp_name}`",
+            f"**Category:** {spec.category}",
+            f"**Safety tier:** {spec.safety_tier}",
+            f"**Execution:** {state}",
+            f"**Target required:** {spec.target_required}",
+            f"**Scope validation:** {spec.validate_scope}",
+            f"**Confirmation required:** {spec.requires_confirmation}",
+        ]
+        if not spec.exposed:
+            lines.append(f"**Blocked reason:** {spec.blocked_reason or 'not exposed by policy'}")
+
+        lines.extend(["", "## Parameters"])
+        for param in adapter_parameter_specs(tool, spec):
+            default = "" if param.default == "" else f" default={param.default!r}"
+            lines.append(
+                f"- `{param.name}` ({param.typ.__name__}{default}) - {param.description}"
+            )
+
+        lines.extend([
+            "",
+            "## Invocation Shape",
+            f"`{spec.mcp_name}(...)`",
+        ])
+        if spec.exposed:
+            lines.append(
+                "Generated options are passed through the shared orchestrator and safety policy."
+            )
+        else:
+            lines.append(
+                "This adapter is registered for inventory and parameter visibility only; it does not execute."
+            )
 
         return "\n".join(lines)
 
