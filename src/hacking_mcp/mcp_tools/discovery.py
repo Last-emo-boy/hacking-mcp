@@ -13,6 +13,7 @@ from hacking_mcp.safety import SafetyPolicy
 from hacking_mcp.runner import get_environment
 from hacking_mcp.environment import get_tools_dir
 from hacking_mcp.ai_help import format_ai_help
+from hacking_mcp.mcp_tools.tool_adapters import build_adapter_specs
 
 
 def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
@@ -184,6 +185,8 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
             "",
             format_ai_help(tool),
             "",
+            _format_adapter_info(tool_name, registry, safety),
+            "",
             "## Availability",
         ]
         if avail.available:
@@ -352,3 +355,32 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
             lines.append('  no_proxy: "localhost,127.0.0.1,.local"')
             lines.append("```")
         return "\n".join(lines)
+
+
+def _format_adapter_info(
+    tool_name: str,
+    registry: ToolRegistry,
+    safety: SafetyPolicy,
+) -> str:
+    specs = build_adapter_specs(registry, safety)
+    spec = next((item for item in specs if item.tool_name == tool_name), None)
+    if spec is None:
+        return "## Dedicated MCP Adapter\nNot available."
+    if spec.exposed:
+        confirm_note = (
+            "\n**Confirmation:** pass `confirm_authorized=true` when invoking this adapter."
+            if spec.requires_confirmation
+            else ""
+        )
+        target_note = "required" if spec.target_required else "optional"
+        return (
+            "## Dedicated MCP Adapter\n"
+            f"**Endpoint:** `{spec.mcp_name}`\n"
+            f"**Target:** {target_note}\n"
+            f"**Scope validation:** {spec.validate_scope}"
+            f"{confirm_note}"
+        )
+    return (
+        "## Dedicated MCP Adapter\n"
+        f"Not registered for execution: {spec.blocked_reason or 'not exposed by policy'}"
+    )

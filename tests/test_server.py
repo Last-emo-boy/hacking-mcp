@@ -35,6 +35,18 @@ class TestServerCreation:
         cmd = runner.dry_run("nmap", ["-sV", "localhost"])
         assert "nmap" in cmd
 
+    @pytest.mark.asyncio
+    async def test_per_tool_adapters_registered(self):
+        """Server should expose dedicated adapters for safety-eligible tools."""
+        from hacking_mcp.server import create_server
+
+        server = create_server()
+        names = {tool.name for tool in await server.list_tools()}
+
+        assert "security_tool_nmap" in names
+        assert "security_tool_sqlmap" in names
+        assert "security_run_recon" in names
+
 
 class TestToolCoherence:
     """Verify that all tools referenced in MCP tool modules exist in the registry."""
