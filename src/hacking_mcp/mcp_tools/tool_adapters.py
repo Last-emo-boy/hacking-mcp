@@ -405,6 +405,13 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "output_dir": "output",
         "config_file": "config.yaml",
         "provider_config": "provider-config.yaml",
+        "config_path": "gitleaks.toml",
+        "baseline_path": "baseline.json",
+        "ignore_path": ".gitleaksignore",
+        "log_opts": "--since=2026-01-01",
+        "report_format": "json",
+        "report_path": "report.json",
+        "log_level": "info",
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -513,7 +520,29 @@ def _adapter_parameters(
     if tags & {"username", "social", "social-media"}:
         params.append(AdapterParameterSpec("timeout", int, 0, "Per-site timeout in seconds when supported."))
 
-    if tags & {"git", "secrets", "credentials"}:
+    if tool.name == "gitleaks":
+        params.extend([
+            AdapterParameterSpec("redact", bool, True, "Redact secrets in output."),
+            AdapterParameterSpec("log_opts", str, "", "Git log options for detect scans."),
+            AdapterParameterSpec("config_path", str, "", "Path to gitleaks config file."),
+            AdapterParameterSpec("baseline_path", str, "", "Path to baseline report."),
+            AdapterParameterSpec("ignore_path", str, "", "Path to .gitleaksignore file."),
+            AdapterParameterSpec("enable_rule", str, "", "Only enable specific rule IDs."),
+            AdapterParameterSpec("exit_code", int, 0, "Exit code when leaks are found; 0 leaves default."),
+            AdapterParameterSpec("follow_symlinks", bool, False, "Scan files that are symlinks to other files."),
+            AdapterParameterSpec("ignore_allow", bool, False, "Ignore gitleaks:allow comments."),
+            AdapterParameterSpec("max_decode_depth", int, 0, "Recursive decode depth; 0 leaves default."),
+            AdapterParameterSpec("max_archive_depth", int, 0, "Nested archive depth; 0 leaves default."),
+            AdapterParameterSpec("max_target_mb", int, 0, "Maximum target file size in MB; 0 leaves default."),
+            AdapterParameterSpec("report_format", str, "", "Report format, for example json, csv, junit, sarif."),
+            AdapterParameterSpec("report_path", str, "", "Report output path."),
+            AdapterParameterSpec("report_template", str, "", "Template file for report generation."),
+            AdapterParameterSpec("log_level", str, "", "Log level: trace, debug, info, warn, error, fatal."),
+            AdapterParameterSpec("no_banner", bool, False, "Suppress banner output."),
+            AdapterParameterSpec("no_color", bool, False, "Disable color output."),
+            AdapterParameterSpec("verbose", bool, False, "Show verbose output from scan."),
+        ])
+    elif tags & {"git", "secrets", "credentials"}:
         params.extend([
             AdapterParameterSpec("redact", bool, True, "Redact discovered secrets when supported."),
             AdapterParameterSpec("since_commit", str, "", "Only scan history since this commit when supported."),
@@ -799,7 +828,7 @@ def _adapter_parameters(
             AdapterParameterSpec("browse", bool, False, "Open found results in browser when supported."),
         ])
 
-    if tool.name in {"trufflehog", "gitleaks"}:
+    if tool.name == "trufflehog":
         params.extend([
             AdapterParameterSpec("source_type", str, "", "Source type such as git, filesystem, github, or docker."),
             AdapterParameterSpec("branch", str, "", "Git branch when supported."),
@@ -1138,7 +1167,28 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
     if tags & {"username", "social", "social-media"}:
         _add_value(tokens, kwargs, "timeout", "--timeout")
 
-    if tags & {"git", "secrets", "credentials"}:
+    if tool.name == "gitleaks":
+        if kwargs.get("redact", True):
+            tokens.append("--redact")
+        _add_value(tokens, kwargs, "log_opts", "--log-opts")
+        _add_value(tokens, kwargs, "config_path", "--config")
+        _add_value(tokens, kwargs, "baseline_path", "--baseline-path")
+        _add_value(tokens, kwargs, "ignore_path", "--gitleaks-ignore-path")
+        _add_value(tokens, kwargs, "enable_rule", "--enable-rule")
+        _add_value(tokens, kwargs, "exit_code", "--exit-code")
+        _add_bool(tokens, kwargs, "follow_symlinks", "--follow-symlinks")
+        _add_bool(tokens, kwargs, "ignore_allow", "--ignore-gitleaks-allow")
+        _add_value(tokens, kwargs, "max_decode_depth", "--max-decode-depth")
+        _add_value(tokens, kwargs, "max_archive_depth", "--max-archive-depth")
+        _add_value(tokens, kwargs, "max_target_mb", "--max-target-megabytes")
+        _add_value(tokens, kwargs, "report_format", "--report-format")
+        _add_value(tokens, kwargs, "report_path", "--report-path")
+        _add_value(tokens, kwargs, "report_template", "--report-template")
+        _add_value(tokens, kwargs, "log_level", "--log-level")
+        _add_bool(tokens, kwargs, "no_banner", "--no-banner")
+        _add_bool(tokens, kwargs, "no_color", "--no-color")
+        _add_bool(tokens, kwargs, "verbose", "--verbose")
+    elif tags & {"git", "secrets", "credentials"}:
         if kwargs.get("redact", True):
             tokens.append("--redact")
         _add_value(tokens, kwargs, "since_commit", "--log-opts")
@@ -1359,7 +1409,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "print_found", "--print-found")
         _add_bool(tokens, kwargs, "browse", "--browse")
 
-    if tool.name in {"trufflehog", "gitleaks"}:
+    if tool.name == "trufflehog":
         _add_value(tokens, kwargs, "source_type", "--source-type")
         _add_value(tokens, kwargs, "branch", "--branch")
         _add_value(tokens, kwargs, "max_depth", "--max-depth")

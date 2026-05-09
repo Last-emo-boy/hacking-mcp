@@ -144,6 +144,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["subfinder"].unverified_parameters == ()
     assert any("subfinder/usage" in item for item in records["subfinder"].evidence)
 
+    assert records["gitleaks"].source_status == "source-reviewed"
+    assert records["gitleaks"].unverified_parameters == ()
+    assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
+
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
     assert records["dracnmap"].gap
@@ -215,6 +219,12 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     assert {"source_type", "branch", "max_depth", "report_format"}.issubset(
         trufflehog_schema
     )
+
+    gitleaks_schema = tools["security_tool_gitleaks"].inputSchema["properties"]
+    assert {
+        "redact", "log_opts", "config_path", "baseline_path", "ignore_path",
+        "report_format", "report_path", "log_level", "no_banner", "no_color",
+    }.issubset(gitleaks_schema)
 
     prowler_schema = tools["security_tool_prowler"].inputSchema["properties"]
     assert {"provider", "checks", "excluded_checks", "output_format"}.issubset(
@@ -503,6 +513,57 @@ async def test_subfinder_source_reviewed_parameters_build_cli_options(registry, 
         "-timeout 30 -max-time 10 -o subdomains.txt -oJ -oD subfinder-out "
         "-cs -oI -config config.yaml -pc providers.yaml "
         "-proxy http://127.0.0.1:8080 -silent"
+    )
+
+
+@pytest.mark.asyncio
+async def test_gitleaks_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_gitleaks",
+        {
+            "target": "repo",
+            "redact": True,
+            "log_opts": "since=2026-01-01",
+            "config_path": "gitleaks.toml",
+            "baseline_path": "baseline.json",
+            "ignore_path": ".gitleaksignore",
+            "enable_rule": "generic-api-key",
+            "exit_code": 2,
+            "follow_symlinks": True,
+            "ignore_allow": True,
+            "max_decode_depth": 2,
+            "max_archive_depth": 1,
+            "max_target_mb": 5,
+            "report_format": "json",
+            "report_path": "gitleaks.json",
+            "report_template": "template.tmpl",
+            "log_level": "debug",
+            "no_banner": True,
+            "no_color": True,
+            "verbose": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "gitleaks"
+    assert request.options == (
+        "--redact --log-opts since=2026-01-01 --config gitleaks.toml "
+        "--baseline-path baseline.json --gitleaks-ignore-path .gitleaksignore "
+        "--enable-rule generic-api-key --exit-code 2 --follow-symlinks "
+        "--ignore-gitleaks-allow --max-decode-depth 2 --max-archive-depth 1 "
+        "--max-target-megabytes 5 --report-format json --report-path gitleaks.json "
+        "--report-template template.tmpl --log-level debug --no-banner --no-color "
+        "--verbose"
     )
 
 

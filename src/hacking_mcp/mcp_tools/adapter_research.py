@@ -171,6 +171,38 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "verbose",
         ),
     ),
+    "gitleaks": SourceReview(
+        note=(
+            "Reviewed against the upstream Gitleaks README usage/options for "
+            "redaction, git log options, config/baseline/ignore files, rule "
+            "selection, limits, report output, logging, banner/color, and "
+            "verbose flags."
+        ),
+        references=(
+            "https://github.com/gitleaks/gitleaks",
+        ),
+        verified_parameters=(
+            "redact",
+            "log_opts",
+            "config_path",
+            "baseline_path",
+            "ignore_path",
+            "enable_rule",
+            "exit_code",
+            "follow_symlinks",
+            "ignore_allow",
+            "max_decode_depth",
+            "max_archive_depth",
+            "max_target_mb",
+            "report_format",
+            "report_path",
+            "report_template",
+            "log_level",
+            "no_banner",
+            "no_color",
+            "verbose",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}
