@@ -486,9 +486,7 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     }.issubset(john_schema)
 
     mobsf_schema = tools["security_tool_mobsf"].inputSchema["properties"]
-    assert {"server_url", "api_key", "frida_script", "runtime_command"}.issubset(
-        mobsf_schema
-    )
+    assert {"bind_host", "bind_port"}.issubset(mobsf_schema)
 
     masscan_schema = tools["security_tool_masscan"].inputSchema["properties"]
     assert {
@@ -2524,6 +2522,32 @@ async def test_jadx_source_reviewed_parameters_build_cli_options(registry, safet
         "--disable-plugins plugin.one,plugin.two --config none "
         "-Pfoo=bar -Pbaz=qux"
     )
+
+
+@pytest.mark.asyncio
+async def test_mobsf_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_mobsf",
+        {
+            "bind_host": "127.0.0.1",
+            "bind_port": 8080,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "mobsf"
+    assert request.target == ""
+    assert request.options == "127.0.0.1:8080"
 
 
 @pytest.mark.asyncio

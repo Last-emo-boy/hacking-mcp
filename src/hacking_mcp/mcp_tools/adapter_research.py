@@ -381,6 +381,22 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "mobsf": SourceReview(
+        note=(
+            "Reviewed against upstream MobSF run.sh server entrypoint. The "
+            "script accepts one optional positional bind argument in IP:PORT "
+            "form, validates IPv4 address and port, and otherwise defaults to "
+            "the built-in [::]:8000 binding before launching gunicorn."
+        ),
+        references=(
+            "https://github.com/MobSF/Mobile-Security-Framework-MobSF",
+            "https://raw.githubusercontent.com/MobSF/Mobile-Security-Framework-MobSF/master/run.sh",
+        ),
+        verified_parameters=(
+            "bind_host",
+            "bind_port",
+        ),
+    ),
     "steghide": SourceReview(
         note=(
             "Reviewed against steghide documentation and packaged man page for "

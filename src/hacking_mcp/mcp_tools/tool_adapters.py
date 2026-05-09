@@ -1375,7 +1375,7 @@ def _adapter_parameters(
             AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
         ])
 
-    if tool.name in {"mobsf", "frida", "objection"}:
+    if tool.name in {"frida", "objection"}:
         params.extend([
             AdapterParameterSpec("server_url", str, "", "Mobile analysis server URL when supported."),
             AdapterParameterSpec("api_key", str, "", "API key/profile when supported."),
@@ -2344,7 +2344,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "local_auth", "--local-auth")
         _add_value(tokens, kwargs, "target_ip", "--target-ip")
 
-    if tool.name in {"mobsf", "frida", "objection"}:
+    if tool.name in {"frida", "objection"}:
         _add_value(tokens, kwargs, "server_url", "--server")
         _add_value(tokens, kwargs, "api_key", "--api-key")
         _add_value(tokens, kwargs, "frida_script", "-l")
