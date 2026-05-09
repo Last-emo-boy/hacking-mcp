@@ -16,6 +16,7 @@ from hacking_mcp.runner import get_environment
 from hacking_mcp.environment import get_tools_dir
 from hacking_mcp.ai_help import format_ai_help
 from hacking_mcp.mcp_tools.tool_adapters import (
+    adapter_example_arguments,
     adapter_parameter_names,
     adapter_parameter_specs,
     adapter_request_preview,
@@ -277,6 +278,13 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
             "",
             "## Invocation Shape",
             f"`{spec.mcp_name}(...)`",
+            "",
+            "## Example Arguments",
+            "```json",
+            json.dumps(adapter_example_arguments(tool, spec), indent=2),
+            "```",
+            "",
+            "Use `security_preview_tool_adapter` with this JSON to verify generated options.",
         ])
         if spec.exposed:
             lines.append(

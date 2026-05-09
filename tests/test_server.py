@@ -90,10 +90,13 @@ class TestServerCreation:
         assert "**Endpoint:** `security_tool_nmap`" in nmap_metadata["result"]
         assert "`ports`" in nmap_metadata["result"]
         assert "**Execution:** executable" in nmap_metadata["result"]
+        assert "## Example Arguments" in nmap_metadata["result"]
+        assert '"ports": "80,443"' in nmap_metadata["result"]
 
         assert "**Endpoint:** `security_tool_vegil`" in vegil_metadata["result"]
         assert "`lhost`" in vegil_metadata["result"]
         assert "**Execution:** policy/info-only" in vegil_metadata["result"]
+        assert '"lhost": "127.0.0.1"' in vegil_metadata["result"]
         assert "does not execute" in vegil_metadata["result"]
 
     @pytest.mark.asyncio

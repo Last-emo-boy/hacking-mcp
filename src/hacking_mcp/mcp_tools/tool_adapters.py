@@ -256,6 +256,65 @@ def adapter_request_preview(
     }
 
 
+def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> dict:
+    """Build conservative example arguments for adapter documentation."""
+    names = adapter_parameter_names(tool, spec)
+    example: dict[str, Any] = {"target": _example_target(tool)}
+
+    examples: dict[str, Any] = {
+        "ports": "80,443",
+        "scan_type": "tcp",
+        "service_version": True,
+        "severity": "low,medium",
+        "tags": "exposure",
+        "wordlist": "wordlist.txt",
+        "threads": 10,
+        "extensions": "php,js,txt",
+        "data": "id=1",
+        "dbms": "MySQL",
+        "risk": 1,
+        "level": 1,
+        "parameter": "id",
+        "sources": "all",
+        "profile": "default",
+        "region": "us-east-1",
+        "domain": "example.local",
+        "username": "alice",
+        "dc_ip": "127.0.0.1",
+        "output_dir": "output",
+        "plugin": "windows.pslist",
+        "extract": True,
+        "hash_file": "hashes.txt",
+        "hash_type": "0",
+        "passphrase": "test-passphrase",
+        "apk_path": "app.apk",
+        "package_name": "com.example.app",
+        "binary_path": "sample.bin",
+        "lhost": "127.0.0.1",
+        "lport": 4444,
+        "interface": "eth0",
+        "template": "training",
+        "payload_type": "generic/shell_reverse_tcp",
+        "format": "raw",
+        "module": "scanner/example",
+        "checks": "default",
+        "scripts": "default",
+        "timeout": 10,
+        "headless": True,
+    }
+    for name in names:
+        if name in {"target", "options", "confirm_authorized"}:
+            continue
+        if name in examples:
+            example[name] = examples[name]
+        if len(example) >= 5:
+            break
+
+    if spec.requires_confirmation:
+        example["confirm_authorized"] = False
+    return example
+
+
 def _adapter_parameters(
     tool: HackingToolDef,
     spec: ToolAdapterSpec,
@@ -778,6 +837,23 @@ def _adapter_parameters(
         ),
     ])
     return _dedupe_parameters(params)
+
+
+def _example_target(tool: HackingToolDef) -> str:
+    tags = set(tool.tags)
+    if "email" in tags:
+        return "user@example.com"
+    if tags & {"username", "social", "social-media"}:
+        return "testuser"
+    if tags & {"web", "http", "url", "xss", "sqli", "injection"}:
+        return "http://127.0.0.1:8000"
+    if tags & {"subdomain", "dns", "osint"}:
+        return "example.com"
+    if tags & {"forensics", "reverse", "binary", "hash", "mobile", "stegano"}:
+        return "local-test"
+    if tool.category == "Cloud Security":
+        return ""
+    return "localhost"
 
 
 def _dedupe_parameters(params: list[AdapterParameterSpec]) -> list[AdapterParameterSpec]:
