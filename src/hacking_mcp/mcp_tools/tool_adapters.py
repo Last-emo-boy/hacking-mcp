@@ -420,6 +420,8 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "output_xml": "scan.xml",
         "include_file": "targets.txt",
         "readscan": "scan.bin",
+        "port_range": "1-1000",
+        "scan_order": "serial",
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -466,6 +468,28 @@ def _adapter_parameters(
             AdapterParameterSpec("output_format", str, "", "Output format, for example xml, json, list, grepable."),
             AdapterParameterSpec("output_filename", str, "", "Output filename when using output_format."),
             AdapterParameterSpec("readscan", str, "", "Read binary scan results from file."),
+        ])
+    elif tool.name == "rustscan":
+        params.extend([
+            AdapterParameterSpec("ports", str, "", "Comma-separated ports to scan."),
+            AdapterParameterSpec("port_range", str, "", "Port range in start-end format."),
+            AdapterParameterSpec("no_config", bool, False, "Ignore RustScan configuration file."),
+            AdapterParameterSpec("no_banner", bool, False, "Hide the RustScan banner."),
+            AdapterParameterSpec("config_path", str, "", "Custom config file path."),
+            AdapterParameterSpec("greppable", bool, False, "Only output ports in greppable mode."),
+            AdapterParameterSpec("accessible", bool, False, "Enable screen-reader friendly mode."),
+            AdapterParameterSpec("resolver", str, "", "Comma-delimited list or file of DNS resolvers."),
+            AdapterParameterSpec("batch_size", int, 0, "Batch size for port scanning; 0 leaves default."),
+            AdapterParameterSpec("timeout", int, 0, "Timeout in milliseconds; 0 leaves default."),
+            AdapterParameterSpec("tries", int, 0, "Number of tries before a port is assumed closed; 0 leaves default."),
+            AdapterParameterSpec("ulimit", int, 0, "Automatically raise ULIMIT; 0 leaves default."),
+            AdapterParameterSpec("scan_order", str, "", "Scan order: serial or random."),
+            AdapterParameterSpec("scripts", str, "", "Script mode: none, default, or custom."),
+            AdapterParameterSpec("top", bool, False, "Use the top 1000 ports."),
+            AdapterParameterSpec("exclude_ports", str, "", "Comma-separated ports to exclude."),
+            AdapterParameterSpec("exclude_addresses", str, "", "Comma-separated CIDRs, IPs, or hosts to exclude."),
+            AdapterParameterSpec("udp", bool, False, "Enable UDP scanning mode."),
+            AdapterParameterSpec("nmap_args", str, "", "Trailing nmap arguments appended after --."),
         ])
     elif "port-scan" in tags or "network" in tags:
         params.extend([
@@ -842,7 +866,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan"}
+        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -973,15 +997,6 @@ def _adapter_parameters(
             AdapterParameterSpec("analysis_level", str, "", "Analysis depth/profile when supported."),
             AdapterParameterSpec("entrypoint", str, "", "Entrypoint/address when supported."),
             AdapterParameterSpec("headless", bool, False, "Run in headless mode when supported."),
-        ])
-
-    if tool.name == "rustscan":
-        params.extend([
-            AdapterParameterSpec("exclude_file", str, "", "File containing targets to exclude when supported."),
-            AdapterParameterSpec("adapter_ip", str, "", "Source/adapter IP address when supported."),
-            AdapterParameterSpec("adapter_port", str, "", "Source/adapter port or range when supported."),
-            AdapterParameterSpec("ulimit", int, 0, "Open file limit when supported; 0 leaves default."),
-            AdapterParameterSpec("batch_size", int, 0, "Batch size when supported; 0 leaves default."),
         ])
 
     if tool.name in {"nikto", "testssl", "wafw00f"}:
@@ -1190,6 +1205,29 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "output_format", "--output-format")
         _add_value(tokens, kwargs, "output_filename", "--output-filename")
         _add_value(tokens, kwargs, "readscan", "--readscan")
+    elif tool.name == "rustscan":
+        _add_value(tokens, kwargs, "ports", "-p")
+        _add_value(tokens, kwargs, "port_range", "-r")
+        _add_bool(tokens, kwargs, "no_config", "--no-config")
+        _add_bool(tokens, kwargs, "no_banner", "--no-banner")
+        _add_value(tokens, kwargs, "config_path", "--config-path")
+        _add_bool(tokens, kwargs, "greppable", "-g")
+        _add_bool(tokens, kwargs, "accessible", "--accessible")
+        _add_value(tokens, kwargs, "resolver", "--resolver")
+        _add_value(tokens, kwargs, "batch_size", "-b")
+        _add_value(tokens, kwargs, "timeout", "-t")
+        _add_value(tokens, kwargs, "tries", "--tries")
+        _add_value(tokens, kwargs, "ulimit", "-u")
+        _add_value(tokens, kwargs, "scan_order", "--scan-order")
+        _add_value(tokens, kwargs, "scripts", "--scripts")
+        _add_bool(tokens, kwargs, "top", "--top")
+        _add_value(tokens, kwargs, "exclude_ports", "--exclude-ports")
+        _add_value(tokens, kwargs, "exclude_addresses", "--exclude-addresses")
+        _add_bool(tokens, kwargs, "udp", "--udp")
+        nmap_args = str(kwargs.get("nmap_args") or "").strip()
+        if nmap_args:
+            tokens.append("--")
+            tokens.extend(shlex.split(nmap_args))
     elif "port-scan" in tags or "network" in tags:
         _add_value(tokens, kwargs, "ports", "-p")
         _add_scan_type(tokens, kwargs)
@@ -1499,7 +1537,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan"}
+        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
@@ -1598,13 +1636,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "analysis_level", "--analysis")
         _add_value(tokens, kwargs, "entrypoint", "--entrypoint")
         _add_bool(tokens, kwargs, "headless", "--headless")
-
-    if tool.name == "rustscan":
-        _add_value(tokens, kwargs, "exclude_file", "--excludefile")
-        _add_value(tokens, kwargs, "adapter_ip", "--adapter-ip")
-        _add_value(tokens, kwargs, "adapter_port", "--adapter-port")
-        _add_value(tokens, kwargs, "ulimit", "--ulimit")
-        _add_value(tokens, kwargs, "batch_size", "--batch-size")
 
     if tool.name in {"nikto", "testssl", "wafw00f"}:
         _add_bool(tokens, kwargs, "ssl", "-ssl")

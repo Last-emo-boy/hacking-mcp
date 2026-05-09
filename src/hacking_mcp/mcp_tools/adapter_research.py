@@ -312,6 +312,39 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "readscan",
         ),
     ),
+    "rustscan": SourceReview(
+        note=(
+            "Reviewed against RustScan's upstream clap input definitions for "
+            "ports/ranges, config/banner/output modes, resolver, batch/timeout "
+            "limits, scan order, scripts, exclusions, UDP mode, and trailing "
+            "nmap arguments."
+        ),
+        references=(
+            "https://github.com/RustScan/RustScan",
+            "https://github.com/RustScan/RustScan/blob/master/src/input.rs",
+        ),
+        verified_parameters=(
+            "ports",
+            "port_range",
+            "no_config",
+            "no_banner",
+            "config_path",
+            "greppable",
+            "accessible",
+            "resolver",
+            "batch_size",
+            "timeout",
+            "tries",
+            "ulimit",
+            "scan_order",
+            "scripts",
+            "top",
+            "exclude_ports",
+            "exclude_addresses",
+            "udp",
+            "nmap_args",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}

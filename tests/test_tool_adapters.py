@@ -152,6 +152,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["masscan"].unverified_parameters == ()
     assert any("robertdavidgraham/masscan" in item for item in records["masscan"].evidence)
 
+    assert records["rustscan"].source_status == "source-reviewed"
+    assert records["rustscan"].unverified_parameters == ()
+    assert any("RustScan/RustScan" in item for item in records["rustscan"].evidence)
+
     assert records["gitleaks"].source_status == "source-reviewed"
     assert records["gitleaks"].unverified_parameters == ()
     assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
@@ -280,6 +284,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "source_port", "exclude_file", "include_file", "output_xml",
         "output_json", "output_format", "readscan",
     }.issubset(masscan_schema)
+
+    rustscan_schema = tools["security_tool_rustscan"].inputSchema["properties"]
+    assert {
+        "ports", "port_range", "no_config", "no_banner", "config_path",
+        "greppable", "resolver", "batch_size", "timeout", "ulimit",
+        "scan_order", "scripts", "exclude_ports", "exclude_addresses", "udp",
+    }.issubset(rustscan_schema)
 
     ffuf_schema = tools["security_tool_ffuf"].inputSchema["properties"]
     assert {"filter_codes", "filter_size", "filter_words", "add_slash"}.issubset(
@@ -632,6 +643,51 @@ async def test_masscan_source_reviewed_parameters_build_cli_options(registry, sa
         "--source-ip 192.0.2.10 --source-port 61000 --excludefile exclude.txt "
         "--includefile include.txt -oX scan.xml -oJ scan.json "
         "--output-format list --output-filename scan.lst --readscan scan.bin"
+    )
+
+
+@pytest.mark.asyncio
+async def test_rustscan_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_rustscan",
+        {
+            "target": "192.0.2.10",
+            "ports": "80,443",
+            "port_range": "1-1000",
+            "no_banner": True,
+            "config_path": "rustscan.toml",
+            "greppable": True,
+            "resolver": "1.1.1.1",
+            "batch_size": 500,
+            "timeout": 1500,
+            "tries": 2,
+            "ulimit": 5000,
+            "scan_order": "serial",
+            "scripts": "none",
+            "exclude_ports": "25,110",
+            "exclude_addresses": "192.0.2.1",
+            "udp": True,
+            "nmap_args": "-sV -sC",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "rustscan"
+    assert request.options == (
+        "-p 80,443 -r 1-1000 --no-banner --config-path rustscan.toml "
+        "-g --resolver 1.1.1.1 -b 500 -t 1500 --tries 2 -u 5000 "
+        "--scan-order serial --scripts none --exclude-ports 25,110 "
+        "--exclude-addresses 192.0.2.1 --udp -- -sV -sC"
     )
 
 
