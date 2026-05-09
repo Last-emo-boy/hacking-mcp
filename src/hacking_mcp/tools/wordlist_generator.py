@@ -68,7 +68,7 @@ WORDLIST_GENERATOR_TOOLS: list[HackingToolDef] = [
         description="Open-source password security auditing and recovery tool. Usage: john --wordlist=wordlist.txt hashfile",
         category="Wordlist Generator",
         install_commands=["sudo apt-get install -y john"],
-        run_command="john --help",
+        run_command="john",
         project_url="https://github.com/openwall/john",
         tags=["password", "cracker", "hash", "audit", "recovery"],
         safety_tier=SafetyTier.SAFE,

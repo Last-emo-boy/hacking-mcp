@@ -1375,15 +1375,6 @@ def _adapter_parameters(
             AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
         ])
 
-    if tool.name == "john":
-        params.extend([
-            AdapterParameterSpec("rules", str, "", "Rule file/name when supported."),
-            AdapterParameterSpec("mask", str, "", "Mask attack pattern when supported."),
-            AdapterParameterSpec("session", str, "", "Session name when supported."),
-            AdapterParameterSpec("show", bool, False, "Show cracked hashes when supported."),
-            AdapterParameterSpec("potfile_path", str, "", "Potfile path when supported."),
-        ])
-
     if tool.name in {"mobsf", "frida", "objection"}:
         params.extend([
             AdapterParameterSpec("server_url", str, "", "Mobile analysis server URL when supported."),
@@ -2352,13 +2343,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "kerberos", "-k")
         _add_bool(tokens, kwargs, "local_auth", "--local-auth")
         _add_value(tokens, kwargs, "target_ip", "--target-ip")
-
-    if tool.name == "john":
-        _add_value(tokens, kwargs, "rules", "-r")
-        _add_value(tokens, kwargs, "mask", "--mask")
-        _add_value(tokens, kwargs, "session", "--session")
-        _add_bool(tokens, kwargs, "show", "--show")
-        _add_value(tokens, kwargs, "potfile_path", "--potfile-path")
 
     if tool.name in {"mobsf", "frida", "objection"}:
         _add_value(tokens, kwargs, "server_url", "--server")

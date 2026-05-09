@@ -466,6 +466,25 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "stdout_candidates", "quiet", "force", "version", "help",
     }.issubset(hashcat_schema)
 
+    john_schema = tools["security_tool_john"].inputSchema["properties"]
+    assert {
+        "single", "single_rules", "single_seed", "single_wordlist",
+        "wordlist", "wordlist_default", "stdin", "pipe", "rules",
+        "rules_default", "rules_stack", "rules_skip_nop", "incremental",
+        "incremental_default", "mask", "custom_charset1",
+        "custom_charset2", "custom_charset3", "custom_charset4", "markov",
+        "external", "stdout_candidates", "stdout_length", "restore",
+        "restore_session", "session", "status", "status_session", "show",
+        "show_mode", "make_charset", "test", "test_time", "stress_test",
+        "no_mask", "skip_self_tests", "users", "groups", "shells", "salts",
+        "costs", "format", "subformat", "pot", "list_option", "config",
+        "field_separator_char", "min_length", "max_length", "length",
+        "max_run_time", "max_candidates", "progress_every", "fork", "node",
+        "devices", "lws", "gws", "verbosity", "no_log", "log_stderr",
+        "crack_status", "keep_guessing", "reject_printable", "force_tty",
+        "help",
+    }.issubset(john_schema)
+
     mobsf_schema = tools["security_tool_mobsf"].inputSchema["properties"]
     assert {"server_url", "api_key", "frida_script", "runtime_command"}.issubset(
         mobsf_schema
@@ -2356,6 +2375,65 @@ async def test_hashcat_source_reviewed_parameters_build_cli_options(registry, sa
         "-1 '?l?d' -w 3 -O -d 1 -D 2 --status --status-json "
         "--status-timer 10 --runtime 60 -s 100 -l 1000 --identify "
         "--quiet --force rockyou.txt '?a?a?a?a'"
+    )
+
+
+@pytest.mark.asyncio
+async def test_john_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_john",
+        {
+            "target": "hashes.txt",
+            "wordlist": "rockyou.txt",
+            "rules": "Wordlist",
+            "rules_stack": "best64",
+            "rules_skip_nop": True,
+            "incremental": "ASCII",
+            "mask": "?l?l?d?d",
+            "custom_charset1": "?l?d",
+            "stdout_length": 8,
+            "session": "audit",
+            "show_mode": "left",
+            "test_time": "0",
+            "no_mask": True,
+            "users": "alice",
+            "format": "raw-md5",
+            "pot": "john.pot",
+            "min_length": 4,
+            "max_length": 12,
+            "max_run_time": "-60",
+            "fork": 2,
+            "node": "1-2/4",
+            "devices": "1,2",
+            "verbosity": 4,
+            "no_log": True,
+            "log_stderr": True,
+            "keep_guessing": True,
+            "force_tty": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "john"
+    assert request.target == "hashes.txt"
+    assert request.options == (
+        "--wordlist=rockyou.txt --rules=Wordlist --rules-stack best64 "
+        "--rules-skip-nop --incremental=ASCII --mask '?l?l?d?d' "
+        "--1 '?l?d' --stdout=8 --session audit --show=left --test=0 "
+        "--no-mask --users alice --format raw-md5 --pot john.pot "
+        "--min-length 4 --max-length 12 --max-run-time -60 --fork 2 "
+        "--node 1-2/4 --devices 1,2 --verbosity 4 --no-log --log-stderr "
+        "--keep-guessing --force-tty"
     )
 
 
