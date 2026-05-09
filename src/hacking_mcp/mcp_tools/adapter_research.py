@@ -606,6 +606,33 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "notfound_string",
         ),
     ),
+    "wafw00f": SourceReview(
+        note=(
+            "Reviewed against upstream wafw00f OptionParser definitions for "
+            "verbosity, find-all matching, redirect suppression, one-WAF tests, "
+            "output file/format, input files, WAF listing, proxy, version, custom "
+            "headers file, timeout, and color suppression."
+        ),
+        references=(
+            "https://github.com/EnableSecurity/wafw00f",
+            "https://raw.githubusercontent.com/EnableSecurity/wafw00f/master/wafw00f/main.py",
+        ),
+        verified_parameters=(
+            "verbosity",
+            "find_all",
+            "no_redirect",
+            "test_waf",
+            "output_file",
+            "output_format",
+            "input_file",
+            "list_wafs",
+            "proxy",
+            "version",
+            "headers_file",
+            "timeout",
+            "no_color",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}

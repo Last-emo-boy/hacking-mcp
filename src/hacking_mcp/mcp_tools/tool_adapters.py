@@ -761,6 +761,22 @@ def _adapter_parameters(
             AdapterParameterSpec("json_output", bool, False, "Store output in JSONL format."),
             AdapterParameterSpec("silent", bool, False, "Enable silent output mode."),
         ])
+    elif tool.name == "wafw00f":
+        params.extend([
+            AdapterParameterSpec("verbosity", int, 0, "Verbosity level 1-3; 0 leaves default."),
+            AdapterParameterSpec("find_all", bool, False, "Find all matching WAF signatures."),
+            AdapterParameterSpec("no_redirect", bool, False, "Do not follow HTTP 3xx redirects."),
+            AdapterParameterSpec("test_waf", str, "", "Test for one specific WAF name."),
+            AdapterParameterSpec("output_file", str, "", "Output file path, or - for stdout."),
+            AdapterParameterSpec("output_format", str, "", "Force output format: csv, json, or text."),
+            AdapterParameterSpec("input_file", str, "", "Input file containing targets."),
+            AdapterParameterSpec("list_wafs", bool, False, "List detectable WAF names and exit."),
+            AdapterParameterSpec("proxy", str, "", "HTTP or SOCKS proxy URL."),
+            AdapterParameterSpec("version", bool, False, "Print WAFW00F version and exit."),
+            AdapterParameterSpec("headers_file", str, "", "Text file containing custom headers."),
+            AdapterParameterSpec("timeout", int, 0, "Request timeout in seconds; 0 leaves default."),
+            AdapterParameterSpec("no_color", bool, False, "Disable ANSI colors in output."),
+        ])
     elif tags & {"web", "http", "url", "discovery", "fuzzing"}:
         params.extend([
             AdapterParameterSpec("wordlist", str, "", "Wordlist path for discovery or fuzzing tools."),
@@ -1092,7 +1108,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto"}
+        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "wafw00f"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -1225,7 +1241,7 @@ def _adapter_parameters(
             AdapterParameterSpec("headless", bool, False, "Run in headless mode when supported."),
         ])
 
-    if tool.name in {"testssl", "wafw00f"}:
+    if tool.name == "testssl":
         params.extend([
             AdapterParameterSpec("ssl", bool, False, "Force SSL/TLS mode when supported."),
             AdapterParameterSpec("evasion", str, "", "Evasion profile when supported."),
@@ -1669,6 +1685,22 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "output_file", "-o")
         _add_bool(tokens, kwargs, "json_output", "-json")
         _add_bool(tokens, kwargs, "silent", "-silent")
+    elif tool.name == "wafw00f":
+        verbosity = _int_value(kwargs, "verbosity")
+        if verbosity:
+            tokens.extend(["-v"] * min(verbosity, 3))
+        _add_bool(tokens, kwargs, "find_all", "-a")
+        _add_bool(tokens, kwargs, "no_redirect", "-r")
+        _add_value(tokens, kwargs, "test_waf", "-t")
+        _add_value(tokens, kwargs, "output_file", "-o")
+        _add_value(tokens, kwargs, "output_format", "-f")
+        _add_value(tokens, kwargs, "input_file", "-i")
+        _add_bool(tokens, kwargs, "list_wafs", "-l")
+        _add_value(tokens, kwargs, "proxy", "-p")
+        _add_bool(tokens, kwargs, "version", "-V")
+        _add_value(tokens, kwargs, "headers_file", "-H")
+        _add_value(tokens, kwargs, "timeout", "-T")
+        _add_bool(tokens, kwargs, "no_color", "--no-colors")
     elif tags & {"web", "http", "url", "discovery", "fuzzing"}:
         _add_value(tokens, kwargs, "wordlist", "-w")
         _add_value(tokens, kwargs, "threads", "-t")
@@ -1943,7 +1975,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto"}
+        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "wafw00f"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
@@ -2043,7 +2075,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "entrypoint", "--entrypoint")
         _add_bool(tokens, kwargs, "headless", "--headless")
 
-    if tool.name in {"testssl", "wafw00f"}:
+    if tool.name == "testssl":
         _add_bool(tokens, kwargs, "ssl", "-ssl")
         _add_value(tokens, kwargs, "evasion", "-evasion")
         _add_value(tokens, kwargs, "tuning", "-Tuning")

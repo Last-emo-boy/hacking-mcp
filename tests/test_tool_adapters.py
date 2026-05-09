@@ -180,6 +180,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["nikto"].unverified_parameters == ()
     assert any("sullo/nikto" in item for item in records["nikto"].evidence)
 
+    assert records["wafw00f"].source_status == "source-reviewed"
+    assert records["wafw00f"].unverified_parameters == ()
+    assert any("EnableSecurity/wafw00f" in item for item in records["wafw00f"].evidence)
+
     assert records["gitleaks"].source_status == "source-reviewed"
     assert records["gitleaks"].unverified_parameters == ()
     assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
@@ -348,6 +352,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "list_plugins", "mutate", "no_ssl", "output_file", "plugins", "port",
         "ssl", "tuning", "user_agent", "use_proxy", "vhost",
     }.issubset(nikto_schema)
+
+    wafw00f_schema = tools["security_tool_wafw00f"].inputSchema["properties"]
+    assert {
+        "verbosity", "find_all", "no_redirect", "test_waf", "output_file",
+        "output_format", "input_file", "list_wafs", "proxy", "version",
+        "headers_file", "timeout", "no_color",
+    }.issubset(wafw00f_schema)
 
     katana_schema = tools["security_tool_katana"].inputSchema["properties"]
     assert {
@@ -1072,6 +1083,46 @@ async def test_nikto_source_reviewed_parameters_build_cli_options(registry, safe
         "-Pause 1 -Plugins tests -port 443 -root /app -ssl -Tuning x "
         "-timeout 10 -useragent hacking-mcp -useproxy -vhost example.test "
         "-404code 404 -404string 'not found'"
+    )
+
+
+@pytest.mark.asyncio
+async def test_wafw00f_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_wafw00f",
+        {
+            "target": "https://example.test",
+            "verbosity": 2,
+            "find_all": True,
+            "no_redirect": True,
+            "test_waf": "Cloudflare",
+            "output_file": "-",
+            "output_format": "json",
+            "input_file": "targets.txt",
+            "list_wafs": True,
+            "proxy": "http://127.0.0.1:8080",
+            "version": True,
+            "headers_file": "headers.txt",
+            "timeout": 12,
+            "no_color": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "wafw00f"
+    assert request.options == (
+        "-v -v -a -r -t Cloudflare -o - -f json -i targets.txt -l "
+        "-p http://127.0.0.1:8080 -V -H headers.txt -T 12 --no-colors"
     )
 
 
