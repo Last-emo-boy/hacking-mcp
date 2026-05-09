@@ -228,6 +228,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["trufflehog"].unverified_parameters == ()
     assert any("trufflesecurity/trufflehog" in item for item in records["trufflehog"].evidence)
 
+    assert records["whatweb"].source_status == "source-reviewed"
+    assert records["whatweb"].unverified_parameters == ()
+    assert any("urbanadventurer/WhatWeb" in item for item in records["whatweb"].evidence)
+
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
     assert records["dracnmap"].gap
@@ -313,6 +317,18 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "redact", "log_opts", "config_path", "baseline_path", "ignore_path",
         "report_format", "report_path", "log_level", "no_banner", "no_color",
     }.issubset(gitleaks_schema)
+
+    whatweb_schema = tools["security_tool_whatweb"].inputSchema["properties"]
+    assert {
+        "input_file", "url_prefix", "url_suffix", "url_pattern", "aggression",
+        "user_agent", "header", "follow_redirect", "max_redirects",
+        "basic_auth", "cookie", "cookiejar", "no_cookies", "proxy",
+        "proxy_user", "list_plugins", "info_plugins", "info_plugin_search",
+        "search_plugins", "plugins", "grep", "custom_plugin", "dorks",
+        "verbose", "color", "quiet", "no_errors", "log_brief", "log_json",
+        "max_threads", "open_timeout", "read_timeout", "wait", "output_sync",
+        "output_buffer_size", "short_help", "debug", "version",
+    }.issubset(whatweb_schema)
 
     prowler_schema = tools["security_tool_prowler"].inputSchema["properties"]
     assert {"provider", "checks", "excluded_checks", "output_format"}.issubset(
@@ -1818,6 +1834,101 @@ async def test_trufflehog_source_reviewed_parameters_build_cli_options(registry,
         "--results verified,unknown --no-color --allow-verification-overlap "
         "--filter-unverified --filter-entropy 3.0 --config trufflehog.yaml "
         "--print-avg-detector-time --fail --log-level info"
+    )
+
+
+@pytest.mark.asyncio
+async def test_whatweb_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_whatweb",
+        {
+            "target": "https://example.test",
+            "input_file": "targets.txt",
+            "url_prefix": "https://",
+            "url_suffix": "/robots.txt",
+            "url_pattern": "https://example.test/%insert%",
+            "aggression": 3,
+            "user_agent": "hacking-mcp",
+            "header": "X-Test:1",
+            "follow_redirect": "same-site",
+            "max_redirects": 5,
+            "basic_auth": "user:pass",
+            "cookie": "sid=abc",
+            "cookiejar": "cookies.txt",
+            "no_cookies": True,
+            "proxy": "127.0.0.1:8080",
+            "proxy_user": "proxy:pass",
+            "list_plugins": True,
+            "info_plugin_search": "phpBB",
+            "search_plugins": "wordpress",
+            "plugins": "title,md5",
+            "grep": "/hello/",
+            "custom_plugin": "title",
+            "dorks": "wordpress",
+            "verbose": 2,
+            "color": "never",
+            "quiet": True,
+            "no_errors": True,
+            "log_brief": "brief.log",
+            "log_verbose": "verbose.log",
+            "log_errors": "errors.log",
+            "log_xml": "out.xml",
+            "log_json": "out.json",
+            "log_sql": "out.sql",
+            "log_sql_create": "schema.sql",
+            "log_json_verbose": "out.verbose.json",
+            "log_magictree": "out.magictree.xml",
+            "log_object": "out.object",
+            "log_mongo_database": "whatweb",
+            "log_mongo_collection": "scans",
+            "log_mongo_host": "127.0.0.1",
+            "log_mongo_username": "mongo",
+            "log_mongo_password": "secret",
+            "log_elastic_index": "whatweb",
+            "log_elastic_host": "127.0.0.1:9200",
+            "max_threads": 50,
+            "open_timeout": 10,
+            "read_timeout": 20,
+            "wait": 1,
+            "output_sync": True,
+            "output_buffer_size": 0,
+            "short_help": True,
+            "debug": True,
+            "version": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "whatweb"
+    assert request.options == (
+        "--input-file targets.txt --url-prefix https:// "
+        "--url-suffix /robots.txt --url-pattern https://example.test/%insert% "
+        "--aggression 3 --user-agent hacking-mcp --header X-Test:1 "
+        "--follow-redirect same-site --max-redirects 5 --user user:pass "
+        "--cookie sid=abc --cookiejar cookies.txt --no-cookies "
+        "--proxy 127.0.0.1:8080 --proxy-user proxy:pass --list-plugins "
+        "--info-plugins phpBB --search-plugins wordpress --plugins title,md5 "
+        "--grep /hello/ --custom-plugin title --dorks wordpress -v -v "
+        "--color never --quiet --no-errors --log-brief brief.log "
+        "--log-verbose verbose.log --log-errors errors.log --log-xml out.xml "
+        "--log-json out.json --log-sql out.sql --log-sql-create schema.sql "
+        "--log-json-verbose out.verbose.json --log-magictree out.magictree.xml "
+        "--log-object out.object --log-mongo-database whatweb "
+        "--log-mongo-collection scans --log-mongo-host 127.0.0.1 "
+        "--log-mongo-username mongo --log-mongo-password secret "
+        "--log-elastic-index whatweb --log-elastic-host 127.0.0.1:9200 "
+        "--max-threads 50 --open-timeout 10 --read-timeout 20 --wait 1 "
+        "--output-sync --output-buffer-size 0 --short-help --debug --version"
     )
 
 
