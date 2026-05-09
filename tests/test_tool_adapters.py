@@ -140,6 +140,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["httpx"].unverified_parameters == ()
     assert any("projectdiscovery.io" in item for item in records["httpx"].evidence)
 
+    assert records["subfinder"].source_status == "source-reviewed"
+    assert records["subfinder"].unverified_parameters == ()
+    assert any("subfinder/usage" in item for item in records["subfinder"].evidence)
+
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
     assert records["dracnmap"].gap
@@ -192,6 +196,12 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     assert {"status_code", "title", "tech_detect", "content_length"}.issubset(
         httpx_schema
     )
+
+    subfinder_schema = tools["security_tool_subfinder"].inputSchema["properties"]
+    assert {
+        "input_file", "sources", "exclude_sources", "all_sources", "recursive",
+        "resolver_file", "rate_limit", "output_file", "json_output", "silent",
+    }.issubset(subfinder_schema)
 
     nuclei_schema = tools["security_tool_nuclei"].inputSchema["properties"]
     assert {"workflows", "exclude_templates", "headless", "interactsh"}.issubset(
@@ -442,6 +452,57 @@ async def test_httpx_source_reviewed_parameters_build_cli_options(registry, safe
         "-sc -title -td -cl -mc 200,302 -fc 404 -t 25 -rl 100 "
         "-path /login -fr -proxy http://127.0.0.1:8080 -H 'X-Test: 1' "
         "-x GET -timeout 5 -o httpx.jsonl -json -silent"
+    )
+
+
+@pytest.mark.asyncio
+async def test_subfinder_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_subfinder",
+        {
+            "target": "example.test",
+            "input_file": "domains.txt",
+            "sources": "crtsh,github",
+            "exclude_sources": "shodan",
+            "all_sources": True,
+            "recursive": True,
+            "active": True,
+            "resolvers": "1.1.1.1,8.8.8.8",
+            "resolver_file": "resolvers.txt",
+            "rate_limit": 50,
+            "threads": 20,
+            "timeout": 30,
+            "max_time": 10,
+            "output_file": "subdomains.txt",
+            "json_output": True,
+            "output_dir": "subfinder-out",
+            "collect_sources": True,
+            "include_ip": True,
+            "config_file": "config.yaml",
+            "provider_config": "providers.yaml",
+            "proxy": "http://127.0.0.1:8080",
+            "silent": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "subfinder"
+    assert request.options == (
+        "-dL domains.txt -s crtsh,github -es shodan -all -recursive "
+        "-active -r 1.1.1.1,8.8.8.8 -rL resolvers.txt -rl 50 -t 20 "
+        "-timeout 30 -max-time 10 -o subdomains.txt -oJ -oD subfinder-out "
+        "-cs -oI -config config.yaml -pc providers.yaml "
+        "-proxy http://127.0.0.1:8080 -silent"
     )
 
 

@@ -132,6 +132,45 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "silent",
         ),
     ),
+    "subfinder": SourceReview(
+        note=(
+            "Reviewed against official ProjectDiscovery Subfinder usage docs "
+            "for domain list input, source selection/filtering, recursive and "
+            "active modes, resolver/rate controls, output formats, config, "
+            "proxy, and debug/output controls."
+        ),
+        references=(
+            "https://docs.projectdiscovery.io/opensource/subfinder/usage",
+        ),
+        verified_parameters=(
+            "input_file",
+            "sources",
+            "exclude_sources",
+            "all_sources",
+            "recursive",
+            "active",
+            "match",
+            "filter",
+            "resolvers",
+            "resolver_file",
+            "rate_limit",
+            "rate_limits",
+            "threads",
+            "timeout",
+            "max_time",
+            "output_file",
+            "json_output",
+            "output_dir",
+            "collect_sources",
+            "include_ip",
+            "exclude_ip",
+            "config_file",
+            "provider_config",
+            "proxy",
+            "silent",
+            "verbose",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}

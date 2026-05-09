@@ -392,11 +392,19 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "headless": True,
         "input_file": "targets.txt",
         "rate_limit": 100,
+        "rate_limits": "shodan=10/s",
         "filter_codes": "404,403",
         "headers": "X-Test: 1",
         "method": "GET",
         "path": "/login",
         "silent": True,
+        "recursive": True,
+        "all_sources": True,
+        "exclude_sources": "shodan,censys",
+        "resolver_file": "resolvers.txt",
+        "output_dir": "output",
+        "config_file": "config.yaml",
+        "provider_config": "provider-config.yaml",
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -645,7 +653,36 @@ def _adapter_parameters(
             AdapterParameterSpec("protocol", str, "", "Protocol selector when supported."),
         ])
 
-    if tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}:
+    if tool.name == "subfinder":
+        params.extend([
+            AdapterParameterSpec("input_file", str, "", "File containing domains to enumerate."),
+            AdapterParameterSpec("sources", str, "", "Comma-separated sources to use."),
+            AdapterParameterSpec("exclude_sources", str, "", "Comma-separated sources to exclude."),
+            AdapterParameterSpec("all_sources", bool, False, "Use all sources for enumeration."),
+            AdapterParameterSpec("recursive", bool, False, "Use only sources that can handle subdomains recursively."),
+            AdapterParameterSpec("active", bool, False, "Display active sources in the result."),
+            AdapterParameterSpec("match", str, "", "Subdomain or list to match."),
+            AdapterParameterSpec("filter", str, "", "Subdomain or list to filter."),
+            AdapterParameterSpec("resolvers", str, "", "Comma-separated resolver addresses."),
+            AdapterParameterSpec("resolver_file", str, "", "File containing resolver addresses."),
+            AdapterParameterSpec("rate_limit", int, 0, "Maximum HTTP requests per second; 0 leaves default."),
+            AdapterParameterSpec("rate_limits", str, "", "Per-provider rate limits, for example shodan=10/s."),
+            AdapterParameterSpec("threads", int, 0, "Number of concurrent goroutines; 0 leaves default."),
+            AdapterParameterSpec("timeout", int, 0, "Seconds before subfinder timeout; 0 leaves default."),
+            AdapterParameterSpec("max_time", int, 0, "Minutes to wait for enumeration; 0 leaves default."),
+            AdapterParameterSpec("output_file", str, "", "Output file path."),
+            AdapterParameterSpec("json_output", bool, False, "Write JSONL output."),
+            AdapterParameterSpec("output_dir", str, "", "Directory for per-host JSON output."),
+            AdapterParameterSpec("collect_sources", bool, False, "Include all sources in JSON output."),
+            AdapterParameterSpec("include_ip", bool, False, "Include host IPs in output."),
+            AdapterParameterSpec("exclude_ip", bool, False, "Exclude IPs from JSON output."),
+            AdapterParameterSpec("config_file", str, "", "Subfinder config file path."),
+            AdapterParameterSpec("provider_config", str, "", "Provider config file path."),
+            AdapterParameterSpec("proxy", str, "", "HTTP proxy URL."),
+            AdapterParameterSpec("silent", bool, False, "Show only subdomains in output."),
+            AdapterParameterSpec("verbose", bool, False, "Enable verbose output."),
+        ])
+    elif tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}:
         params.extend([
             AdapterParameterSpec("sources", str, "", "Comma-separated OSINT sources when supported."),
             AdapterParameterSpec("passive", bool, False, "Use passive enumeration when supported."),
@@ -722,7 +759,7 @@ def _adapter_parameters(
             AdapterParameterSpec("recursion_depth", int, 0, "Recursive discovery depth when supported; 0 leaves default."),
         ])
 
-    if tool.name in {"subfinder", "amass"}:
+    if tool.name == "amass":
         params.extend([
             AdapterParameterSpec("active", bool, False, "Enable active enumeration when supported."),
             AdapterParameterSpec("all_sources", bool, False, "Use all configured sources when supported."),
@@ -1209,7 +1246,34 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "listener", "--listener")
         _add_value(tokens, kwargs, "protocol", "--protocol")
 
-    if tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}:
+    if tool.name == "subfinder":
+        _add_value(tokens, kwargs, "input_file", "-dL")
+        _add_value(tokens, kwargs, "sources", "-s")
+        _add_value(tokens, kwargs, "exclude_sources", "-es")
+        _add_bool(tokens, kwargs, "all_sources", "-all")
+        _add_bool(tokens, kwargs, "recursive", "-recursive")
+        _add_bool(tokens, kwargs, "active", "-active")
+        _add_value(tokens, kwargs, "match", "-m")
+        _add_value(tokens, kwargs, "filter", "-f")
+        _add_value(tokens, kwargs, "resolvers", "-r")
+        _add_value(tokens, kwargs, "resolver_file", "-rL")
+        _add_value(tokens, kwargs, "rate_limit", "-rl")
+        _add_value(tokens, kwargs, "rate_limits", "-rls")
+        _add_value(tokens, kwargs, "threads", "-t")
+        _add_value(tokens, kwargs, "timeout", "-timeout")
+        _add_value(tokens, kwargs, "max_time", "-max-time")
+        _add_value(tokens, kwargs, "output_file", "-o")
+        _add_bool(tokens, kwargs, "json_output", "-oJ")
+        _add_value(tokens, kwargs, "output_dir", "-oD")
+        _add_bool(tokens, kwargs, "collect_sources", "-cs")
+        _add_bool(tokens, kwargs, "include_ip", "-oI")
+        _add_bool(tokens, kwargs, "exclude_ip", "-ei")
+        _add_value(tokens, kwargs, "config_file", "-config")
+        _add_value(tokens, kwargs, "provider_config", "-pc")
+        _add_value(tokens, kwargs, "proxy", "-proxy")
+        _add_bool(tokens, kwargs, "silent", "-silent")
+        _add_bool(tokens, kwargs, "verbose", "-v")
+    elif tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}:
         if "email" not in tags:
             _add_value(tokens, kwargs, "sources", "-sources")
         _add_bool(tokens, kwargs, "passive", "-passive")
@@ -1265,7 +1329,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "host_header", "-H")
         _add_value(tokens, kwargs, "recursion_depth", "-recursion-depth")
 
-    if tool.name in {"subfinder", "amass"}:
+    if tool.name == "amass":
         _add_bool(tokens, kwargs, "active", "-active")
         _add_bool(tokens, kwargs, "all_sources", "-all")
         _add_value(tokens, kwargs, "exclude_sources", "-es")
