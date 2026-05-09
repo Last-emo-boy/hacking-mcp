@@ -449,9 +449,22 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     }.issubset(stegcracker_schema)
 
     hashcat_schema = tools["security_tool_hashcat"].inputSchema["properties"]
-    assert {"rules", "mask", "session", "show", "potfile_path"}.issubset(
-        hashcat_schema
-    )
+    assert {
+        "hash_type", "attack_mode", "wordlist", "wordlist2", "mask",
+        "rules", "rule_left", "rule_right", "generate_rules", "session",
+        "restore", "restore_disable", "restore_file_path", "output_file",
+        "outfile_format", "outfile_json", "outfile_autohex_disable",
+        "separator", "show", "left", "username", "remove", "remove_timer",
+        "potfile_disable", "potfile_path", "increment", "increment_inverse",
+        "increment_min", "increment_max", "custom_charset1",
+        "custom_charset2", "custom_charset3", "custom_charset4",
+        "hex_charset", "hex_salt", "hex_wordlist", "workload_profile",
+        "optimized_kernel", "backend_devices", "opencl_device_types",
+        "backend_info", "status", "status_json", "status_timer", "runtime",
+        "skip", "limit", "benchmark", "benchmark_all", "benchmark_min",
+        "benchmark_max", "hash_info", "example_hashes", "identify",
+        "stdout_candidates", "quiet", "force", "version", "help",
+    }.issubset(hashcat_schema)
 
     mobsf_schema = tools["security_tool_mobsf"].inputSchema["properties"]
     assert {"server_url", "api_key", "frida_script", "runtime_command"}.issubset(
@@ -2281,6 +2294,68 @@ async def test_haiti_source_reviewed_parameters_build_cli_options(registry, safe
     assert request.target == "d41d8cd98f00b204e9800998ecf8427e"
     assert request.options == (
         "--no-color --extended --short --hashcat-only --john-only --debug"
+    )
+
+
+@pytest.mark.asyncio
+async def test_hashcat_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_hashcat",
+        {
+            "target": "hashes.txt",
+            "hash_type": "0",
+            "attack_mode": "3",
+            "wordlist": "rockyou.txt",
+            "mask": "?a?a?a?a",
+            "rules": "rules/best64.rule",
+            "rule_left": "c",
+            "session": "audit",
+            "output_file": "cracked.txt",
+            "outfile_format": "1,2",
+            "separator": ":",
+            "show": True,
+            "username": True,
+            "potfile_path": "audit.pot",
+            "increment": True,
+            "increment_min": 4,
+            "increment_max": 8,
+            "custom_charset1": "?l?d",
+            "workload_profile": 3,
+            "optimized_kernel": True,
+            "backend_devices": "1",
+            "opencl_device_types": "2",
+            "status": True,
+            "status_json": True,
+            "status_timer": 10,
+            "runtime": 60,
+            "skip": 100,
+            "limit": 1000,
+            "identify": True,
+            "quiet": True,
+            "force": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "hashcat"
+    assert request.target == "hashes.txt"
+    assert request.options == (
+        "-m 0 -a 3 -r rules/best64.rule -j c --session audit "
+        "-o cracked.txt --outfile-format 1,2 -p : --show --username "
+        "--potfile-path audit.pot -i --increment-min 4 --increment-max 8 "
+        "-1 '?l?d' -w 3 -O -d 1 -D 2 --status --status-json "
+        "--status-timer 10 --runtime 60 -s 100 -l 1000 --identify "
+        "--quiet --force rockyou.txt '?a?a?a?a'"
     )
 
 

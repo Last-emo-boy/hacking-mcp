@@ -1375,7 +1375,7 @@ def _adapter_parameters(
             AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
         ])
 
-    if tool.name in {"hashcat", "john"}:
+    if tool.name == "john":
         params.extend([
             AdapterParameterSpec("rules", str, "", "Rule file/name when supported."),
             AdapterParameterSpec("mask", str, "", "Mask attack pattern when supported."),
@@ -2353,7 +2353,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "local_auth", "--local-auth")
         _add_value(tokens, kwargs, "target_ip", "--target-ip")
 
-    if tool.name in {"hashcat", "john"}:
+    if tool.name == "john":
         _add_value(tokens, kwargs, "rules", "-r")
         _add_value(tokens, kwargs, "mask", "--mask")
         _add_value(tokens, kwargs, "session", "--session")
