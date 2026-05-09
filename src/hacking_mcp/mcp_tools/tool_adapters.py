@@ -1375,13 +1375,6 @@ def _adapter_parameters(
             AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
         ])
 
-    if tool.name == "volatility3":
-        params.extend([
-            AdapterParameterSpec("symbol_dir", str, "", "Volatility symbol directory when supported."),
-            AdapterParameterSpec("renderer", str, "", "Renderer/output format when supported."),
-            AdapterParameterSpec("dump_files", bool, False, "Dump referenced files when supported."),
-        ])
-
     if tool.name in {"steghide", "stegcracker"}:
         params.extend([
             AdapterParameterSpec("cover_file", str, "", "Cover file path when supported."),
@@ -2367,11 +2360,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "kerberos", "-k")
         _add_bool(tokens, kwargs, "local_auth", "--local-auth")
         _add_value(tokens, kwargs, "target_ip", "--target-ip")
-
-    if tool.name == "volatility3":
-        _add_value(tokens, kwargs, "symbol_dir", "--symbol-dirs")
-        _add_value(tokens, kwargs, "renderer", "--renderer")
-        _add_bool(tokens, kwargs, "dump_files", "--dump")
 
     if tool.name in {"steghide", "stegcracker"}:
         _add_value(tokens, kwargs, "cover_file", "-cf")

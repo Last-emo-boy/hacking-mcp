@@ -60,6 +60,46 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "output_dir",
         ),
     ),
+    "volatility3": SourceReview(
+        note=(
+            "Reviewed against upstream Volatility 3 CLI source and generated "
+            "manual page for config, parallelism, extension, plugin/symbol "
+            "paths, verbosity, logging, output directory, quiet mode, renderer, "
+            "configuration/cache controls, online/offline ISF controls, output "
+            "filters, column hiding, memory location inputs, stackers, swap "
+            "locations, and plugin selection."
+        ),
+        references=(
+            "https://github.com/volatilityfoundation/volatility3",
+            "https://raw.githubusercontent.com/volatilityfoundation/volatility3/develop/volatility3/cli/__init__.py",
+            "https://raw.githubusercontent.com/volatilityfoundation/volatility3/develop/doc/source/vol-cli.rst",
+        ),
+        verified_parameters=(
+            "config_file",
+            "parallelism",
+            "extend",
+            "plugin_dirs",
+            "symbol_dirs",
+            "symbol_dir",
+            "verbosity",
+            "log_file",
+            "output_dir",
+            "quiet",
+            "renderer",
+            "write_config",
+            "save_config",
+            "clear_cache",
+            "cache_path",
+            "offline",
+            "remote_isf_url",
+            "filters",
+            "hide_columns",
+            "single_location",
+            "stackers",
+            "single_swap_locations",
+            "plugin",
+        ),
+    ),
     "nmap": SourceReview(
         note=(
             "Reviewed against the official Nmap reference guide for target "

@@ -125,7 +125,14 @@ def test_split_adapter_registry_includes_migrated_tools():
         has_split_adapter,
     )
 
-    migrated = {"binwalk", "owasp-zap", "sherlock", "theHarvester", "whatweb"}
+    migrated = {
+        "binwalk",
+        "owasp-zap",
+        "sherlock",
+        "theHarvester",
+        "volatility3",
+        "whatweb",
+    }
     assert migrated.issubset(PARAMETER_PROVIDERS)
     assert all(has_split_adapter(tool_name) for tool_name in migrated)
 
@@ -154,6 +161,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["binwalk"].source_status == "source-reviewed"
     assert records["binwalk"].unverified_parameters == ()
     assert any("ReFirmLabs/binwalk" in item for item in records["binwalk"].evidence)
+
+    assert records["volatility3"].source_status == "source-reviewed"
+    assert records["volatility3"].unverified_parameters == ()
+    assert any("volatilityfoundation/volatility3" in item for item in records["volatility3"].evidence)
 
     assert records["subfinder"].source_status == "source-reviewed"
     assert records["subfinder"].unverified_parameters == ()
@@ -376,7 +387,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     )
 
     volatility_schema = tools["security_tool_volatility3"].inputSchema["properties"]
-    assert {"symbol_dir", "renderer", "dump_files"}.issubset(volatility_schema)
+    assert {
+        "config_file", "parallelism", "extend", "plugin_dirs", "symbol_dirs",
+        "symbol_dir", "verbosity", "log_file", "output_dir", "quiet",
+        "renderer", "write_config", "save_config", "clear_cache", "cache_path",
+        "offline", "remote_isf_url", "filters", "hide_columns",
+        "single_location", "stackers", "single_swap_locations", "plugin",
+    }.issubset(volatility_schema)
 
     binwalk_schema = tools["security_tool_binwalk"].inputSchema["properties"]
     assert {
@@ -2092,6 +2109,62 @@ async def test_binwalk_source_reviewed_parameters_build_cli_options(registry, sa
     assert request.options == (
         "--quiet --verbose --extract --carve --matryoshka --search-all "
         "--log binwalk.json --threads 4 --exclude gzip,zlib --directory out"
+    )
+
+
+@pytest.mark.asyncio
+async def test_volatility3_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_volatility3",
+        {
+            "target": "memory.dmp",
+            "config_file": "vol.json",
+            "parallelism": "threads",
+            "extend": "plugins.Test.option=value",
+            "plugin_dirs": "plugins",
+            "symbol_dirs": "symbols",
+            "verbosity": 3,
+            "log_file": "vol.log",
+            "output_dir": "vol-out",
+            "quiet": True,
+            "renderer": "json",
+            "write_config": True,
+            "save_config": "saved.json",
+            "clear_cache": True,
+            "cache_path": "cache",
+            "offline": True,
+            "filters": "+Pid,4",
+            "hide_columns": "Offset Hex",
+            "single_location": "file:///memory.dmp",
+            "stackers": "windows.WindowsIntel32e",
+            "single_swap_locations": "swap.sys,pagefile.sys",
+            "plugin": "windows.info",
+            "options": "--dump",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "volatility3"
+    assert request.target == "memory.dmp"
+    assert request.options == (
+        "--config vol.json --parallelism threads --extend "
+        "plugins.Test.option=value --plugin-dirs plugins --symbol-dirs symbols "
+        "-v -v -v --log vol.log --output-dir vol-out --quiet --renderer json "
+        "--write-config --save-config saved.json --clear-cache "
+        "--cache-path cache --offline --filters +Pid,4 "
+        "--hide-columns 'Offset Hex' --single-location file:///memory.dmp "
+        "--stackers windows.WindowsIntel32e --single-swap-locations "
+        "swap.sys,pagefile.sys windows.info --dump"
     )
 
 

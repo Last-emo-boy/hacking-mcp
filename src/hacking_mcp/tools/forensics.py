@@ -69,7 +69,7 @@ FORENSICS_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/volatilityfoundation/volatility3.git",
             "cd volatility3 && pip install --user -r requirements.txt",
         ],
-        run_command="cd volatility3 && python3 vol.py -f {target} windows.pslist",
+        run_command="cd volatility3 && python3 vol.py -f {target}",
         project_url="https://github.com/volatilityfoundation/volatility3",
         tags=["forensics", "memory", "analysis", "malware"],
         safety_tier=SafetyTier.SAFE,
