@@ -345,6 +345,45 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "nmap_args",
         ),
     ),
+    "katana": SourceReview(
+        note=(
+            "Reviewed against official ProjectDiscovery Katana usage docs for "
+            "target list input, crawl depth/strategy, JavaScript and known-file "
+            "crawling, form/headless options, proxy/header settings, timeout/"
+            "retry/rate/concurrency controls, crawl duration, output, JSONL, "
+            "field selection, and quiet/color controls."
+        ),
+        references=(
+            "https://docs.projectdiscovery.io/opensource/katana/usage",
+        ),
+        verified_parameters=(
+            "input_file",
+            "depth",
+            "strategy",
+            "js_crawl",
+            "known_files",
+            "automatic_form_fill",
+            "form_extraction",
+            "headless",
+            "headless_options",
+            "no_sandbox",
+            "system_chrome",
+            "proxy",
+            "headers",
+            "timeout",
+            "retry",
+            "rate_limit",
+            "concurrency",
+            "parallelism",
+            "delay",
+            "crawl_duration",
+            "output_file",
+            "json_output",
+            "field",
+            "silent",
+            "no_color",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}

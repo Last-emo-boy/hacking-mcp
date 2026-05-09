@@ -156,6 +156,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["rustscan"].unverified_parameters == ()
     assert any("RustScan/RustScan" in item for item in records["rustscan"].evidence)
 
+    assert records["katana"].source_status == "source-reviewed"
+    assert records["katana"].unverified_parameters == ()
+    assert any("katana/usage" in item for item in records["katana"].evidence)
+
     assert records["gitleaks"].source_status == "source-reviewed"
     assert records["gitleaks"].unverified_parameters == ()
     assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
@@ -298,7 +302,10 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     )
 
     katana_schema = tools["security_tool_katana"].inputSchema["properties"]
-    assert {"depth", "scope", "known_files", "headless"}.issubset(katana_schema)
+    assert {
+        "input_file", "depth", "strategy", "js_crawl", "known_files",
+        "automatic_form_fill", "headless", "proxy", "rate_limit", "json_output",
+    }.issubset(katana_schema)
 
     evil_winrm_schema = tools["security_tool_evil_winrm"].inputSchema["properties"]
     assert {"ssl", "key_file", "cert_file", "upload", "download"}.issubset(
@@ -688,6 +695,59 @@ async def test_rustscan_source_reviewed_parameters_build_cli_options(registry, s
         "-g --resolver 1.1.1.1 -b 500 -t 1500 --tries 2 -u 5000 "
         "--scan-order serial --scripts none --exclude-ports 25,110 "
         "--exclude-addresses 192.0.2.1 --udp -- -sV -sC"
+    )
+
+
+@pytest.mark.asyncio
+async def test_katana_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_katana",
+        {
+            "target": "https://example.test",
+            "input_file": "urls.txt",
+            "depth": 3,
+            "strategy": "depth-first",
+            "js_crawl": True,
+            "known_files": "robots.txt,sitemap.xml",
+            "automatic_form_fill": True,
+            "form_extraction": True,
+            "headless": True,
+            "no_sandbox": True,
+            "system_chrome": True,
+            "proxy": "http://127.0.0.1:8080",
+            "headers": "X-Test: 1",
+            "timeout": 10,
+            "retry": 2,
+            "rate_limit": 50,
+            "concurrency": 10,
+            "parallelism": 2,
+            "delay": "1s",
+            "crawl_duration": "5m",
+            "output_file": "katana.jsonl",
+            "json_output": True,
+            "field": "url",
+            "silent": True,
+            "no_color": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "katana"
+    assert request.options == (
+        "-list urls.txt -d 3 -strategy depth-first -jc -kf robots.txt,sitemap.xml "
+        "-aff -fx -headless -nos -system-chrome -proxy http://127.0.0.1:8080 "
+        "-H 'X-Test: 1' -timeout 10 -retry 2 -rl 50 -c 10 -p 2 "
+        "-delay 1s -ct 5m -o katana.jsonl -jsonl -field url -silent -no-color"
     )
 
 

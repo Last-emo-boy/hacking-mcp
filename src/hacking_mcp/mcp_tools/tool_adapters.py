@@ -422,6 +422,10 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "readscan": "scan.bin",
         "port_range": "1-1000",
         "scan_order": "serial",
+        "strategy": "depth-first",
+        "delay": "1s",
+        "crawl_duration": "5m",
+        "field": "url",
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -515,6 +519,34 @@ def _adapter_parameters(
             AdapterParameterSpec("template_path", str, "", "Template file or directory path."),
             AdapterParameterSpec("rate_limit", int, 0, "Maximum requests per second; 0 leaves default."),
             AdapterParameterSpec("proxy", str, "", "Optional HTTP proxy URL."),
+        ])
+    elif tool.name == "katana":
+        params.extend([
+            AdapterParameterSpec("input_file", str, "", "Input file containing targets to crawl."),
+            AdapterParameterSpec("depth", int, 0, "Maximum crawl depth; 0 leaves default."),
+            AdapterParameterSpec("strategy", str, "", "Crawling strategy, for example depth-first or breadth-first."),
+            AdapterParameterSpec("js_crawl", bool, False, "Enable JavaScript file crawling."),
+            AdapterParameterSpec("known_files", str, "", "Known files to crawl, for example robots.txt,sitemap.xml."),
+            AdapterParameterSpec("automatic_form_fill", bool, False, "Enable automatic form filling."),
+            AdapterParameterSpec("form_extraction", bool, False, "Extract forms and inputs."),
+            AdapterParameterSpec("headless", bool, False, "Enable headless browser crawling."),
+            AdapterParameterSpec("headless_options", str, "", "Headless browser options."),
+            AdapterParameterSpec("no_sandbox", bool, False, "Start Chrome without sandbox."),
+            AdapterParameterSpec("system_chrome", bool, False, "Use locally installed Chrome."),
+            AdapterParameterSpec("proxy", str, "", "HTTP proxy URL."),
+            AdapterParameterSpec("headers", str, "", "Custom HTTP header to send."),
+            AdapterParameterSpec("timeout", int, 0, "Request timeout in seconds; 0 leaves default."),
+            AdapterParameterSpec("retry", int, 0, "Number of retries; 0 leaves default."),
+            AdapterParameterSpec("rate_limit", int, 0, "Maximum requests per second; 0 leaves default."),
+            AdapterParameterSpec("concurrency", int, 0, "Number of concurrent fetchers; 0 leaves default."),
+            AdapterParameterSpec("parallelism", int, 0, "Number of parallel input targets; 0 leaves default."),
+            AdapterParameterSpec("delay", str, "", "Delay between requests, for example 1s."),
+            AdapterParameterSpec("crawl_duration", str, "", "Maximum crawl duration, for example 5m."),
+            AdapterParameterSpec("output_file", str, "", "Output file path."),
+            AdapterParameterSpec("json_output", bool, False, "Write JSONL output."),
+            AdapterParameterSpec("field", str, "", "Field to display, for example url or qurl."),
+            AdapterParameterSpec("silent", bool, False, "Show only output."),
+            AdapterParameterSpec("no_color", bool, False, "Disable colored output."),
         ])
     elif tool.name == "httpx":
         params.extend([
@@ -1016,7 +1048,7 @@ def _adapter_parameters(
             AdapterParameterSpec("add_slash", bool, False, "Append trailing slash to discovered paths when supported."),
         ])
 
-    if tool.name in {"katana", "arjun"}:
+    if tool.name == "arjun":
         params.extend([
             AdapterParameterSpec("depth", int, 0, "Crawl or discovery depth when supported; 0 leaves default."),
             AdapterParameterSpec("scope", str, "", "Scope selector such as fqdn/rdir when supported."),
@@ -1246,6 +1278,32 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "template_path", "-t")
         _add_value(tokens, kwargs, "rate_limit", "-rate-limit")
         _add_value(tokens, kwargs, "proxy", "-proxy")
+    elif tool.name == "katana":
+        _add_value(tokens, kwargs, "input_file", "-list")
+        _add_value(tokens, kwargs, "depth", "-d")
+        _add_value(tokens, kwargs, "strategy", "-strategy")
+        _add_bool(tokens, kwargs, "js_crawl", "-jc")
+        _add_value(tokens, kwargs, "known_files", "-kf")
+        _add_bool(tokens, kwargs, "automatic_form_fill", "-aff")
+        _add_bool(tokens, kwargs, "form_extraction", "-fx")
+        _add_bool(tokens, kwargs, "headless", "-headless")
+        _add_value(tokens, kwargs, "headless_options", "-ho")
+        _add_bool(tokens, kwargs, "no_sandbox", "-nos")
+        _add_bool(tokens, kwargs, "system_chrome", "-system-chrome")
+        _add_value(tokens, kwargs, "proxy", "-proxy")
+        _add_value(tokens, kwargs, "headers", "-H")
+        _add_value(tokens, kwargs, "timeout", "-timeout")
+        _add_value(tokens, kwargs, "retry", "-retry")
+        _add_value(tokens, kwargs, "rate_limit", "-rl")
+        _add_value(tokens, kwargs, "concurrency", "-c")
+        _add_value(tokens, kwargs, "parallelism", "-p")
+        _add_value(tokens, kwargs, "delay", "-delay")
+        _add_value(tokens, kwargs, "crawl_duration", "-ct")
+        _add_value(tokens, kwargs, "output_file", "-o")
+        _add_bool(tokens, kwargs, "json_output", "-jsonl")
+        _add_value(tokens, kwargs, "field", "-field")
+        _add_bool(tokens, kwargs, "silent", "-silent")
+        _add_bool(tokens, kwargs, "no_color", "-no-color")
     elif tool.name == "httpx":
         _add_value(tokens, kwargs, "input_file", "-l")
         _add_bool(tokens, kwargs, "status_code", "-sc")
@@ -1650,7 +1708,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "filter_words", "-fw")
         _add_bool(tokens, kwargs, "add_slash", "--add-slash")
 
-    if tool.name in {"katana", "arjun"}:
+    if tool.name == "arjun":
         _add_value(tokens, kwargs, "depth", "-d")
         _add_value(tokens, kwargs, "scope", "-scope")
         _add_value(tokens, kwargs, "known_files", "-known-files")
