@@ -144,6 +144,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["subfinder"].unverified_parameters == ()
     assert any("subfinder/usage" in item for item in records["subfinder"].evidence)
 
+    assert records["theHarvester"].source_status == "source-reviewed"
+    assert records["theHarvester"].unverified_parameters == ()
+    assert any("laramies/theHarvester" in item for item in records["theHarvester"].evidence)
+
     assert records["amass"].source_status == "source-reviewed"
     assert records["amass"].unverified_parameters == ()
     assert any("owasp-amass/amass" in item for item in records["amass"].evidence)
@@ -304,7 +308,11 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     )
 
     harvester_schema = tools["security_tool_theharvester"].inputSchema["properties"]
-    assert {"limit", "start", "takeover", "dns_lookup"}.issubset(harvester_schema)
+    assert {
+        "sources", "limit", "start", "proxies", "shodan", "screenshot",
+        "dns_server", "takeover", "dns_resolve", "dns_lookup", "dns_brute",
+        "filename", "wordlist", "api_scan", "quiet",
+    }.issubset(harvester_schema)
 
     trufflehog_schema = tools["security_tool_trufflehog"].inputSchema["properties"]
     assert {
@@ -743,6 +751,48 @@ async def test_subfinder_source_reviewed_parameters_build_cli_options(registry, 
         "-timeout 30 -max-time 10 -o subdomains.txt -oJ -oD subfinder-out "
         "-cs -oI -config config.yaml -pc providers.yaml "
         "-proxy http://127.0.0.1:8080 -silent"
+    )
+
+
+@pytest.mark.asyncio
+async def test_theharvester_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_theharvester",
+        {
+            "target": "example.test",
+            "sources": "bing,crtsh",
+            "limit": 100,
+            "start": 10,
+            "proxies": True,
+            "shodan": True,
+            "screenshot": "shots",
+            "dns_server": "1.1.1.1",
+            "takeover": True,
+            "dns_resolve": "resolvers.txt",
+            "dns_lookup": True,
+            "dns_brute": True,
+            "filename": "harvester",
+            "wordlist": "apis.txt",
+            "api_scan": True,
+            "quiet": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "theHarvester"
+    assert request.options == (
+        "-b bing,crtsh -l 100 -S 10 -p -s --screenshot shots -e 1.1.1.1 "
+        "-t -r resolvers.txt -n -c -f harvester -w apis.txt -a -q"
     )
 
 

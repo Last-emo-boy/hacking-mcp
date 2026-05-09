@@ -297,6 +297,36 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "theHarvester": SourceReview(
+        note=(
+            "Reviewed against the upstream theHarvester argparse definitions "
+            "and README for domain/source selection, result limit/start offset, "
+            "proxy/Shodan/screenshot controls, DNS lookup/resolve/brute-force "
+            "options, report filename, API endpoint wordlist/scan, and quiet "
+            "mode."
+        ),
+        references=(
+            "https://github.com/laramies/theHarvester",
+            "https://raw.githubusercontent.com/laramies/theHarvester/master/theHarvester/__main__.py",
+        ),
+        verified_parameters=(
+            "sources",
+            "limit",
+            "start",
+            "proxies",
+            "shodan",
+            "screenshot",
+            "dns_server",
+            "takeover",
+            "dns_resolve",
+            "dns_lookup",
+            "dns_brute",
+            "filename",
+            "wordlist",
+            "api_scan",
+            "quiet",
+        ),
+    ),
     "amass": SourceReview(
         note=(
             "Reviewed against the OWASP Amass user guide for the enum command, "

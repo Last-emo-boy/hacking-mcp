@@ -1090,7 +1090,7 @@ def _adapter_parameters(
             AdapterParameterSpec("blind_callback", str, "", "Blind XSS callback URL when supported."),
         ])
 
-    if "email" in tags:
+    if "email" in tags and tool.name not in {"theHarvester"}:
         params.append(AdapterParameterSpec("sources", str, "", "OSINT source selector when supported."))
 
     if tags & {"username", "social", "social-media"}:
@@ -1303,6 +1303,24 @@ def _adapter_parameters(
             AdapterParameterSpec("silent", bool, False, "Show only subdomains in output."),
             AdapterParameterSpec("verbose", bool, False, "Enable verbose output."),
         ])
+    elif tool.name == "theHarvester":
+        params.extend([
+            AdapterParameterSpec("sources", str, "", "Comma-separated source list, or all."),
+            AdapterParameterSpec("limit", int, 0, "Maximum search results; 0 leaves default."),
+            AdapterParameterSpec("start", int, 0, "Start offset; 0 leaves default."),
+            AdapterParameterSpec("proxies", bool, False, "Use proxies from proxies.yaml."),
+            AdapterParameterSpec("shodan", bool, False, "Use Shodan to query discovered hosts."),
+            AdapterParameterSpec("screenshot", str, "", "Directory for screenshots of resolved domains."),
+            AdapterParameterSpec("dns_server", str, "", "DNS server to use for lookups."),
+            AdapterParameterSpec("takeover", bool, False, "Check discovered hosts for takeover candidates."),
+            AdapterParameterSpec("dns_resolve", str, "", "Resolver list path or comma-separated resolver IPs."),
+            AdapterParameterSpec("dns_lookup", bool, False, "Enable DNS server lookup."),
+            AdapterParameterSpec("dns_brute", bool, False, "Perform DNS brute force for the domain."),
+            AdapterParameterSpec("filename", str, "", "Base filename for XML and JSON reports."),
+            AdapterParameterSpec("wordlist", str, "", "Wordlist for API endpoint scanning."),
+            AdapterParameterSpec("api_scan", bool, False, "Scan for API endpoints."),
+            AdapterParameterSpec("quiet", bool, False, "Suppress missing API key warnings."),
+        ])
     elif tool.name == "amass":
         params.extend([
             AdapterParameterSpec("config_file", str, "", "Path to Amass YAML configuration file."),
@@ -1350,7 +1368,7 @@ def _adapter_parameters(
         ])
     elif (
         tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}
-        and tool.name not in {"gobuster"}
+        and tool.name not in {"gobuster", "theHarvester"}
     ):
         params.extend([
             AdapterParameterSpec("sources", str, "", "Comma-separated OSINT sources when supported."),
@@ -1394,7 +1412,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "dsss", "owasp-zap", "sqlscan", "whatweb", "xanxss", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "dsss", "owasp-zap", "sqlscan", "theHarvester", "whatweb", "xanxss", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -1434,14 +1452,6 @@ def _adapter_parameters(
             AdapterParameterSpec("exclude_templates", str, "", "Comma-separated templates to exclude."),
             AdapterParameterSpec("headless", bool, False, "Enable headless browser templates."),
             AdapterParameterSpec("interactsh", bool, False, "Enable interactsh/OAST interaction support."),
-        ])
-
-    if tool.name == "theHarvester":
-        params.extend([
-            AdapterParameterSpec("limit", int, 0, "Maximum results when supported; 0 leaves default."),
-            AdapterParameterSpec("start", int, 0, "Start offset when supported; 0 leaves default."),
-            AdapterParameterSpec("takeover", bool, False, "Check takeover candidates when supported."),
-            AdapterParameterSpec("dns_lookup", bool, False, "Run DNS lookup when supported."),
         ])
 
     if tool.name == "sherlock":
@@ -2252,7 +2262,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "cookies", "--cookie")
         _add_value(tokens, kwargs, "blind_callback", "-b")
 
-    if "email" in tags:
+    if "email" in tags and tool.name not in {"theHarvester"}:
         _add_value(tokens, kwargs, "sources", "-b")
 
     if tags & {"username", "social", "social-media"}:
@@ -2428,6 +2438,22 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "proxy", "-proxy")
         _add_bool(tokens, kwargs, "silent", "-silent")
         _add_bool(tokens, kwargs, "verbose", "-v")
+    elif tool.name == "theHarvester":
+        _add_value(tokens, kwargs, "sources", "-b")
+        _add_value(tokens, kwargs, "limit", "-l")
+        _add_value(tokens, kwargs, "start", "-S")
+        _add_bool(tokens, kwargs, "proxies", "-p")
+        _add_bool(tokens, kwargs, "shodan", "-s")
+        _add_value(tokens, kwargs, "screenshot", "--screenshot")
+        _add_value(tokens, kwargs, "dns_server", "-e")
+        _add_bool(tokens, kwargs, "takeover", "-t")
+        _add_value(tokens, kwargs, "dns_resolve", "-r")
+        _add_bool(tokens, kwargs, "dns_lookup", "-n")
+        _add_bool(tokens, kwargs, "dns_brute", "-c")
+        _add_value(tokens, kwargs, "filename", "-f")
+        _add_value(tokens, kwargs, "wordlist", "-w")
+        _add_bool(tokens, kwargs, "api_scan", "-a")
+        _add_bool(tokens, kwargs, "quiet", "-q")
     elif tool.name == "amass":
         _add_value(tokens, kwargs, "config_file", "-config")
         _add_value(tokens, kwargs, "output_dir", "-dir")
@@ -2473,7 +2499,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "wordlist_masks", "-wm")
     elif (
         tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}
-        and tool.name not in {"gobuster"}
+        and tool.name not in {"gobuster", "theHarvester"}
     ):
         if "email" not in tags:
             _add_value(tokens, kwargs, "sources", "-sources")
@@ -2505,7 +2531,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "dsss", "owasp-zap", "sqlscan", "whatweb", "xanxss", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "dsss", "owasp-zap", "sqlscan", "theHarvester", "whatweb", "xanxss", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
@@ -2535,12 +2561,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "exclude_templates", "-exclude-templates")
         _add_bool(tokens, kwargs, "headless", "-headless")
         _add_bool(tokens, kwargs, "interactsh", "-interactsh-server")
-
-    if tool.name == "theHarvester":
-        _add_value(tokens, kwargs, "limit", "-l")
-        _add_value(tokens, kwargs, "start", "-S")
-        _add_bool(tokens, kwargs, "takeover", "--takeover")
-        _add_bool(tokens, kwargs, "dns_lookup", "-n")
 
     if tool.name == "sherlock":
         _add_value(tokens, kwargs, "site_list", "--site")
