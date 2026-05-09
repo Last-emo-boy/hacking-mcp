@@ -26,6 +26,7 @@ class SourceReview:
 
     note: str
     references: tuple[str, ...]
+    verified_parameters: tuple[str, ...]
 
 
 SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
@@ -39,6 +40,19 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "https://nmap.org/book/man.html",
             "https://nmap.org/book/man-briefoptions.html",
         ),
+        verified_parameters=(
+            "ports",
+            "scan_type",
+            "service_version",
+            "os_detection",
+            "default_scripts",
+            "timing",
+            "top_ports",
+            "rate",
+            "scripts",
+            "script_args",
+            "exclude_hosts",
+        ),
     ),
     "nuclei": SourceReview(
         note=(
@@ -48,6 +62,17 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
         ),
         references=(
             "https://docs.projectdiscovery.io/opensource/nuclei/running",
+        ),
+        verified_parameters=(
+            "severity",
+            "tags",
+            "template_path",
+            "rate_limit",
+            "proxy",
+            "workflows",
+            "exclude_templates",
+            "headless",
+            "interactsh",
         ),
     ),
     "ffuf": SourceReview(
@@ -59,8 +84,57 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
         references=(
             "https://github.com/ffuf/ffuf",
         ),
+        verified_parameters=(
+            "wordlist",
+            "threads",
+            "extensions",
+            "match_codes",
+            "recursive",
+            "follow_redirects",
+            "proxy",
+            "fuzz_keyword",
+            "host_header",
+            "recursion_depth",
+            "filter_codes",
+            "filter_size",
+            "filter_words",
+            "add_slash",
+        ),
+    ),
+    "httpx": SourceReview(
+        note=(
+            "Reviewed against official ProjectDiscovery httpx usage docs for "
+            "single URL/list input, probes, match/filter codes, rate/thread "
+            "controls, proxy/header/method, timeout, output, and JSON flags."
+        ),
+        references=(
+            "https://docs.projectdiscovery.io/opensource/httpx/usage",
+        ),
+        verified_parameters=(
+            "input_file",
+            "status_code",
+            "title",
+            "tech_detect",
+            "content_length",
+            "match_codes",
+            "filter_codes",
+            "threads",
+            "rate_limit",
+            "ports",
+            "path",
+            "follow_redirects",
+            "proxy",
+            "headers",
+            "method",
+            "timeout",
+            "output_file",
+            "json_output",
+            "silent",
+        ),
     ),
 }
+
+BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}
 
 
 @dataclass(frozen=True)
@@ -78,6 +152,8 @@ class AdapterResearchRecord:
     source_reviewed: bool
     parameter_count: int
     project_url: str
+    verified_parameters: tuple[str, ...]
+    unverified_parameters: tuple[str, ...]
     evidence: tuple[str, ...]
     gap: str
 
@@ -93,9 +169,16 @@ def build_adapter_research_records(
     for tool in registry.list_all_tools():
         spec = specs[tool.name]
         params = adapter_parameter_names(tool, spec)
+        reviewable_params = sorted(set(params) - BASE_ADAPTER_PARAMETERS)
         source_review = SOURCE_REVIEWED_TOOLS.get(tool.name)
         source_reviewed = source_review is not None
         named_override = tool.name in NAMED_OVERRIDE_TOOL_NAMES
+        verified_params = sorted(source_review.verified_parameters) if source_review else []
+        unverified_params = (
+            sorted(set(reviewable_params) - set(verified_params))
+            if source_review
+            else reviewable_params
+        )
 
         if source_reviewed:
             source_status = SOURCE_STATUS_SOURCE_REVIEWED
@@ -116,13 +199,21 @@ def build_adapter_research_records(
             evidence.append(f"registry project_url: {tool.project_url}")
         if source_review:
             evidence.append(f"source review note: {source_review.note}")
+            evidence.append(
+                "source-verified parameters: " + ", ".join(verified_params)
+            )
             evidence.extend(
                 f"source reference: {reference}"
                 for reference in source_review.references
             )
 
         gap = ""
-        if not source_reviewed:
+        if source_reviewed and unverified_params:
+            gap = (
+                "source review does not yet verify exposed parameters: "
+                + ", ".join(unverified_params)
+            )
+        elif not source_reviewed:
             gap = (
                 "upstream source/docs have not been manually reviewed for exact "
                 "CLI parity"
@@ -141,6 +232,8 @@ def build_adapter_research_records(
                 source_reviewed=source_reviewed,
                 parameter_count=len(params),
                 project_url=tool.project_url,
+                verified_parameters=tuple(verified_params),
+                unverified_parameters=tuple(unverified_params),
                 evidence=tuple(evidence),
                 gap=gap,
             )
@@ -157,7 +250,11 @@ def summarize_adapter_research(records: list[AdapterResearchRecord]) -> dict[str
         "registry_derived": by_status[SOURCE_STATUS_REGISTRY_DERIVED],
         "named_override": by_status[SOURCE_STATUS_NAMED_OVERRIDE],
         "source_reviewed": by_status[SOURCE_STATUS_SOURCE_REVIEWED],
-        "source_review_gaps": sum(1 for record in records if not record.source_reviewed),
+        "fully_source_verified": sum(
+            1 for record in records
+            if record.source_reviewed and not record.unverified_parameters
+        ),
+        "source_review_gaps": sum(1 for record in records if record.gap),
     }
 
 

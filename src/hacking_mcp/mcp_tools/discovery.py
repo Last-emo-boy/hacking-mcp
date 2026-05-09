@@ -280,6 +280,8 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
                 f"- Source status: `{research.source_status}`",
                 f"- Named override: {research.named_override}",
                 f"- Source reviewed: {research.source_reviewed}",
+                f"- Source-verified params: {len(research.verified_parameters)}",
+                f"- Unverified params: {len(research.unverified_parameters)}",
             ])
             if research.gap:
                 lines.append(f"- Gap: {research.gap}")
@@ -502,7 +504,7 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
                 if record.source_status == "source-reviewed"
             ]
         elif status_filter in {"source-review-gap", "gap", "gaps"}:
-            records = [record for record in records if not record.source_reviewed]
+            records = [record for record in records if record.gap]
         elif status_filter and status_filter != "all":
             return (
                 "Unknown status filter. Use one of: all, registry-derived, "
@@ -521,18 +523,26 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
             f"Registry-derived only: {summary['registry_derived']}",
             f"Named overrides: {summary['named_override']}",
             f"Source-reviewed: {summary['source_reviewed']}",
+            f"Fully source-verified: {summary['fully_source_verified']}",
             f"Open source-review gaps: {summary['source_review_gaps']}",
             f"Showing: {min(len(records), limit)}/{len(records)}",
             "",
         ]
 
         for record in records[:limit]:
-            review = "source-reviewed" if record.source_reviewed else "gap"
+            if record.gap:
+                review = "gap"
+            elif record.source_reviewed:
+                review = "fully source-verified"
+            else:
+                review = "not source-reviewed"
             lines.append(
                 f"- `{record.tool_name}` -> `{record.endpoint}` "
                 f"({record.category}, {record.safety_tier}, "
                 f"{record.execution_state}) status: `{record.source_status}`; "
-                f"params: {record.parameter_count}; {review}"
+                f"params: {record.parameter_count}; "
+                f"verified: {len(record.verified_parameters)}; "
+                f"unverified: {len(record.unverified_parameters)}; {review}"
             )
             if include_details:
                 lines.extend(f"  - evidence: {item}" for item in record.evidence)
@@ -804,11 +814,19 @@ def _format_adapter_research_record(record) -> str:
         f"**Named override:** {record.named_override}",
         f"**Source reviewed:** {record.source_reviewed}",
         f"**Parameter count:** {record.parameter_count}",
+        f"**Source-verified params:** {len(record.verified_parameters)}",
+        f"**Unverified params:** {len(record.unverified_parameters)}",
     ]
     if record.project_url:
         lines.append(f"**Project URL:** {record.project_url}")
     lines.extend(["", "## Evidence"])
     lines.extend(f"- {item}" for item in record.evidence)
+    if record.verified_parameters:
+        lines.extend(["", "## Source-Verified Parameters"])
+        lines.append(", ".join(record.verified_parameters))
+    if record.unverified_parameters:
+        lines.extend(["", "## Unverified Parameters"])
+        lines.append(", ".join(record.unverified_parameters))
     if record.gap:
         lines.extend(["", "## Gap", f"- {record.gap}"])
     return "\n".join(lines)

@@ -161,6 +161,15 @@ class TestServerCreation:
     async def test_adapter_research_status_reports_source_review_gaps(self):
         """Research status should expose current evidence and source-review gaps."""
         from hacking_mcp.server import create_server
+        from hacking_mcp.server import registry, safety
+        from hacking_mcp.mcp_tools.adapter_research import (
+            build_adapter_research_records,
+            summarize_adapter_research,
+        )
+
+        research_summary = summarize_adapter_research(
+            build_adapter_research_records(registry, safety)
+        )
 
         server = create_server()
         _, summary_metadata = await server.call_tool(
@@ -174,14 +183,23 @@ class TestServerCreation:
 
         result = summary_metadata["result"]
         assert "Total adapters: 184" in result
-        assert "Source-reviewed: 3" in result
-        assert "Open source-review gaps: 181" in result
-        assert "Showing: 3/181" in result
+        assert f"Source-reviewed: {research_summary['source_reviewed']}" in result
+        assert (
+            f"Fully source-verified: {research_summary['fully_source_verified']}"
+            in result
+        )
+        assert (
+            f"Open source-review gaps: {research_summary['source_review_gaps']}"
+            in result
+        )
+        assert f"Showing: 3/{research_summary['source_review_gaps']}" in result
 
         nmap = nmap_metadata["result"]
         assert "**Tool:** `nmap`" in nmap
         assert "**Source status:** `source-reviewed`" in nmap
         assert "tool-specific named override exists" in nmap
+        assert "**Unverified params:** 0" in nmap
+        assert "## Unverified Parameters" not in nmap
         assert "source reference: https://nmap.org/book/man.html" in nmap
 
 

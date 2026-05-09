@@ -8,6 +8,7 @@ from hacking_mcp.mcp_tools.tool_adapters import (
     register,
 )
 from hacking_mcp.mcp_tools.adapter_research import (
+    SOURCE_REVIEWED_TOOLS,
     build_adapter_research_records,
     summarize_adapter_research,
 )
@@ -113,8 +114,9 @@ def test_adapter_research_records_cover_every_registry_tool(registry, safety):
         + summary["source_reviewed"]
         == summary["total"]
     )
-    assert summary["source_reviewed"] == 3
-    assert summary["source_review_gaps"] == summary["total"] - 3
+    assert summary["source_reviewed"] == len(SOURCE_REVIEWED_TOOLS)
+    assert summary["fully_source_verified"] == len(SOURCE_REVIEWED_TOOLS)
+    assert summary["source_review_gaps"] == summary["total"] - len(SOURCE_REVIEWED_TOOLS)
 
 
 def test_adapter_research_distinguishes_named_overrides(registry, safety):
@@ -126,8 +128,17 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["nmap"].source_status == "source-reviewed"
     assert records["nmap"].named_override is True
     assert records["nmap"].source_reviewed is True
+    assert records["nmap"].unverified_parameters == ()
     assert records["nmap"].gap == ""
     assert any("nmap.org" in item for item in records["nmap"].evidence)
+
+    assert records["ffuf"].source_status == "source-reviewed"
+    assert records["ffuf"].unverified_parameters == ()
+    assert records["ffuf"].gap == ""
+
+    assert records["httpx"].source_status == "source-reviewed"
+    assert records["httpx"].unverified_parameters == ()
+    assert any("projectdiscovery.io" in item for item in records["httpx"].evidence)
 
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
@@ -386,6 +397,51 @@ async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     assert request.tool_name == "nuclei"
     assert request.options == (
         "-severity critical,high -tags exposure -w workflows/ -headless"
+    )
+
+
+@pytest.mark.asyncio
+async def test_httpx_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_httpx",
+        {
+            "target": "https://example.test",
+            "status_code": True,
+            "title": True,
+            "tech_detect": True,
+            "content_length": True,
+            "match_codes": "200,302",
+            "filter_codes": "404",
+            "threads": 25,
+            "rate_limit": 100,
+            "path": "/login",
+            "follow_redirects": True,
+            "proxy": "http://127.0.0.1:8080",
+            "headers": "X-Test: 1",
+            "method": "GET",
+            "timeout": 5,
+            "output_file": "httpx.jsonl",
+            "json_output": True,
+            "silent": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "httpx"
+    assert request.options == (
+        "-sc -title -td -cl -mc 200,302 -fc 404 -t 25 -rl 100 "
+        "-path /login -fr -proxy http://127.0.0.1:8080 -H 'X-Test: 1' "
+        "-x GET -timeout 5 -o httpx.jsonl -json -silent"
     )
 
 

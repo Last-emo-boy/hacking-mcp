@@ -390,6 +390,13 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "scripts": "default",
         "timeout": 10,
         "headless": True,
+        "input_file": "targets.txt",
+        "rate_limit": 100,
+        "filter_codes": "404,403",
+        "headers": "X-Test: 1",
+        "method": "GET",
+        "path": "/login",
+        "silent": True,
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -442,6 +449,28 @@ def _adapter_parameters(
             AdapterParameterSpec("template_path", str, "", "Template file or directory path."),
             AdapterParameterSpec("rate_limit", int, 0, "Maximum requests per second; 0 leaves default."),
             AdapterParameterSpec("proxy", str, "", "Optional HTTP proxy URL."),
+        ])
+    elif tool.name == "httpx":
+        params.extend([
+            AdapterParameterSpec("input_file", str, "", "Input file containing hosts to probe."),
+            AdapterParameterSpec("status_code", bool, False, "Show HTTP status code."),
+            AdapterParameterSpec("title", bool, False, "Show page title."),
+            AdapterParameterSpec("tech_detect", bool, False, "Show technology detection."),
+            AdapterParameterSpec("content_length", bool, False, "Show response content length."),
+            AdapterParameterSpec("match_codes", str, "", "HTTP status codes to match."),
+            AdapterParameterSpec("filter_codes", str, "", "HTTP status codes to filter."),
+            AdapterParameterSpec("threads", int, 0, "Worker/thread count; 0 leaves default."),
+            AdapterParameterSpec("rate_limit", int, 0, "Maximum requests per second; 0 leaves default."),
+            AdapterParameterSpec("ports", str, "", "Ports to probe, for example http:80,https:8443."),
+            AdapterParameterSpec("path", str, "", "Path or comma-separated paths to probe."),
+            AdapterParameterSpec("follow_redirects", bool, False, "Follow HTTP redirects."),
+            AdapterParameterSpec("proxy", str, "", "Optional HTTP proxy URL."),
+            AdapterParameterSpec("headers", str, "", "Custom HTTP header to send."),
+            AdapterParameterSpec("method", str, "", "HTTP method to probe, or all."),
+            AdapterParameterSpec("timeout", int, 0, "Timeout in seconds; 0 leaves default."),
+            AdapterParameterSpec("output_file", str, "", "Output file path."),
+            AdapterParameterSpec("json_output", bool, False, "Store output in JSONL format."),
+            AdapterParameterSpec("silent", bool, False, "Enable silent output mode."),
         ])
     elif tags & {"web", "http", "url", "discovery", "fuzzing"}:
         params.extend([
@@ -657,7 +686,10 @@ def _adapter_parameters(
             AdapterParameterSpec("layout", str, "", "Layout/profile name when supported."),
         ])
 
-    if tags & {"scanner", "vuln", "recon", "app", "check"}:
+    if (
+        tags & {"scanner", "vuln", "recon", "app", "check"}
+        and tool.name not in {"nmap", "nuclei", "httpx"}
+    ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
             AdapterParameterSpec("timeout", int, 0, "Timeout in seconds when supported; 0 leaves default."),
@@ -695,14 +727,6 @@ def _adapter_parameters(
             AdapterParameterSpec("active", bool, False, "Enable active enumeration when supported."),
             AdapterParameterSpec("all_sources", bool, False, "Use all configured sources when supported."),
             AdapterParameterSpec("exclude_sources", str, "", "Comma-separated sources to exclude."),
-        ])
-
-    if tool.name == "httpx":
-        params.extend([
-            AdapterParameterSpec("status_code", bool, False, "Show HTTP status code."),
-            AdapterParameterSpec("title", bool, False, "Show page title."),
-            AdapterParameterSpec("tech_detect", bool, False, "Show technology detection."),
-            AdapterParameterSpec("content_length", bool, False, "Show response content length."),
         ])
 
     if tool.name == "nuclei":
@@ -1030,6 +1054,26 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "template_path", "-t")
         _add_value(tokens, kwargs, "rate_limit", "-rate-limit")
         _add_value(tokens, kwargs, "proxy", "-proxy")
+    elif tool.name == "httpx":
+        _add_value(tokens, kwargs, "input_file", "-l")
+        _add_bool(tokens, kwargs, "status_code", "-sc")
+        _add_bool(tokens, kwargs, "title", "-title")
+        _add_bool(tokens, kwargs, "tech_detect", "-td")
+        _add_bool(tokens, kwargs, "content_length", "-cl")
+        _add_value(tokens, kwargs, "match_codes", "-mc")
+        _add_value(tokens, kwargs, "filter_codes", "-fc")
+        _add_value(tokens, kwargs, "threads", "-t")
+        _add_value(tokens, kwargs, "rate_limit", "-rl")
+        _add_value(tokens, kwargs, "ports", "-p")
+        _add_value(tokens, kwargs, "path", "-path")
+        _add_bool(tokens, kwargs, "follow_redirects", "-fr")
+        _add_value(tokens, kwargs, "proxy", "-proxy")
+        _add_value(tokens, kwargs, "headers", "-H")
+        _add_value(tokens, kwargs, "method", "-x")
+        _add_value(tokens, kwargs, "timeout", "-timeout")
+        _add_value(tokens, kwargs, "output_file", "-o")
+        _add_bool(tokens, kwargs, "json_output", "-json")
+        _add_bool(tokens, kwargs, "silent", "-silent")
     elif tags & {"web", "http", "url", "discovery", "fuzzing"}:
         _add_value(tokens, kwargs, "wordlist", "-w")
         _add_value(tokens, kwargs, "threads", "-t")
@@ -1194,7 +1238,10 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "session_name", "-s")
         _add_value(tokens, kwargs, "layout", "-l")
 
-    if tags & {"scanner", "vuln", "recon", "app", "check"}:
+    if (
+        tags & {"scanner", "vuln", "recon", "app", "check"}
+        and tool.name not in {"nmap", "nuclei", "httpx"}
+    ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
         _add_value(tokens, kwargs, "user_agent", "--user-agent")
@@ -1222,12 +1269,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "active", "-active")
         _add_bool(tokens, kwargs, "all_sources", "-all")
         _add_value(tokens, kwargs, "exclude_sources", "-es")
-
-    if tool.name == "httpx":
-        _add_bool(tokens, kwargs, "status_code", "-status-code")
-        _add_bool(tokens, kwargs, "title", "-title")
-        _add_bool(tokens, kwargs, "tech_detect", "-tech-detect")
-        _add_bool(tokens, kwargs, "content_length", "-content-length")
 
     if tool.name == "nuclei":
         _add_value(tokens, kwargs, "workflows", "-w")
