@@ -765,6 +765,31 @@ def _adapter_parameters(
             AdapterParameterSpec("json_output", bool, False, "Store output in JSONL format."),
             AdapterParameterSpec("silent", bool, False, "Enable silent output mode."),
         ])
+    elif tool.name == "owasp-zap":
+        params.extend([
+            AdapterParameterSpec("quick_out", str, "", "Quick Start report output file."),
+            AdapterParameterSpec("quick_progress", bool, False, "Show ASCII progress bars in command mode."),
+            AdapterParameterSpec("zapit_url", str, "", "URL for a quick ZAPit reconnaissance scan."),
+            AdapterParameterSpec("config", str, "", "Override a key=value configuration pair."),
+            AdapterParameterSpec("config_file", str, "", "Properties file with configuration overrides."),
+            AdapterParameterSpec("home_dir", str, "", "ZAP home directory."),
+            AdapterParameterSpec("install_dir", str, "", "ZAP installation directory."),
+            AdapterParameterSpec("new_session", str, "", "Create a new session at this path."),
+            AdapterParameterSpec("session", str, "", "Open an existing session path."),
+            AdapterParameterSpec("low_mem", bool, False, "Use database storage as much as possible."),
+            AdapterParameterSpec("experimental_db", bool, False, "Use the experimental generic database code."),
+            AdapterParameterSpec("no_stdout", bool, False, "Disable default stdout logging."),
+            AdapterParameterSpec("log_level", str, "", "Log level, for example INFO or DEBUG."),
+            AdapterParameterSpec("silent", bool, False, "Disable unsolicited requests such as update checks."),
+            AdapterParameterSpec("addon_install", str, "", "Install an add-on by ID."),
+            AdapterParameterSpec("addon_install_all", bool, False, "Install all marketplace add-ons."),
+            AdapterParameterSpec("addon_uninstall", str, "", "Uninstall an add-on by ID."),
+            AdapterParameterSpec("addon_update", bool, False, "Update changed marketplace add-ons."),
+            AdapterParameterSpec("addon_list", bool, False, "List installed add-ons."),
+            AdapterParameterSpec("script", str, "", "Run or load a script file."),
+            AdapterParameterSpec("support_info", bool, False, "Print support and troubleshooting details."),
+            AdapterParameterSpec("sbom_zip", str, "", "Create a zip containing available SBOMs."),
+        ])
     elif tool.name == "dalfox":
         params.extend([
             AdapterParameterSpec("blind_callback", str, "", "Blind XSS callback URL."),
@@ -1312,7 +1337,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "dsss", "sqlscan", "xanxss", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "dsss", "owasp-zap", "sqlscan", "xanxss", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -1442,14 +1467,6 @@ def _adapter_parameters(
             AdapterParameterSpec("filter_size", str, "", "Response size filter when supported."),
             AdapterParameterSpec("filter_words", str, "", "Word-count filter when supported."),
             AdapterParameterSpec("add_slash", bool, False, "Append trailing slash to discovered paths when supported."),
-        ])
-
-    if tool.name == "owasp-zap":
-        params.extend([
-            AdapterParameterSpec("scan_policy", str, "", "Scan policy/profile when supported."),
-            AdapterParameterSpec("ajax_spider", bool, False, "Enable AJAX spidering when supported."),
-            AdapterParameterSpec("auth_header", str, "", "Authorization header when supported."),
-            AdapterParameterSpec("report_path", str, "", "Report output path when supported."),
         ])
 
     if tool.name in {"bloodhound", "impacket", "responder"}:
@@ -2058,6 +2075,29 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "append", "--append")
         _add_bool(tokens, kwargs, "overwrite", "--overwrite")
         _add_value(tokens, kwargs, "outprefix", "--outprefix")
+    elif tool.name == "owasp-zap":
+        _add_value(tokens, kwargs, "quick_out", "-quickout")
+        _add_bool(tokens, kwargs, "quick_progress", "-quickprogress")
+        _add_value(tokens, kwargs, "zapit_url", "-zapit")
+        _add_value(tokens, kwargs, "config", "-config")
+        _add_value(tokens, kwargs, "config_file", "-configfile")
+        _add_value(tokens, kwargs, "home_dir", "-dir")
+        _add_value(tokens, kwargs, "install_dir", "-installdir")
+        _add_value(tokens, kwargs, "new_session", "-newsession")
+        _add_value(tokens, kwargs, "session", "-session")
+        _add_bool(tokens, kwargs, "low_mem", "-lowmem")
+        _add_bool(tokens, kwargs, "experimental_db", "-experimentaldb")
+        _add_bool(tokens, kwargs, "no_stdout", "-nostdout")
+        _add_value(tokens, kwargs, "log_level", "-loglevel")
+        _add_bool(tokens, kwargs, "silent", "-silent")
+        _add_value(tokens, kwargs, "addon_install", "-addoninstall")
+        _add_bool(tokens, kwargs, "addon_install_all", "-addoninstallall")
+        _add_value(tokens, kwargs, "addon_uninstall", "-addonuninstall")
+        _add_bool(tokens, kwargs, "addon_update", "-addonupdate")
+        _add_bool(tokens, kwargs, "addon_list", "-addonlist")
+        _add_value(tokens, kwargs, "script", "-script")
+        _add_bool(tokens, kwargs, "support_info", "-suppinfo")
+        _add_value(tokens, kwargs, "sbom_zip", "-sbomzip")
     elif tool.name == "wafw00f":
         verbosity = _int_value(kwargs, "verbosity")
         if verbosity:
@@ -2348,7 +2388,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "dsss", "sqlscan", "xanxss", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "dsss", "owasp-zap", "sqlscan", "xanxss", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
@@ -2446,12 +2486,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "filter_size", "-fs")
         _add_value(tokens, kwargs, "filter_words", "-fw")
         _add_bool(tokens, kwargs, "add_slash", "--add-slash")
-
-    if tool.name == "owasp-zap":
-        _add_value(tokens, kwargs, "scan_policy", "--scan-policy")
-        _add_bool(tokens, kwargs, "ajax_spider", "--ajax-spider")
-        _add_value(tokens, kwargs, "auth_header", "-H")
-        _add_value(tokens, kwargs, "report_path", "-o")
 
     if tool.name in {"bloodhound", "impacket", "responder"}:
         _add_bool(tokens, kwargs, "ldap", "--ldap")

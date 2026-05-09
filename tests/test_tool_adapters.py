@@ -180,6 +180,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["nikto"].unverified_parameters == ()
     assert any("sullo/nikto" in item for item in records["nikto"].evidence)
 
+    assert records["owasp-zap"].source_status == "source-reviewed"
+    assert records["owasp-zap"].unverified_parameters == ()
+    assert any("zaproxy.org/docs/desktop/cmdline" in item for item in records["owasp-zap"].evidence)
+
     assert records["testssl"].source_status == "source-reviewed"
     assert records["testssl"].unverified_parameters == ()
     assert any("drwetter/testssl.sh" in item for item in records["testssl"].evidence)
@@ -384,6 +388,15 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "list_plugins", "mutate", "no_ssl", "output_file", "plugins", "port",
         "ssl", "tuning", "user_agent", "use_proxy", "vhost",
     }.issubset(nikto_schema)
+
+    owasp_zap_schema = tools["security_tool_owasp_zap"].inputSchema["properties"]
+    assert {
+        "quick_out", "quick_progress", "zapit_url", "config", "config_file",
+        "home_dir", "install_dir", "new_session", "session", "low_mem",
+        "experimental_db", "no_stdout", "log_level", "silent", "addon_install",
+        "addon_install_all", "addon_uninstall", "addon_update", "addon_list",
+        "script", "support_info", "sbom_zip",
+    }.issubset(owasp_zap_schema)
 
     testssl_schema = tools["security_tool_testssl"].inputSchema["properties"]
     assert {
@@ -1369,6 +1382,59 @@ async def test_dsss_source_reviewed_parameters_build_cli_options(registry, safet
     assert request.options == (
         "--data q=1 --cookie a=b --user-agent hacking-mcp "
         "--referer https://ref.example --proxy http://127.0.0.1:8080"
+    )
+
+
+@pytest.mark.asyncio
+async def test_owasp_zap_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_owasp_zap",
+        {
+            "target": "https://example.test",
+            "quick_out": "zap.html",
+            "quick_progress": True,
+            "zapit_url": "https://zapit.example",
+            "config": "api.disablekey=true",
+            "config_file": "zap.properties",
+            "home_dir": "zap-home",
+            "install_dir": "/opt/zap",
+            "new_session": "zap.session",
+            "low_mem": True,
+            "experimental_db": True,
+            "no_stdout": True,
+            "log_level": "DEBUG",
+            "silent": True,
+            "addon_install": "pscanrulesAlpha",
+            "addon_install_all": True,
+            "addon_uninstall": "hud",
+            "addon_update": True,
+            "addon_list": True,
+            "script": "script.js",
+            "support_info": True,
+            "sbom_zip": "sbom.zip",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "owasp-zap"
+    assert request.require_confirmation is False
+    assert request.options == (
+        "-quickout zap.html -quickprogress -zapit https://zapit.example "
+        "-config api.disablekey=true -configfile zap.properties -dir zap-home "
+        "-installdir /opt/zap -newsession zap.session -lowmem "
+        "-experimentaldb -nostdout -loglevel DEBUG -silent "
+        "-addoninstall pscanrulesAlpha -addoninstallall -addonuninstall hud "
+        "-addonupdate -addonlist -script script.js -suppinfo -sbomzip sbom.zip"
     )
 
 

@@ -606,6 +606,42 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "notfound_string",
         ),
     ),
+    "owasp-zap": SourceReview(
+        note=(
+            "Reviewed against the official ZAP desktop command line docs and "
+            "Quick Start add-on command line docs for quick scan URL/report/"
+            "progress, ZAPit URL, core config/session/logging options, add-on "
+            "management, script loading, support info, and SBOM output flags."
+        ),
+        references=(
+            "https://www.zaproxy.org/docs/desktop/cmdline/",
+            "https://www.zaproxy.org/docs/desktop/addons/quick-start/cmdline/",
+        ),
+        verified_parameters=(
+            "quick_out",
+            "quick_progress",
+            "zapit_url",
+            "config",
+            "config_file",
+            "home_dir",
+            "install_dir",
+            "new_session",
+            "session",
+            "low_mem",
+            "experimental_db",
+            "no_stdout",
+            "log_level",
+            "silent",
+            "addon_install",
+            "addon_install_all",
+            "addon_uninstall",
+            "addon_update",
+            "addon_list",
+            "script",
+            "support_info",
+            "sbom_zip",
+        ),
+    ),
     "testssl": SourceReview(
         note=(
             "Reviewed against the upstream testssl.sh manual for input/mass "
