@@ -327,6 +327,40 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "quiet",
         ),
     ),
+    "sherlock": SourceReview(
+        note=(
+            "Reviewed against the upstream Sherlock argparse definitions for "
+            "username target input, verbosity, file/folder output controls, "
+            "CSV/XLSX/TXT/JSON outputs, repeated --site selection, proxy, "
+            "response dumping, timeout, print controls, color, browse, local "
+            "site data, NSFW inclusion, and exclusion override flags."
+        ),
+        references=(
+            "https://github.com/sherlock-project/sherlock",
+            "https://raw.githubusercontent.com/sherlock-project/sherlock/master/sherlock_project/sherlock.py",
+        ),
+        verified_parameters=(
+            "verbose",
+            "folder_output",
+            "output_file",
+            "csv_output",
+            "xlsx_output",
+            "sites",
+            "site_list",
+            "proxy",
+            "dump_response",
+            "json_file",
+            "timeout",
+            "print_all",
+            "print_found",
+            "no_color",
+            "browse",
+            "local",
+            "nsfw",
+            "txt_output",
+            "ignore_exclusions",
+        ),
+    ),
     "amass": SourceReview(
         note=(
             "Reviewed against the OWASP Amass user guide for the enum command, "

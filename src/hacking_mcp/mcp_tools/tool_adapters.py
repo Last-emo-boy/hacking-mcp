@@ -1357,14 +1357,6 @@ def _adapter_parameters(
             AdapterParameterSpec("interactsh", bool, False, "Enable interactsh/OAST interaction support."),
         ])
 
-    if tool.name == "sherlock":
-        params.extend([
-            AdapterParameterSpec("site_list", str, "", "Comma-separated site list when supported."),
-            AdapterParameterSpec("csv_output", bool, False, "Request CSV output when supported."),
-            AdapterParameterSpec("print_found", bool, False, "Only print found accounts when supported."),
-            AdapterParameterSpec("browse", bool, False, "Open found results in browser when supported."),
-        ])
-
     if tool.name in {"prowler", "trivy"}:
         params.extend([
             AdapterParameterSpec("provider", str, "", "Cloud/provider selector when supported."),
@@ -2369,12 +2361,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "exclude_templates", "-exclude-templates")
         _add_bool(tokens, kwargs, "headless", "-headless")
         _add_bool(tokens, kwargs, "interactsh", "-interactsh-server")
-
-    if tool.name == "sherlock":
-        _add_value(tokens, kwargs, "site_list", "--site")
-        _add_bool(tokens, kwargs, "csv_output", "--csv")
-        _add_bool(tokens, kwargs, "print_found", "--print-found")
-        _add_bool(tokens, kwargs, "browse", "--browse")
 
     if tool.name in {"prowler", "trivy"}:
         _add_value(tokens, kwargs, "provider", "--provider")

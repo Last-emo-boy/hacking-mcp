@@ -125,7 +125,7 @@ def test_split_adapter_registry_includes_migrated_tools():
         has_split_adapter,
     )
 
-    migrated = {"owasp-zap", "theHarvester", "whatweb"}
+    migrated = {"owasp-zap", "sherlock", "theHarvester", "whatweb"}
     assert migrated.issubset(PARAMETER_PROVIDERS)
     assert all(has_split_adapter(tool_name) for tool_name in migrated)
 
@@ -158,6 +158,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["theHarvester"].source_status == "source-reviewed"
     assert records["theHarvester"].unverified_parameters == ()
     assert any("laramies/theHarvester" in item for item in records["theHarvester"].evidence)
+
+    assert records["sherlock"].source_status == "source-reviewed"
+    assert records["sherlock"].unverified_parameters == ()
+    assert any("sherlock-project/sherlock" in item for item in records["sherlock"].evidence)
 
     assert records["amass"].source_status == "source-reviewed"
     assert records["amass"].unverified_parameters == ()
@@ -324,6 +328,14 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "dns_server", "takeover", "dns_resolve", "dns_lookup", "dns_brute",
         "filename", "wordlist", "api_scan", "quiet",
     }.issubset(harvester_schema)
+
+    sherlock_schema = tools["security_tool_sherlock"].inputSchema["properties"]
+    assert {
+        "verbose", "folder_output", "output_file", "csv_output", "xlsx_output",
+        "sites", "site_list", "proxy", "dump_response", "json_file", "timeout",
+        "print_all", "print_found", "no_color", "browse", "local", "nsfw",
+        "txt_output", "ignore_exclusions",
+    }.issubset(sherlock_schema)
 
     trufflehog_schema = tools["security_tool_trufflehog"].inputSchema["properties"]
     assert {
@@ -804,6 +816,56 @@ async def test_theharvester_source_reviewed_parameters_build_cli_options(registr
     assert request.options == (
         "-b bing,crtsh -l 100 -S 10 -p -s --screenshot shots -e 1.1.1.1 "
         "-t -r resolvers.txt -n -c -f harvester -w apis.txt -a -q"
+    )
+
+
+@pytest.mark.asyncio
+async def test_sherlock_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_sherlock",
+        {
+            "target": "user123",
+            "verbose": True,
+            "folder_output": "sherlock-out",
+            "output_file": "user123.txt",
+            "csv_output": True,
+            "xlsx_output": True,
+            "sites": "GitHub,Reddit",
+            "site_list": "Twitter",
+            "proxy": "socks5://127.0.0.1:9050",
+            "dump_response": True,
+            "json_file": "user123.json",
+            "timeout": 15,
+            "print_all": True,
+            "print_found": True,
+            "no_color": True,
+            "browse": True,
+            "local": True,
+            "nsfw": True,
+            "txt_output": True,
+            "ignore_exclusions": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "sherlock"
+    assert request.target == "user123"
+    assert request.options == (
+        "--verbose --folderoutput sherlock-out --output user123.txt --csv "
+        "--xlsx --site GitHub --site Reddit --site Twitter "
+        "--proxy socks5://127.0.0.1:9050 --dump-response --json user123.json "
+        "--timeout 15 --print-all --print-found --no-color --browse --local "
+        "--nsfw --txt --ignore-exclusions"
     )
 
 
