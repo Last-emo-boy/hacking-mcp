@@ -801,6 +801,19 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "proxy",
         ),
     ),
+    "sqlscan": SourceReview(
+        note=(
+            "Reviewed against upstream sqlscan README usage showing URL or input "
+            "file targets scanned with the --scan mode flag."
+        ),
+        references=(
+            "https://github.com/Cvar1984/sqlscan",
+            "https://raw.githubusercontent.com/Cvar1984/sqlscan/dev/README.md",
+        ),
+        verified_parameters=(
+            "scan",
+        ),
+    ),
     "wafw00f": SourceReview(
         note=(
             "Reviewed against upstream wafw00f OptionParser definitions for "

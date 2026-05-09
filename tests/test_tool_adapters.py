@@ -196,6 +196,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["dsss"].unverified_parameters == ()
     assert any("stamparm/DSSS" in item for item in records["dsss"].evidence)
 
+    assert records["sqlscan"].source_status == "source-reviewed"
+    assert records["sqlscan"].unverified_parameters == ()
+    assert any("Cvar1984/sqlscan" in item for item in records["sqlscan"].evidence)
+
     assert records["wafw00f"].source_status == "source-reviewed"
     assert records["wafw00f"].unverified_parameters == ()
     assert any("EnableSecurity/wafw00f" in item for item in records["wafw00f"].evidence)
@@ -408,6 +412,9 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     assert {"data", "cookie", "user_agent", "referer", "proxy"}.issubset(
         dsss_schema
     )
+
+    sqlscan_schema = tools["security_tool_sqlscan"].inputSchema["properties"]
+    assert {"scan"}.issubset(sqlscan_schema)
 
     wafw00f_schema = tools["security_tool_wafw00f"].inputSchema["properties"]
     assert {
@@ -1140,6 +1147,33 @@ async def test_nikto_source_reviewed_parameters_build_cli_options(registry, safe
         "-timeout 10 -useragent hacking-mcp -useproxy -vhost example.test "
         "-404code 404 -404string 'not found'"
     )
+
+
+@pytest.mark.asyncio
+async def test_sqlscan_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_sqlscan",
+        {
+            "target": "https://example.test/?id=1",
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "sqlscan"
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+    assert request.options == "--scan"
 
 
 @pytest.mark.asyncio
