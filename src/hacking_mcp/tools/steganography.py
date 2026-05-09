@@ -21,6 +21,7 @@ STEGANOGRAPHY_TOOLS: list[HackingToolDef] = [
         category="Steganography",
         install_commands=["pip3 install stegcracker"],
         run_command="stegcracker {target}",
+        project_url="https://github.com/Paradoxis/StegCracker",
         tags=["stegano", "bruteforce", "extract", "password"],
         safety_tier=SafetyTier.SAFE,
     ),

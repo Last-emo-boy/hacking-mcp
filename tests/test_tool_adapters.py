@@ -131,6 +131,7 @@ def test_split_adapter_registry_includes_migrated_tools():
         "owasp-zap",
         "pspy",
         "sherlock",
+        "stegcracker",
         "steghide",
         "theHarvester",
         "volatility3",
@@ -180,6 +181,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["steghide"].source_status == "source-reviewed"
     assert records["steghide"].unverified_parameters == ()
     assert any("steghide" in item for item in records["steghide"].evidence)
+
+    assert records["stegcracker"].source_status == "source-reviewed"
+    assert records["stegcracker"].unverified_parameters == ()
+    assert any("Paradoxis/StegCracker" in item for item in records["stegcracker"].evidence)
 
     assert records["subfinder"].source_status == "source-reviewed"
     assert records["subfinder"].unverified_parameters == ()
@@ -436,6 +441,12 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "no_compress", "no_checksum", "no_embed_name", "passphrase", "verbose",
         "quiet", "force",
     }.issubset(steghide_schema)
+
+    stegcracker_schema = tools["security_tool_stegcracker"].inputSchema["properties"]
+    assert {
+        "wordlist", "output_file", "threads", "chunk_size", "quiet",
+        "version", "verbose",
+    }.issubset(stegcracker_schema)
 
     hashcat_schema = tools["security_tool_hashcat"].inputSchema["properties"]
     assert {"rules", "mask", "session", "show", "potfile_path"}.issubset(
@@ -2309,6 +2320,38 @@ async def test_steghide_source_reviewed_parameters_build_cli_options(registry, s
         "embed --embedfile secret.txt --coverfile picture.jpg --stegofile "
         "out.jpg --encryption rijndael-128 --compress 9 --nochecksum "
         "--dontembedname --passphrase 'pass word' --verbose --force"
+    )
+
+
+@pytest.mark.asyncio
+async def test_stegcracker_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_stegcracker",
+        {
+            "target": "picture.jpg",
+            "wordlist": "words.txt",
+            "output_file": "secret.out",
+            "threads": 8,
+            "chunk_size": 128,
+            "quiet": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "stegcracker"
+    assert request.target == "picture.jpg"
+    assert request.options == (
+        "words.txt --output secret.out --threads 8 --chunk-size 128 --quiet"
     )
 
 

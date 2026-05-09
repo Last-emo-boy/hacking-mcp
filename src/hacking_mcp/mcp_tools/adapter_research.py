@@ -175,6 +175,27 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "force",
         ),
     ),
+    "stegcracker": SourceReview(
+        note=(
+            "Reviewed against upstream StegCracker README usage and argparse "
+            "definitions for stego input file, optional wordlist, output file, "
+            "thread count, chunk size, quiet mode, version, and verbose mode."
+        ),
+        references=(
+            "https://github.com/Paradoxis/StegCracker",
+            "https://raw.githubusercontent.com/Paradoxis/StegCracker/master/README.md",
+            "https://raw.githubusercontent.com/Paradoxis/StegCracker/master/stegcracker/__main__.py",
+        ),
+        verified_parameters=(
+            "wordlist",
+            "output_file",
+            "threads",
+            "chunk_size",
+            "quiet",
+            "version",
+            "verbose",
+        ),
+    ),
     "nmap": SourceReview(
         note=(
             "Reviewed against the official Nmap reference guide for target "

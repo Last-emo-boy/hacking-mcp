@@ -1375,14 +1375,6 @@ def _adapter_parameters(
             AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
         ])
 
-    if tool.name == "stegcracker":
-        params.extend([
-            AdapterParameterSpec("cover_file", str, "", "Cover file path when supported."),
-            AdapterParameterSpec("embed_file", str, "", "File to embed when supported."),
-            AdapterParameterSpec("compression_level", int, 0, "Compression level when supported; 0 leaves default."),
-            AdapterParameterSpec("encryption", str, "", "Encryption algorithm when supported."),
-        ])
-
     if tool.name in {"hashcat", "john"}:
         params.extend([
             AdapterParameterSpec("rules", str, "", "Rule file/name when supported."),
@@ -2360,12 +2352,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "kerberos", "-k")
         _add_bool(tokens, kwargs, "local_auth", "--local-auth")
         _add_value(tokens, kwargs, "target_ip", "--target-ip")
-
-    if tool.name == "stegcracker":
-        _add_value(tokens, kwargs, "cover_file", "-cf")
-        _add_value(tokens, kwargs, "embed_file", "-ef")
-        _add_value(tokens, kwargs, "compression_level", "-z")
-        _add_value(tokens, kwargs, "encryption", "-e")
 
     if tool.name in {"hashcat", "john"}:
         _add_value(tokens, kwargs, "rules", "-r")
