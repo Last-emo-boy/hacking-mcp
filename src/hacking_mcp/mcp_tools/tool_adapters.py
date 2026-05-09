@@ -648,6 +648,49 @@ def _adapter_parameters(
             AdapterParameterSpec("headless", bool, False, "Run in headless mode when supported."),
         ])
 
+    if tool.name in {"masscan", "rustscan"}:
+        params.extend([
+            AdapterParameterSpec("exclude_file", str, "", "File containing targets to exclude when supported."),
+            AdapterParameterSpec("adapter_ip", str, "", "Source/adapter IP address when supported."),
+            AdapterParameterSpec("adapter_port", str, "", "Source/adapter port or range when supported."),
+            AdapterParameterSpec("ulimit", int, 0, "Open file limit when supported; 0 leaves default."),
+            AdapterParameterSpec("batch_size", int, 0, "Batch size when supported; 0 leaves default."),
+        ])
+
+    if tool.name in {"nikto", "testssl", "wafw00f"}:
+        params.extend([
+            AdapterParameterSpec("ssl", bool, False, "Force SSL/TLS mode when supported."),
+            AdapterParameterSpec("evasion", str, "", "Evasion profile when supported."),
+            AdapterParameterSpec("tuning", str, "", "Scan tuning selector when supported."),
+            AdapterParameterSpec("no_color", bool, False, "Disable colored output when supported."),
+            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value when supported."),
+        ])
+
+    if tool.name in {"ffuf", "gobuster", "dirsearch", "feroxbuster"}:
+        params.extend([
+            AdapterParameterSpec("filter_codes", str, "", "HTTP status codes to filter out."),
+            AdapterParameterSpec("filter_size", str, "", "Response size filter when supported."),
+            AdapterParameterSpec("filter_words", str, "", "Word-count filter when supported."),
+            AdapterParameterSpec("add_slash", bool, False, "Append trailing slash to discovered paths when supported."),
+        ])
+
+    if tool.name in {"katana", "arjun"}:
+        params.extend([
+            AdapterParameterSpec("depth", int, 0, "Crawl or discovery depth when supported; 0 leaves default."),
+            AdapterParameterSpec("scope", str, "", "Scope selector such as fqdn/rdir when supported."),
+            AdapterParameterSpec("known_files", str, "", "Known files selector when supported."),
+            AdapterParameterSpec("headless", bool, False, "Enable headless crawling when supported."),
+            AdapterParameterSpec("passive", bool, False, "Enable passive discovery when supported."),
+        ])
+
+    if tool.name in {"owasp-zap", "xspear", "xsscon"}:
+        params.extend([
+            AdapterParameterSpec("scan_policy", str, "", "Scan policy/profile when supported."),
+            AdapterParameterSpec("ajax_spider", bool, False, "Enable AJAX spidering when supported."),
+            AdapterParameterSpec("auth_header", str, "", "Authorization header when supported."),
+            AdapterParameterSpec("report_path", str, "", "Report output path when supported."),
+        ])
+
     params.extend([
         AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
         AdapterParameterSpec(
@@ -986,6 +1029,39 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "analysis_level", "--analysis")
         _add_value(tokens, kwargs, "entrypoint", "--entrypoint")
         _add_bool(tokens, kwargs, "headless", "--headless")
+
+    if tool.name in {"masscan", "rustscan"}:
+        _add_value(tokens, kwargs, "exclude_file", "--excludefile")
+        _add_value(tokens, kwargs, "adapter_ip", "--adapter-ip")
+        _add_value(tokens, kwargs, "adapter_port", "--adapter-port")
+        _add_value(tokens, kwargs, "ulimit", "--ulimit")
+        _add_value(tokens, kwargs, "batch_size", "--batch-size")
+
+    if tool.name in {"nikto", "testssl", "wafw00f"}:
+        _add_bool(tokens, kwargs, "ssl", "-ssl")
+        _add_value(tokens, kwargs, "evasion", "-evasion")
+        _add_value(tokens, kwargs, "tuning", "-Tuning")
+        _add_bool(tokens, kwargs, "no_color", "--color=0")
+        _add_value(tokens, kwargs, "user_agent", "-useragent")
+
+    if tool.name in {"ffuf", "gobuster", "dirsearch", "feroxbuster"}:
+        _add_value(tokens, kwargs, "filter_codes", "-fc")
+        _add_value(tokens, kwargs, "filter_size", "-fs")
+        _add_value(tokens, kwargs, "filter_words", "-fw")
+        _add_bool(tokens, kwargs, "add_slash", "--add-slash")
+
+    if tool.name in {"katana", "arjun"}:
+        _add_value(tokens, kwargs, "depth", "-d")
+        _add_value(tokens, kwargs, "scope", "-scope")
+        _add_value(tokens, kwargs, "known_files", "-known-files")
+        _add_bool(tokens, kwargs, "headless", "-headless")
+        _add_bool(tokens, kwargs, "passive", "-passive")
+
+    if tool.name in {"owasp-zap", "xspear", "xsscon"}:
+        _add_value(tokens, kwargs, "scan_policy", "--scan-policy")
+        _add_bool(tokens, kwargs, "ajax_spider", "--ajax-spider")
+        _add_value(tokens, kwargs, "auth_header", "-H")
+        _add_value(tokens, kwargs, "report_path", "-o")
 
     return tokens
 
