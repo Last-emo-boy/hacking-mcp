@@ -784,6 +784,33 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "log_file",
         ),
     ),
+    "xspear": SourceReview(
+        note=(
+            "Reviewed against upstream XSpear README usage for POST data, all-"
+            "parameter mode, no-XSS analysis mode, headers/cookies, custom "
+            "payloads, raw request input, parameter selection, blind callback, "
+            "threading, output format, config file, and verbosity."
+        ),
+        references=(
+            "https://github.com/hahwul/XSpear",
+            "https://raw.githubusercontent.com/hahwul/XSpear/master/README.md",
+        ),
+        verified_parameters=(
+            "data",
+            "test_all_params",
+            "no_xss",
+            "headers",
+            "cookie",
+            "custom_payload",
+            "raw_file",
+            "parameter",
+            "blind_callback",
+            "threads",
+            "output_format",
+            "config_file",
+            "verbose",
+        ),
+    ),
     "dsss": SourceReview(
         note=(
             "Reviewed against upstream DSSS option parsing for POST data, cookie, "

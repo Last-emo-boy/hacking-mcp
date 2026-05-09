@@ -192,6 +192,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["xsstrike"].unverified_parameters == ()
     assert any("UltimateHackers/XSStrike" in item for item in records["xsstrike"].evidence)
 
+    assert records["xspear"].source_status == "source-reviewed"
+    assert records["xspear"].unverified_parameters == ()
+    assert any("hahwul/XSpear" in item for item in records["xspear"].evidence)
+
     assert records["dsss"].source_status == "source-reviewed"
     assert records["dsss"].unverified_parameters == ()
     assert any("stamparm/DSSS" in item for item in records["dsss"].evidence)
@@ -407,6 +411,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "headers", "threads", "delay", "skip", "skip_dom", "blind",
         "console_log_level", "file_log_level", "log_file",
     }.issubset(xsstrike_schema)
+
+    xspear_schema = tools["security_tool_xspear"].inputSchema["properties"]
+    assert {
+        "data", "test_all_params", "no_xss", "headers", "cookie",
+        "custom_payload", "raw_file", "parameter", "blind_callback", "threads",
+        "output_format", "config_file", "verbose",
+    }.issubset(xspear_schema)
 
     dsss_schema = tools["security_tool_dsss"].inputSchema["properties"]
     assert {"data", "cookie", "user_agent", "referer", "proxy"}.issubset(
@@ -1174,6 +1185,50 @@ async def test_sqlscan_source_reviewed_parameters_build_cli_options(registry, sa
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
     assert request.options == "--scan"
+
+
+@pytest.mark.asyncio
+async def test_xspear_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_xspear",
+        {
+            "target": "https://example.test/?q=1",
+            "confirm_authorized": True,
+            "data": "q=1",
+            "test_all_params": True,
+            "no_xss": True,
+            "headers": "X-Test: 1",
+            "cookie": "a=b",
+            "custom_payload": "payloads.json",
+            "raw_file": "request.txt",
+            "parameter": "q",
+            "blind_callback": "https://callback.test",
+            "threads": 8,
+            "output_format": "json",
+            "config_file": "xspear.json",
+            "verbose": 2,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "xspear"
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+    assert request.options == (
+        "-d q=1 -a --no-xss --headers 'X-Test: 1' --cookie a=b "
+        "--custom-payload payloads.json --raw request.txt -p q "
+        "-b https://callback.test -t 8 -o json -c xspear.json -vv"
+    )
 
 
 @pytest.mark.asyncio
