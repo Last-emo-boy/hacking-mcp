@@ -446,6 +446,9 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "suffixes": "backup",
         "subdirs": "api,admin",
         "format": "json",
+        "output_format": "json",
+        "display": "V",
+        "tuning": "x",
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -539,6 +542,42 @@ def _adapter_parameters(
             AdapterParameterSpec("template_path", str, "", "Template file or directory path."),
             AdapterParameterSpec("rate_limit", int, 0, "Maximum requests per second; 0 leaves default."),
             AdapterParameterSpec("proxy", str, "", "Optional HTTP proxy URL."),
+        ])
+    elif tool.name == "nikto":
+        params.extend([
+            AdapterParameterSpec("ask", str, "", "Interactive prompt behavior."),
+            AdapterParameterSpec("cgi_dirs", str, "", "CGI directories to scan."),
+            AdapterParameterSpec("config_file", str, "", "Nikto config file path."),
+            AdapterParameterSpec("display", str, "", "Display selector."),
+            AdapterParameterSpec("dbcheck", bool, False, "Check database and syntax errors."),
+            AdapterParameterSpec("evasion", str, "", "IDS evasion technique."),
+            AdapterParameterSpec("output_format", str, "", "Output format."),
+            AdapterParameterSpec("auth", str, "", "Host authentication credential pair."),
+            AdapterParameterSpec("list_plugins", bool, False, "List installed plugins."),
+            AdapterParameterSpec("max_time", str, "", "Maximum testing time."),
+            AdapterParameterSpec("mutate", str, "", "Guess additional file names."),
+            AdapterParameterSpec("mutate_options", str, "", "Mutate option values."),
+            AdapterParameterSpec("no_interactive", bool, False, "Disable interactive prompts."),
+            AdapterParameterSpec("no_lookup", bool, False, "Disable DNS lookups."),
+            AdapterParameterSpec("no_ssl", bool, False, "Disable SSL/TLS."),
+            AdapterParameterSpec("no_404", bool, False, "Disable 404 checks."),
+            AdapterParameterSpec("output_file", str, "", "Output file path."),
+            AdapterParameterSpec("pause", int, 0, "Pause between tests in seconds; 0 leaves default."),
+            AdapterParameterSpec("plugins", str, "", "Plugin selector."),
+            AdapterParameterSpec("port", str, "", "Ports to scan."),
+            AdapterParameterSpec("rsa_cert", str, "", "Client certificate file."),
+            AdapterParameterSpec("root", str, "", "Prepend root path to requests."),
+            AdapterParameterSpec("save_dir", str, "", "Directory to save positive responses."),
+            AdapterParameterSpec("ssl", bool, False, "Force SSL/TLS mode."),
+            AdapterParameterSpec("tuning", str, "", "Scan tuning selector."),
+            AdapterParameterSpec("timeout", int, 0, "Request timeout in seconds; 0 leaves default."),
+            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value."),
+            AdapterParameterSpec("until", str, "", "Run until specified time or duration."),
+            AdapterParameterSpec("update", bool, False, "Update plugins and databases."),
+            AdapterParameterSpec("use_proxy", bool, False, "Use configured HTTP proxy."),
+            AdapterParameterSpec("vhost", str, "", "Virtual host header."),
+            AdapterParameterSpec("notfound_code", str, "", "Treat this HTTP code as 404."),
+            AdapterParameterSpec("notfound_string", str, "", "Treat response body containing this string as 404."),
         ])
     elif tool.name == "katana":
         params.extend([
@@ -1053,7 +1092,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan"}
+        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -1186,7 +1225,7 @@ def _adapter_parameters(
             AdapterParameterSpec("headless", bool, False, "Run in headless mode when supported."),
         ])
 
-    if tool.name in {"nikto", "testssl", "wafw00f"}:
+    if tool.name in {"testssl", "wafw00f"}:
         params.extend([
             AdapterParameterSpec("ssl", bool, False, "Force SSL/TLS mode when supported."),
             AdapterParameterSpec("evasion", str, "", "Evasion profile when supported."),
@@ -1424,6 +1463,40 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "template_path", "-t")
         _add_value(tokens, kwargs, "rate_limit", "-rate-limit")
         _add_value(tokens, kwargs, "proxy", "-proxy")
+    elif tool.name == "nikto":
+        _add_value(tokens, kwargs, "ask", "-ask")
+        _add_value(tokens, kwargs, "cgi_dirs", "-Cgidirs")
+        _add_value(tokens, kwargs, "config_file", "-config")
+        _add_value(tokens, kwargs, "display", "-Display")
+        _add_bool(tokens, kwargs, "dbcheck", "-dbcheck")
+        _add_value(tokens, kwargs, "evasion", "-evasion")
+        _add_value(tokens, kwargs, "output_format", "-Format")
+        _add_value(tokens, kwargs, "auth", "-id")
+        _add_bool(tokens, kwargs, "list_plugins", "-list-plugins")
+        _add_value(tokens, kwargs, "max_time", "-maxtime")
+        _add_value(tokens, kwargs, "mutate", "-mutate")
+        _add_value(tokens, kwargs, "mutate_options", "-mutate-options")
+        _add_bool(tokens, kwargs, "no_interactive", "-nointeractive")
+        _add_bool(tokens, kwargs, "no_lookup", "-nolookup")
+        _add_bool(tokens, kwargs, "no_ssl", "-nossl")
+        _add_bool(tokens, kwargs, "no_404", "-no404")
+        _add_value(tokens, kwargs, "output_file", "-output")
+        _add_value(tokens, kwargs, "pause", "-Pause")
+        _add_value(tokens, kwargs, "plugins", "-Plugins")
+        _add_value(tokens, kwargs, "port", "-port")
+        _add_value(tokens, kwargs, "rsa_cert", "-RSAcert")
+        _add_value(tokens, kwargs, "root", "-root")
+        _add_value(tokens, kwargs, "save_dir", "-Save")
+        _add_bool(tokens, kwargs, "ssl", "-ssl")
+        _add_value(tokens, kwargs, "tuning", "-Tuning")
+        _add_value(tokens, kwargs, "timeout", "-timeout")
+        _add_value(tokens, kwargs, "user_agent", "-useragent")
+        _add_value(tokens, kwargs, "until", "-until")
+        _add_bool(tokens, kwargs, "update", "-update")
+        _add_bool(tokens, kwargs, "use_proxy", "-useproxy")
+        _add_value(tokens, kwargs, "vhost", "-vhost")
+        _add_value(tokens, kwargs, "notfound_code", "-404code")
+        _add_value(tokens, kwargs, "notfound_string", "-404string")
     elif tool.name == "katana":
         _add_value(tokens, kwargs, "input_file", "-list")
         _add_value(tokens, kwargs, "depth", "-d")
@@ -1870,7 +1943,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan"}
+        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
@@ -1970,7 +2043,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "entrypoint", "--entrypoint")
         _add_bool(tokens, kwargs, "headless", "--headless")
 
-    if tool.name in {"nikto", "testssl", "wafw00f"}:
+    if tool.name in {"testssl", "wafw00f"}:
         _add_bool(tokens, kwargs, "ssl", "-ssl")
         _add_value(tokens, kwargs, "evasion", "-evasion")
         _add_value(tokens, kwargs, "tuning", "-Tuning")

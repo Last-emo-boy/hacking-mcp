@@ -176,6 +176,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["dirsearch"].unverified_parameters == ()
     assert any("maurosoria/dirsearch" in item for item in records["dirsearch"].evidence)
 
+    assert records["nikto"].source_status == "source-reviewed"
+    assert records["nikto"].unverified_parameters == ()
+    assert any("sullo/nikto" in item for item in records["nikto"].evidence)
+
     assert records["gitleaks"].source_status == "source-reviewed"
     assert records["gitleaks"].unverified_parameters == ()
     assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
@@ -337,6 +341,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "exclude_sizes", "recursive", "recursion_depth", "method", "headers",
         "follow_redirects", "proxy", "max_rate", "json_report", "no_color",
     }.issubset(dirsearch_schema)
+
+    nikto_schema = tools["security_tool_nikto"].inputSchema["properties"]
+    assert {
+        "config_file", "display", "dbcheck", "evasion", "output_format", "auth",
+        "list_plugins", "mutate", "no_ssl", "output_file", "plugins", "port",
+        "ssl", "tuning", "user_agent", "use_proxy", "vhost",
+    }.issubset(nikto_schema)
 
     katana_schema = tools["security_tool_katana"].inputSchema["properties"]
     assert {
@@ -1005,6 +1016,62 @@ async def test_dirsearch_source_reviewed_parameters_build_cli_options(registry, 
         "--proxy http://127.0.0.1:8080 --timeout 10 --delay 1s --max-rate 50 "
         "--retries 2 --format json -o dirsearch.out --json-report dirsearch.json "
         "--quiet --full-url --no-color"
+    )
+
+
+@pytest.mark.asyncio
+async def test_nikto_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_nikto",
+        {
+            "target": "https://example.test",
+            "cgi_dirs": "all",
+            "config_file": "nikto.conf",
+            "display": "V",
+            "dbcheck": True,
+            "evasion": "1",
+            "output_format": "json",
+            "auth": "user:pass",
+            "max_time": "1h",
+            "mutate": "2",
+            "mutate_options": "admin",
+            "no_interactive": True,
+            "no_lookup": True,
+            "output_file": "nikto.json",
+            "pause": 1,
+            "plugins": "tests",
+            "port": "443",
+            "root": "/app",
+            "ssl": True,
+            "tuning": "x",
+            "timeout": 10,
+            "user_agent": "hacking-mcp",
+            "use_proxy": True,
+            "vhost": "example.test",
+            "notfound_code": "404",
+            "notfound_string": "not found",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "nikto"
+    assert request.options == (
+        "-Cgidirs all -config nikto.conf -Display V -dbcheck -evasion 1 "
+        "-Format json -id user:pass -maxtime 1h -mutate 2 "
+        "-mutate-options admin -nointeractive -nolookup -output nikto.json "
+        "-Pause 1 -Plugins tests -port 443 -root /app -ssl -Tuning x "
+        "-timeout 10 -useragent hacking-mcp -useproxy -vhost example.test "
+        "-404code 404 -404string 'not found'"
     )
 
 

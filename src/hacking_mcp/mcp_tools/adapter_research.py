@@ -560,6 +560,52 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "no_color",
         ),
     ),
+    "nikto": SourceReview(
+        note=(
+            "Reviewed against the upstream Nikto README help/options for CGI "
+            "dirs, config/display/dbcheck/evasion, output formats, auth, plugin "
+            "selection, max time, mutation, DNS/SSL/404 behavior, output/save, "
+            "ports/root/tuning/timeout/user-agent/proxy/vhost, and update flags."
+        ),
+        references=(
+            "https://github.com/sullo/nikto",
+        ),
+        verified_parameters=(
+            "ask",
+            "cgi_dirs",
+            "config_file",
+            "display",
+            "dbcheck",
+            "evasion",
+            "output_format",
+            "auth",
+            "list_plugins",
+            "max_time",
+            "mutate",
+            "mutate_options",
+            "no_interactive",
+            "no_lookup",
+            "no_ssl",
+            "no_404",
+            "output_file",
+            "pause",
+            "plugins",
+            "port",
+            "rsa_cert",
+            "root",
+            "save_dir",
+            "ssl",
+            "tuning",
+            "timeout",
+            "user_agent",
+            "until",
+            "update",
+            "use_proxy",
+            "vhost",
+            "notfound_code",
+            "notfound_string",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}
