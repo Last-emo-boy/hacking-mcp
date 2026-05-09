@@ -827,6 +827,46 @@ def _adapter_parameters(
             AdapterParameterSpec("report_dir", str, "", "Report directory when supported."),
         ])
 
+    if tool.name in {
+        "setoolkit", "pyphisher", "hiddeneye", "blackeye", "shellphish",
+        "evilginx3", "maskphish", "blackphish",
+    }:
+        params.extend([
+            AdapterParameterSpec("site", str, "", "Template/site selector when supported."),
+            AdapterParameterSpec("redirect_url", str, "", "Redirect URL for authorized training when supported."),
+            AdapterParameterSpec("custom_domain", str, "", "Authorized custom domain when supported."),
+            AdapterParameterSpec("phishlet", str, "", "Phishlet/profile selector when supported."),
+            AdapterParameterSpec("capture_path", str, "", "Capture/output path when supported."),
+        ])
+
+    if tool.name in {"msfvenom", "thefatrat", "venom", "mobdroid", "brutal"}:
+        params.extend([
+            AdapterParameterSpec("stager", str, "", "Stager/profile selector when supported."),
+            AdapterParameterSpec("listener_name", str, "", "Listener/profile name when supported."),
+            AdapterParameterSpec("apk_name", str, "", "APK/app output name when supported."),
+            AdapterParameterSpec("bundle_id", str, "", "Mobile bundle/package id when supported."),
+            AdapterParameterSpec("sign_apk", bool, False, "Sign APK output when supported."),
+        ])
+
+    if tool.name in {
+        "wifite", "airgeddon", "hcxdumptool", "hcxtools", "bettercap",
+        "wifiphisher", "fluxion",
+    }:
+        params.extend([
+            AdapterParameterSpec("pmkid", bool, False, "Enable PMKID workflow when supported."),
+            AdapterParameterSpec("deauth_count", int, 0, "Deauth packet count when supported; 0 leaves default."),
+            AdapterParameterSpec("capture_file", str, "", "Capture/handshake file path when supported."),
+            AdapterParameterSpec("target_essid", str, "", "Target ESSID override when supported."),
+            AdapterParameterSpec("ble", bool, False, "Enable BLE mode when supported."),
+        ])
+
+    if tool.name in {"anonsurf", "multitor"}:
+        params.extend([
+            AdapterParameterSpec("action", str, "", "Action such as start, stop, restart, or status."),
+            AdapterParameterSpec("new_identity", bool, False, "Request a new Tor identity when supported."),
+            AdapterParameterSpec("dns_only", bool, False, "Only route DNS when supported."),
+        ])
+
     params.extend([
         AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
         AdapterParameterSpec(
@@ -1261,6 +1301,38 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
             _add_value(tokens, kwargs, "module", "--module")
         _add_value(tokens, kwargs, "regions", "--regions")
         _add_value(tokens, kwargs, "report_dir", "--report-dir")
+
+    if tool.name in {
+        "setoolkit", "pyphisher", "hiddeneye", "blackeye", "shellphish",
+        "evilginx3", "maskphish", "blackphish",
+    }:
+        _add_value(tokens, kwargs, "site", "--site")
+        _add_value(tokens, kwargs, "redirect_url", "--redirect")
+        _add_value(tokens, kwargs, "custom_domain", "--domain")
+        _add_value(tokens, kwargs, "phishlet", "--phishlet")
+        _add_value(tokens, kwargs, "capture_path", "--capture-path")
+
+    if tool.name in {"msfvenom", "thefatrat", "venom", "mobdroid", "brutal"}:
+        _add_value(tokens, kwargs, "stager", "--stager")
+        _add_value(tokens, kwargs, "listener_name", "--listener")
+        _add_value(tokens, kwargs, "apk_name", "--apk-name")
+        _add_value(tokens, kwargs, "bundle_id", "--bundle-id")
+        _add_bool(tokens, kwargs, "sign_apk", "--sign")
+
+    if tool.name in {
+        "wifite", "airgeddon", "hcxdumptool", "hcxtools", "bettercap",
+        "wifiphisher", "fluxion",
+    }:
+        _add_bool(tokens, kwargs, "pmkid", "--pmkid")
+        _add_value(tokens, kwargs, "deauth_count", "--deauth")
+        _add_value(tokens, kwargs, "capture_file", "--capture")
+        _add_value(tokens, kwargs, "target_essid", "--essid")
+        _add_bool(tokens, kwargs, "ble", "--ble")
+
+    if tool.name in {"anonsurf", "multitor"}:
+        _add_value(tokens, kwargs, "action", "--action")
+        _add_bool(tokens, kwargs, "new_identity", "--new-identity")
+        _add_bool(tokens, kwargs, "dns_only", "--dns-only")
 
     return tokens
 

@@ -211,6 +211,24 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     pacu_schema = tools["security_tool_pacu"].inputSchema["properties"]
     assert {"session", "module", "regions", "report_dir"}.issubset(pacu_schema)
 
+    evilginx_schema = tools["security_tool_evilginx3"].inputSchema["properties"]
+    assert {"site", "redirect_url", "custom_domain", "phishlet"}.issubset(
+        evilginx_schema
+    )
+
+    msfvenom_schema = tools["security_tool_msfvenom"].inputSchema["properties"]
+    assert {"stager", "listener_name", "apk_name", "bundle_id", "sign_apk"}.issubset(
+        msfvenom_schema
+    )
+
+    airgeddon_schema = tools["security_tool_airgeddon"].inputSchema["properties"]
+    assert {"pmkid", "deauth_count", "capture_file", "target_essid"}.issubset(
+        airgeddon_schema
+    )
+
+    anonsurf_schema = tools["security_tool_anonsurf"].inputSchema["properties"]
+    assert {"action", "new_identity", "dns_only"}.issubset(anonsurf_schema)
+
     bloodhound_schema = tools["security_tool_bloodhound"].inputSchema["properties"]
     assert {"domain", "username", "dc_ip", "collection_method"}.issubset(
         bloodhound_schema
@@ -415,6 +433,33 @@ async def test_offensive_named_parameters_build_cli_options(registry, safety):
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "commix"
     assert request.options == "-p x --method POST --time-sec 5 --os-shell --batch"
+
+
+@pytest.mark.asyncio
+async def test_policy_only_named_parameters_preview_without_execution(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock()
+
+    register(mcp, orchestrator, registry, safety)
+    content, metadata = await mcp.call_tool(
+        "security_tool_msfvenom",
+        {
+            "target": "lab",
+            "payload_type": "generic/shell_reverse_tcp",
+            "lhost": "127.0.0.1",
+            "lport": 4444,
+            "format": "raw",
+            "sign_apk": True,
+        },
+    )
+
+    assert "does not run the tool" in metadata["result"]
+    assert content
+    orchestrator.execute.assert_not_awaited()
 
 
 @pytest.mark.asyncio
