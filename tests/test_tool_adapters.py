@@ -119,6 +119,17 @@ def test_adapter_research_records_cover_every_registry_tool(registry, safety):
     assert summary["source_review_gaps"] == summary["total"] - len(SOURCE_REVIEWED_TOOLS)
 
 
+def test_split_adapter_registry_includes_migrated_tools():
+    from hacking_mcp.mcp_tools.adapters import (
+        PARAMETER_PROVIDERS,
+        has_split_adapter,
+    )
+
+    migrated = {"owasp-zap", "theHarvester", "whatweb"}
+    assert migrated.issubset(PARAMETER_PROVIDERS)
+    assert all(has_split_adapter(tool_name) for tool_name in migrated)
+
+
 def test_adapter_research_distinguishes_named_overrides(registry, safety):
     records = {
         record.tool_name: record

@@ -9,12 +9,13 @@ import re
 import shlex
 from inspect import Parameter, Signature
 from dataclasses import dataclass
-from typing import Annotated, Any
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
-from pydantic import Field
 
 from hacking_mcp.ai_help import build_ai_help
+from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
+from hacking_mcp.mcp_tools.adapters import split_adapter_options, split_adapter_parameters
 from hacking_mcp.models import HackingToolDef, SafetyTier
 from hacking_mcp.orchestrator import ToolOrchestrator, ToolRequest
 from hacking_mcp.registry import ToolRegistry
@@ -142,19 +143,6 @@ class ToolAdapterSpec:
     requires_confirmation: bool
     exposed: bool
     blocked_reason: str = ""
-
-
-@dataclass(frozen=True)
-class AdapterParameterSpec:
-    """A generated MCP argument for a per-tool adapter."""
-
-    name: str
-    typ: type
-    default: Any
-    description: str
-
-    def annotation(self) -> Any:
-        return Annotated[self.typ, Field(description=self.description)]
 
 
 def build_adapter_specs(
@@ -482,6 +470,20 @@ def _adapter_parameters(
     ]
     tags = set(tool.tags)
 
+    split_params = split_adapter_parameters(tool.name)
+    if split_params is not None:
+        params.extend(split_params)
+        params.extend([
+            AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
+            AdapterParameterSpec(
+                "confirm_authorized",
+                bool,
+                False,
+                "Set true only for targets you own or have explicit written authorization to test.",
+            ),
+        ])
+        return _dedupe_parameters(params)
+
     if tool.name == "masscan":
         params.extend([
             AdapterParameterSpec("ports", str, "", "Ports or ranges to scan, for example 80,8000-8100."),
@@ -766,31 +768,6 @@ def _adapter_parameters(
             AdapterParameterSpec("json_output", bool, False, "Store output in JSONL format."),
             AdapterParameterSpec("silent", bool, False, "Enable silent output mode."),
         ])
-    elif tool.name == "owasp-zap":
-        params.extend([
-            AdapterParameterSpec("quick_out", str, "", "Quick Start report output file."),
-            AdapterParameterSpec("quick_progress", bool, False, "Show ASCII progress bars in command mode."),
-            AdapterParameterSpec("zapit_url", str, "", "URL for a quick ZAPit reconnaissance scan."),
-            AdapterParameterSpec("config", str, "", "Override a key=value configuration pair."),
-            AdapterParameterSpec("config_file", str, "", "Properties file with configuration overrides."),
-            AdapterParameterSpec("home_dir", str, "", "ZAP home directory."),
-            AdapterParameterSpec("install_dir", str, "", "ZAP installation directory."),
-            AdapterParameterSpec("new_session", str, "", "Create a new session at this path."),
-            AdapterParameterSpec("session", str, "", "Open an existing session path."),
-            AdapterParameterSpec("low_mem", bool, False, "Use database storage as much as possible."),
-            AdapterParameterSpec("experimental_db", bool, False, "Use the experimental generic database code."),
-            AdapterParameterSpec("no_stdout", bool, False, "Disable default stdout logging."),
-            AdapterParameterSpec("log_level", str, "", "Log level, for example INFO or DEBUG."),
-            AdapterParameterSpec("silent", bool, False, "Disable unsolicited requests such as update checks."),
-            AdapterParameterSpec("addon_install", str, "", "Install an add-on by ID."),
-            AdapterParameterSpec("addon_install_all", bool, False, "Install all marketplace add-ons."),
-            AdapterParameterSpec("addon_uninstall", str, "", "Uninstall an add-on by ID."),
-            AdapterParameterSpec("addon_update", bool, False, "Update changed marketplace add-ons."),
-            AdapterParameterSpec("addon_list", bool, False, "List installed add-ons."),
-            AdapterParameterSpec("script", str, "", "Run or load a script file."),
-            AdapterParameterSpec("support_info", bool, False, "Print support and troubleshooting details."),
-            AdapterParameterSpec("sbom_zip", str, "", "Create a zip containing available SBOMs."),
-        ])
     elif tool.name == "dalfox":
         params.extend([
             AdapterParameterSpec("blind_callback", str, "", "Blind XSS callback URL."),
@@ -1006,62 +983,6 @@ def _adapter_parameters(
             AdapterParameterSpec("headers_file", str, "", "Text file containing custom headers."),
             AdapterParameterSpec("timeout", int, 0, "Request timeout in seconds; 0 leaves default."),
             AdapterParameterSpec("no_color", bool, False, "Disable ANSI colors in output."),
-        ])
-    elif tool.name == "whatweb":
-        params.extend([
-            AdapterParameterSpec("input_file", str, "", "File containing targets, or /dev/stdin."),
-            AdapterParameterSpec("url_prefix", str, "", "Prefix added to target URLs."),
-            AdapterParameterSpec("url_suffix", str, "", "Suffix added to target URLs."),
-            AdapterParameterSpec("url_pattern", str, "", "Pattern that inserts targets with %insert%."),
-            AdapterParameterSpec("aggression", int, 0, "Aggression level 1, 3, or 4; 0 leaves default."),
-            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value."),
-            AdapterParameterSpec("header", str, "", "HTTP header, for example Foo:Bar."),
-            AdapterParameterSpec("follow_redirect", str, "", "Redirect policy: never, http-only, meta-only, same-site, or always."),
-            AdapterParameterSpec("max_redirects", int, 0, "Maximum contiguous redirects; 0 leaves default."),
-            AdapterParameterSpec("basic_auth", str, "", "HTTP basic auth in user:password format."),
-            AdapterParameterSpec("cookie", str, "", "Initial cookies, for example name=value; name2=value2."),
-            AdapterParameterSpec("cookiejar", str, "", "Cookie jar file path."),
-            AdapterParameterSpec("no_cookies", bool, False, "Disable automatic cookie handling."),
-            AdapterParameterSpec("proxy", str, "", "Proxy host[:port]."),
-            AdapterParameterSpec("proxy_user", str, "", "Proxy auth in username:password format."),
-            AdapterParameterSpec("list_plugins", bool, False, "List all plugins."),
-            AdapterParameterSpec("info_plugins", bool, False, "List detailed plugin information."),
-            AdapterParameterSpec("info_plugin_search", str, "", "Detailed plugin search terms."),
-            AdapterParameterSpec("search_plugins", str, "", "Search plugins for a keyword."),
-            AdapterParameterSpec("plugins", str, "", "Comma-delimited plugin selection list."),
-            AdapterParameterSpec("grep", str, "", "String or regular expression to search in responses."),
-            AdapterParameterSpec("custom_plugin", str, "", "Inline custom plugin definition."),
-            AdapterParameterSpec("dorks", str, "", "Plugin name for Google dorks."),
-            AdapterParameterSpec("verbose", int, 0, "Verbosity level 1-2; 0 leaves default."),
-            AdapterParameterSpec("color", str, "", "Color mode: never, always, or auto."),
-            AdapterParameterSpec("quiet", bool, False, "Suppress brief stdout logging."),
-            AdapterParameterSpec("no_errors", bool, False, "Suppress error messages."),
-            AdapterParameterSpec("log_brief", str, "", "Brief log output file."),
-            AdapterParameterSpec("log_verbose", str, "", "Verbose log output file."),
-            AdapterParameterSpec("log_errors", str, "", "Error log output file."),
-            AdapterParameterSpec("log_xml", str, "", "XML log output file."),
-            AdapterParameterSpec("log_json", str, "", "JSON log output file."),
-            AdapterParameterSpec("log_sql", str, "", "SQL INSERT log output file."),
-            AdapterParameterSpec("log_sql_create", str, "", "SQL table creation output file."),
-            AdapterParameterSpec("log_json_verbose", str, "", "Verbose JSON log output file."),
-            AdapterParameterSpec("log_magictree", str, "", "MagicTree XML log output file."),
-            AdapterParameterSpec("log_object", str, "", "Ruby object log output file."),
-            AdapterParameterSpec("log_mongo_database", str, "", "MongoDB database name."),
-            AdapterParameterSpec("log_mongo_collection", str, "", "MongoDB collection name."),
-            AdapterParameterSpec("log_mongo_host", str, "", "MongoDB host."),
-            AdapterParameterSpec("log_mongo_username", str, "", "MongoDB username."),
-            AdapterParameterSpec("log_mongo_password", str, "", "MongoDB password."),
-            AdapterParameterSpec("log_elastic_index", str, "", "Elasticsearch index name."),
-            AdapterParameterSpec("log_elastic_host", str, "", "Elasticsearch host:port."),
-            AdapterParameterSpec("max_threads", int, 0, "Maximum simultaneous threads; 0 leaves default."),
-            AdapterParameterSpec("open_timeout", int, 0, "TCP open timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("read_timeout", int, 0, "HTTP read timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("wait", int, 0, "Seconds to wait between connections; 0 leaves default."),
-            AdapterParameterSpec("output_sync", bool, False, "Force immediate output flushing."),
-            AdapterParameterSpec("output_buffer_size", int, -1, "Output buffer size; -1 leaves default, 0 disables buffering."),
-            AdapterParameterSpec("short_help", bool, False, "Show short usage help."),
-            AdapterParameterSpec("debug", bool, False, "Raise plugin errors."),
-            AdapterParameterSpec("version", bool, False, "Show version information."),
         ])
     elif tags & {"web", "http", "url", "discovery", "fuzzing"}:
         params.extend([
@@ -1302,24 +1223,6 @@ def _adapter_parameters(
             AdapterParameterSpec("proxy", str, "", "HTTP proxy URL."),
             AdapterParameterSpec("silent", bool, False, "Show only subdomains in output."),
             AdapterParameterSpec("verbose", bool, False, "Enable verbose output."),
-        ])
-    elif tool.name == "theHarvester":
-        params.extend([
-            AdapterParameterSpec("sources", str, "", "Comma-separated source list, or all."),
-            AdapterParameterSpec("limit", int, 0, "Maximum search results; 0 leaves default."),
-            AdapterParameterSpec("start", int, 0, "Start offset; 0 leaves default."),
-            AdapterParameterSpec("proxies", bool, False, "Use proxies from proxies.yaml."),
-            AdapterParameterSpec("shodan", bool, False, "Use Shodan to query discovered hosts."),
-            AdapterParameterSpec("screenshot", str, "", "Directory for screenshots of resolved domains."),
-            AdapterParameterSpec("dns_server", str, "", "DNS server to use for lookups."),
-            AdapterParameterSpec("takeover", bool, False, "Check discovered hosts for takeover candidates."),
-            AdapterParameterSpec("dns_resolve", str, "", "Resolver list path or comma-separated resolver IPs."),
-            AdapterParameterSpec("dns_lookup", bool, False, "Enable DNS server lookup."),
-            AdapterParameterSpec("dns_brute", bool, False, "Perform DNS brute force for the domain."),
-            AdapterParameterSpec("filename", str, "", "Base filename for XML and JSON reports."),
-            AdapterParameterSpec("wordlist", str, "", "Wordlist for API endpoint scanning."),
-            AdapterParameterSpec("api_scan", bool, False, "Scan for API endpoints."),
-            AdapterParameterSpec("quiet", bool, False, "Suppress missing API key warnings."),
         ])
     elif tool.name == "amass":
         params.extend([
@@ -1690,6 +1593,10 @@ def _request_parts(
 def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
     tokens: list[str] = []
     tags = set(tool.tags)
+
+    split_options = split_adapter_options(tool.name, kwargs)
+    if split_options is not None:
+        return split_options
 
     if tool.name == "masscan":
         _add_value(tokens, kwargs, "ports", "-p")
@@ -2142,29 +2049,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "append", "--append")
         _add_bool(tokens, kwargs, "overwrite", "--overwrite")
         _add_value(tokens, kwargs, "outprefix", "--outprefix")
-    elif tool.name == "owasp-zap":
-        _add_value(tokens, kwargs, "quick_out", "-quickout")
-        _add_bool(tokens, kwargs, "quick_progress", "-quickprogress")
-        _add_value(tokens, kwargs, "zapit_url", "-zapit")
-        _add_value(tokens, kwargs, "config", "-config")
-        _add_value(tokens, kwargs, "config_file", "-configfile")
-        _add_value(tokens, kwargs, "home_dir", "-dir")
-        _add_value(tokens, kwargs, "install_dir", "-installdir")
-        _add_value(tokens, kwargs, "new_session", "-newsession")
-        _add_value(tokens, kwargs, "session", "-session")
-        _add_bool(tokens, kwargs, "low_mem", "-lowmem")
-        _add_bool(tokens, kwargs, "experimental_db", "-experimentaldb")
-        _add_bool(tokens, kwargs, "no_stdout", "-nostdout")
-        _add_value(tokens, kwargs, "log_level", "-loglevel")
-        _add_bool(tokens, kwargs, "silent", "-silent")
-        _add_value(tokens, kwargs, "addon_install", "-addoninstall")
-        _add_bool(tokens, kwargs, "addon_install_all", "-addoninstallall")
-        _add_value(tokens, kwargs, "addon_uninstall", "-addonuninstall")
-        _add_bool(tokens, kwargs, "addon_update", "-addonupdate")
-        _add_bool(tokens, kwargs, "addon_list", "-addonlist")
-        _add_value(tokens, kwargs, "script", "-script")
-        _add_bool(tokens, kwargs, "support_info", "-suppinfo")
-        _add_value(tokens, kwargs, "sbom_zip", "-sbomzip")
     elif tool.name == "wafw00f":
         verbosity = _int_value(kwargs, "verbosity")
         if verbosity:
@@ -2181,66 +2065,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "headers_file", "-H")
         _add_value(tokens, kwargs, "timeout", "-T")
         _add_bool(tokens, kwargs, "no_color", "--no-colors")
-    elif tool.name == "whatweb":
-        _add_value(tokens, kwargs, "input_file", "--input-file")
-        _add_value(tokens, kwargs, "url_prefix", "--url-prefix")
-        _add_value(tokens, kwargs, "url_suffix", "--url-suffix")
-        _add_value(tokens, kwargs, "url_pattern", "--url-pattern")
-        _add_value(tokens, kwargs, "aggression", "--aggression")
-        _add_value(tokens, kwargs, "user_agent", "--user-agent")
-        _add_value(tokens, kwargs, "header", "--header")
-        _add_value(tokens, kwargs, "follow_redirect", "--follow-redirect")
-        _add_value(tokens, kwargs, "max_redirects", "--max-redirects")
-        _add_value(tokens, kwargs, "basic_auth", "--user")
-        _add_value(tokens, kwargs, "cookie", "--cookie")
-        _add_value(tokens, kwargs, "cookiejar", "--cookiejar")
-        _add_bool(tokens, kwargs, "no_cookies", "--no-cookies")
-        _add_value(tokens, kwargs, "proxy", "--proxy")
-        _add_value(tokens, kwargs, "proxy_user", "--proxy-user")
-        _add_bool(tokens, kwargs, "list_plugins", "--list-plugins")
-        if kwargs.get("info_plugin_search"):
-            _add_value(tokens, kwargs, "info_plugin_search", "--info-plugins")
-        else:
-            _add_bool(tokens, kwargs, "info_plugins", "--info-plugins")
-        _add_value(tokens, kwargs, "search_plugins", "--search-plugins")
-        _add_value(tokens, kwargs, "plugins", "--plugins")
-        _add_value(tokens, kwargs, "grep", "--grep")
-        _add_value(tokens, kwargs, "custom_plugin", "--custom-plugin")
-        _add_value(tokens, kwargs, "dorks", "--dorks")
-        verbosity = _int_value(kwargs, "verbose")
-        if verbosity:
-            tokens.extend(["-v"] * min(verbosity, 2))
-        _add_value(tokens, kwargs, "color", "--color")
-        _add_bool(tokens, kwargs, "quiet", "--quiet")
-        _add_bool(tokens, kwargs, "no_errors", "--no-errors")
-        _add_value(tokens, kwargs, "log_brief", "--log-brief")
-        _add_value(tokens, kwargs, "log_verbose", "--log-verbose")
-        _add_value(tokens, kwargs, "log_errors", "--log-errors")
-        _add_value(tokens, kwargs, "log_xml", "--log-xml")
-        _add_value(tokens, kwargs, "log_json", "--log-json")
-        _add_value(tokens, kwargs, "log_sql", "--log-sql")
-        _add_value(tokens, kwargs, "log_sql_create", "--log-sql-create")
-        _add_value(tokens, kwargs, "log_json_verbose", "--log-json-verbose")
-        _add_value(tokens, kwargs, "log_magictree", "--log-magictree")
-        _add_value(tokens, kwargs, "log_object", "--log-object")
-        _add_value(tokens, kwargs, "log_mongo_database", "--log-mongo-database")
-        _add_value(tokens, kwargs, "log_mongo_collection", "--log-mongo-collection")
-        _add_value(tokens, kwargs, "log_mongo_host", "--log-mongo-host")
-        _add_value(tokens, kwargs, "log_mongo_username", "--log-mongo-username")
-        _add_value(tokens, kwargs, "log_mongo_password", "--log-mongo-password")
-        _add_value(tokens, kwargs, "log_elastic_index", "--log-elastic-index")
-        _add_value(tokens, kwargs, "log_elastic_host", "--log-elastic-host")
-        _add_value(tokens, kwargs, "max_threads", "--max-threads")
-        _add_value(tokens, kwargs, "open_timeout", "--open-timeout")
-        _add_value(tokens, kwargs, "read_timeout", "--read-timeout")
-        _add_value(tokens, kwargs, "wait", "--wait")
-        _add_bool(tokens, kwargs, "output_sync", "--output-sync")
-        output_buffer_size = kwargs.get("output_buffer_size")
-        if output_buffer_size not in (None, "", -1):
-            tokens.extend(["--output-buffer-size", str(output_buffer_size)])
-        _add_bool(tokens, kwargs, "short_help", "--short-help")
-        _add_bool(tokens, kwargs, "debug", "--debug")
-        _add_bool(tokens, kwargs, "version", "--version")
     elif tags & {"web", "http", "url", "discovery", "fuzzing"}:
         _add_value(tokens, kwargs, "wordlist", "-w")
         _add_value(tokens, kwargs, "threads", "-t")
@@ -2438,22 +2262,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "proxy", "-proxy")
         _add_bool(tokens, kwargs, "silent", "-silent")
         _add_bool(tokens, kwargs, "verbose", "-v")
-    elif tool.name == "theHarvester":
-        _add_value(tokens, kwargs, "sources", "-b")
-        _add_value(tokens, kwargs, "limit", "-l")
-        _add_value(tokens, kwargs, "start", "-S")
-        _add_bool(tokens, kwargs, "proxies", "-p")
-        _add_bool(tokens, kwargs, "shodan", "-s")
-        _add_value(tokens, kwargs, "screenshot", "--screenshot")
-        _add_value(tokens, kwargs, "dns_server", "-e")
-        _add_bool(tokens, kwargs, "takeover", "-t")
-        _add_value(tokens, kwargs, "dns_resolve", "-r")
-        _add_bool(tokens, kwargs, "dns_lookup", "-n")
-        _add_bool(tokens, kwargs, "dns_brute", "-c")
-        _add_value(tokens, kwargs, "filename", "-f")
-        _add_value(tokens, kwargs, "wordlist", "-w")
-        _add_bool(tokens, kwargs, "api_scan", "-a")
-        _add_bool(tokens, kwargs, "quiet", "-q")
     elif tool.name == "amass":
         _add_value(tokens, kwargs, "config_file", "-config")
         _add_value(tokens, kwargs, "output_dir", "-dir")
