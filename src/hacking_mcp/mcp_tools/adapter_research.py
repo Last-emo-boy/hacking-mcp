@@ -457,6 +457,68 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "objection": SourceReview(
+        note=(
+            "Reviewed against upstream Objection Click CLI definitions for "
+            "global connection/API/target controls and the api, start, run, "
+            "version, patchipa, patchapk, and signapk subcommands, including "
+            "plugin/startup inputs, hook debugging, Frida Gadget patching, "
+            "APK signing controls, manifest/resource handling, and positional "
+            "signing sources."
+        ),
+        references=(
+            "https://github.com/sensepost/objection",
+            "https://raw.githubusercontent.com/sensepost/objection/master/objection/console/cli.py",
+        ),
+        verified_parameters=(
+            "command",
+            "network",
+            "local",
+            "host",
+            "port",
+            "api_host",
+            "api_port",
+            "name",
+            "serial",
+            "debug",
+            "spawn",
+            "no_pause",
+            "foremost",
+            "debugger",
+            "uid",
+            "plugin_folder",
+            "quiet",
+            "startup_command",
+            "file_commands",
+            "startup_script",
+            "enable_api",
+            "hook_debug",
+            "runtime_command",
+            "source",
+            "architecture",
+            "gadget_version",
+            "codesign_signature",
+            "provision_file",
+            "binary_name",
+            "skip_cleanup",
+            "pause",
+            "unzip_unicode",
+            "enable_debug",
+            "network_security_config",
+            "skip_resources",
+            "skip_signing",
+            "target_class",
+            "use_aapt2",
+            "gadget_config",
+            "script_source",
+            "ignore_nativelibs",
+            "manifest",
+            "only_main_classes",
+            "fix_concurrency_to",
+            "bundle_id",
+            "sources",
+        ),
+    ),
     "steghide": SourceReview(
         note=(
             "Reviewed against steghide documentation and packaged man page for "

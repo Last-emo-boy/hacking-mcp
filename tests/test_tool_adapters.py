@@ -129,6 +129,7 @@ def test_split_adapter_registry_includes_migrated_tools():
         "binwalk",
         "frida",
         "haiti",
+        "objection",
         "owasp-zap",
         "pspy",
         "sherlock",
@@ -290,6 +291,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["frida"].source_status == "source-reviewed"
     assert records["frida"].unverified_parameters == ()
     assert any("frida/frida-tools" in item for item in records["frida"].evidence)
+
+    assert records["objection"].source_status == "source-reviewed"
+    assert records["objection"].unverified_parameters == ()
+    assert any("sensepost/objection" in item for item in records["objection"].evidence)
 
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
@@ -505,6 +510,21 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "output_file", "eternalize", "exit_on_error", "kill_on_exit",
         "auto_perform", "auto_reload", "no_auto_reload", "version",
     }.issubset(frida_schema)
+
+    objection_schema = tools["security_tool_objection"].inputSchema["properties"]
+    assert {
+        "command", "network", "local", "host", "port", "api_host",
+        "api_port", "name", "serial", "debug", "spawn", "no_pause",
+        "foremost", "debugger", "uid", "plugin_folder", "quiet",
+        "startup_command", "file_commands", "startup_script", "enable_api",
+        "hook_debug", "runtime_command", "source", "architecture",
+        "gadget_version", "codesign_signature", "provision_file",
+        "binary_name", "skip_cleanup", "pause", "unzip_unicode",
+        "enable_debug", "network_security_config", "skip_resources",
+        "skip_signing", "target_class", "use_aapt2", "gadget_config",
+        "script_source", "ignore_nativelibs", "manifest", "only_main_classes",
+        "fix_concurrency_to", "bundle_id", "sources",
+    }.issubset(objection_schema)
 
     masscan_schema = tools["security_tool_masscan"].inputSchema["properties"]
     assert {
@@ -2608,6 +2628,78 @@ async def test_frida_source_reviewed_parameters_build_cli_options(registry, safe
         "-U -f com.example.app --runtime v8 --debug -l hook.js "
         "-P '{\"mode\":\"test\"}' -e 'console.log(1)' -q -t 10 --pause "
         "-o frida.log --exit-on-error --no-auto-reload"
+    )
+
+
+@pytest.mark.asyncio
+async def test_objection_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_objection",
+        {
+            "target": "com.example.app",
+            "network": True,
+            "host": "127.0.0.1",
+            "port": 27042,
+            "api_host": "0.0.0.0",
+            "api_port": 9999,
+            "spawn": True,
+            "no_pause": True,
+            "quiet": True,
+            "startup_command": "android sslpinning disable",
+            "file_commands": "commands.txt",
+            "startup_script": "startup.js",
+            "enable_api": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "objection"
+    assert request.target == "com.example.app"
+    assert request.options == (
+        "--network --host 127.0.0.1 --port 27042 --api-host 0.0.0.0 "
+        "--api-port 9999 --name com.example.app --spawn --no-pause start "
+        "--quiet --startup-command 'android sslpinning disable' "
+        "--file-commands commands.txt --startup-script startup.js --enable-api"
+    )
+
+    await mcp.call_tool(
+        "security_tool_objection",
+        {
+            "command": "patchapk",
+            "source": "app.apk",
+            "architecture": "arm64-v8a",
+            "gadget_version": "16.2.1",
+            "enable_debug": True,
+            "network_security_config": True,
+            "target_class": "com.example.MainActivity",
+            "gadget_config": "gadget.config",
+            "script_source": "script.js",
+            "ignore_nativelibs": True,
+            "manifest": "AndroidManifest.xml",
+            "only_main_classes": True,
+            "fix_concurrency_to": 1,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "objection"
+    assert request.target == "app.apk"
+    assert request.options == (
+        "patchapk --source app.apk --architecture arm64-v8a "
+        "--gadget-version 16.2.1 --enable-debug --network-security-config "
+        "--target-class com.example.MainActivity --gadget-config gadget.config "
+        "--script-source script.js --ignore-nativelibs "
+        "--manifest AndroidManifest.xml --only-main-classes --fix-concurrency-to 1"
     )
 
 

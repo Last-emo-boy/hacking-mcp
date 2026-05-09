@@ -11,7 +11,7 @@
 [![Tools](https://img.shields.io/badge/Tools-184-00FF88?style=flat-square)](.)
 [![Categories](https://img.shields.io/badge/Categories-20-7B61FF?style=flat-square)](.)
 [![MCP Endpoints](https://img.shields.io/badge/MCP_Endpoints-213-FF61DC?style=flat-square)](.)
-[![Tests](https://img.shields.io/badge/Tests-270_passing-00FF88?style=flat-square)](.)
+[![Tests](https://img.shields.io/badge/Tests-271_passing-00FF88?style=flat-square)](.)
 [![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-FFA116?style=flat-square)](.)
 
 [![Star](https://img.shields.io/github/stars/Last-emo-boy/hacking-mcp?style=social)](.)

@@ -76,7 +76,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "nmap",
         "nosqlmap",
         "nuclei",
-        "objection",
         "owasp-zap",
         "pacu",
         "peass-ng",
@@ -1374,14 +1373,6 @@ def _adapter_parameters(
             AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
         ])
 
-    if tool.name == "objection":
-        params.extend([
-            AdapterParameterSpec("server_url", str, "", "Mobile analysis server URL when supported."),
-            AdapterParameterSpec("api_key", str, "", "API key/profile when supported."),
-            AdapterParameterSpec("frida_script", str, "", "Frida script path or snippet when supported."),
-            AdapterParameterSpec("runtime_command", str, "", "Runtime command when supported."),
-        ])
-
     if tool.name in {"radare2", "ghidra"}:
         params.extend([
             AdapterParameterSpec("project_name", str, "", "Project name when supported."),
@@ -1542,11 +1533,23 @@ def _request_parts(
     spec: ToolAdapterSpec,
     kwargs: dict,
 ) -> tuple[str, str, bool]:
-    target = str(kwargs.get("target") or "")
+    target = _request_target(tool, kwargs)
     structured_options = shlex.join(_structured_options(tool, kwargs))
     raw_options = str(kwargs.get("options") or "").strip()
     options = " ".join(item for item in (structured_options, raw_options) if item)
     return target, options, bool(kwargs.get("confirm_authorized", False))
+
+
+def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
+    target = str(kwargs.get("target") or "")
+    if tool.name != "objection" or target:
+        return target
+
+    for key in ("name", "source", "sources", "runtime_command"):
+        value = str(kwargs.get(key) or "").strip()
+        if value:
+            return value
+    return str(kwargs.get("command") or "start").strip() or "start"
 
 
 def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
@@ -2342,12 +2345,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "kerberos", "-k")
         _add_bool(tokens, kwargs, "local_auth", "--local-auth")
         _add_value(tokens, kwargs, "target_ip", "--target-ip")
-
-    if tool.name == "objection":
-        _add_value(tokens, kwargs, "server_url", "--server")
-        _add_value(tokens, kwargs, "api_key", "--api-key")
-        _add_value(tokens, kwargs, "frida_script", "-l")
-        _add_value(tokens, kwargs, "runtime_command", "-c")
 
     if tool.name in {"radare2", "ghidra"}:
         _add_value(tokens, kwargs, "project_name", "--project")
