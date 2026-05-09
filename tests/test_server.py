@@ -51,6 +51,7 @@ class TestServerCreation:
         assert "security_list_tool_adapters" in names
         assert "security_get_tool_adapter_info" in names
         assert "security_preview_tool_adapter" in names
+        assert "security_audit_tool_adapters" in names
         assert len(adapter_names) == len(registry.get_tool_names())
 
     @pytest.mark.asyncio
@@ -133,6 +134,25 @@ class TestServerCreation:
         assert "**Executable:** False" in vegil_metadata["result"]
         assert "**Generated options:** `--lhost 127.0.0.1 --lport 4444`" in vegil_metadata["result"]
         assert "No command was executed." in vegil_metadata["result"]
+
+    @pytest.mark.asyncio
+    async def test_tool_adapter_audit_reports_full_coverage(self):
+        """Adapter audit should verify all registry tools have usable adapters."""
+        from hacking_mcp.server import create_server
+
+        server = create_server()
+        _, metadata = await server.call_tool(
+            "security_audit_tool_adapters",
+            {"include_details": True},
+        )
+
+        result = metadata["result"]
+        assert "**Status:** PASS" in result
+        assert "Registry tools: 184" in result
+        assert "Adapter specs: 184" in result
+        assert "Missing adapter specs: 0" in result
+        assert "Missing tool-specific parameters: 0" in result
+        assert "Preview generation errors: 0" in result
 
 
 class TestToolCoherence:

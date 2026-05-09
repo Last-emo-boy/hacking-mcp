@@ -351,6 +351,88 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
         return "\n".join(lines)
 
     @mcp.tool(
+        name="security_audit_tool_adapters",
+        description="Audit generated per-tool adapter coverage for all registry tools. "
+        "Checks adapter presence, unique endpoint names, tool-specific parameters, "
+        "and preview generation without executing tools.",
+    )
+    async def security_audit_tool_adapters(
+        include_details: bool = False,
+        ctx: Context = None,
+    ) -> str:
+        """Audit generated adapter coverage without executing tools."""
+        specs = build_adapter_specs(registry, safety)
+        spec_by_tool = {spec.tool_name: spec for spec in specs}
+        registry_tools = registry.list_all_tools()
+        registry_names = {tool.name for tool in registry_tools}
+        spec_names = set(spec_by_tool)
+        mcp_names = [spec.mcp_name for spec in specs]
+        base_params = {"target", "options", "confirm_authorized"}
+
+        missing_specs = sorted(registry_names - spec_names)
+        duplicate_endpoints = sorted(
+            name for name in set(mcp_names) if mcp_names.count(name) > 1
+        )
+        missing_specific_params: list[str] = []
+        preview_errors: list[str] = []
+
+        for tool in registry_tools:
+            spec = spec_by_tool.get(tool.name)
+            if spec is None:
+                continue
+            params = set(adapter_parameter_names(tool, spec))
+            if not (params - base_params):
+                missing_specific_params.append(tool.name)
+            try:
+                adapter_request_preview(tool, spec, adapter_example_arguments(tool, spec))
+            except Exception as e:
+                preview_errors.append(f"{tool.name}: {e}")
+
+        executable = sum(1 for spec in specs if spec.exposed)
+        blocked = len(specs) - executable
+        passed = not (
+            missing_specs
+            or duplicate_endpoints
+            or missing_specific_params
+            or preview_errors
+        )
+
+        lines = [
+            "# Tool Adapter Audit",
+            "",
+            f"**Status:** {'PASS' if passed else 'FAIL'}",
+            f"Registry tools: {len(registry_tools)}",
+            f"Adapter specs: {len(specs)}",
+            f"Unique endpoints: {len(set(mcp_names))}",
+            f"Executable adapters: {executable}",
+            f"Policy/info-only adapters: {blocked}",
+            f"Missing adapter specs: {len(missing_specs)}",
+            f"Duplicate endpoint names: {len(duplicate_endpoints)}",
+            f"Missing tool-specific parameters: {len(missing_specific_params)}",
+            f"Preview generation errors: {len(preview_errors)}",
+        ]
+
+        if include_details:
+            lines.extend(["", "## Details"])
+            if missing_specs:
+                lines.append(f"Missing specs: {', '.join(missing_specs)}")
+            if duplicate_endpoints:
+                lines.append(f"Duplicate endpoints: {', '.join(duplicate_endpoints)}")
+            if missing_specific_params:
+                lines.append(
+                    "Missing tool-specific parameters: "
+                    + ", ".join(missing_specific_params)
+                )
+            if preview_errors:
+                lines.append("Preview errors:")
+                lines.extend(f"- {item}" for item in preview_errors)
+            if passed:
+                lines.append("All registry tools have adapter specs, unique endpoint names, "
+                             "tool-specific parameters, and previewable examples.")
+
+        return "\n".join(lines)
+
+    @mcp.tool(
         name="security_get_tool_info",
         description="Get detailed information about a specific security tool, "
         "including description, install commands, project URL, and safety tier. "
