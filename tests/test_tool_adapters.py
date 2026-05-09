@@ -125,7 +125,7 @@ def test_split_adapter_registry_includes_migrated_tools():
         has_split_adapter,
     )
 
-    migrated = {"owasp-zap", "sherlock", "theHarvester", "whatweb"}
+    migrated = {"binwalk", "owasp-zap", "sherlock", "theHarvester", "whatweb"}
     assert migrated.issubset(PARAMETER_PROVIDERS)
     assert all(has_split_adapter(tool_name) for tool_name in migrated)
 
@@ -150,6 +150,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["httpx"].source_status == "source-reviewed"
     assert records["httpx"].unverified_parameters == ()
     assert any("projectdiscovery.io" in item for item in records["httpx"].evidence)
+
+    assert records["binwalk"].source_status == "source-reviewed"
+    assert records["binwalk"].unverified_parameters == ()
+    assert any("ReFirmLabs/binwalk" in item for item in records["binwalk"].evidence)
 
     assert records["subfinder"].source_status == "source-reviewed"
     assert records["subfinder"].unverified_parameters == ()
@@ -375,9 +379,11 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     assert {"symbol_dir", "renderer", "dump_files"}.issubset(volatility_schema)
 
     binwalk_schema = tools["security_tool_binwalk"].inputSchema["properties"]
-    assert {"signature_scan", "entropy", "matryoshka", "carve"}.issubset(
-        binwalk_schema
-    )
+    assert {
+        "list_signatures", "stdin", "quiet", "verbose", "extract", "carve",
+        "matryoshka", "search_all", "entropy", "png_output", "log_file",
+        "threads", "exclude", "include", "output_dir",
+    }.issubset(binwalk_schema)
 
     hashcat_schema = tools["security_tool_hashcat"].inputSchema["properties"]
     assert {"rules", "mask", "session", "show", "potfile_path"}.issubset(
@@ -563,9 +569,6 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     assert {"domain", "username", "dc_ip", "collection_method"}.issubset(
         bloodhound_schema
     )
-
-    binwalk_schema = tools["security_tool_binwalk"].inputSchema["properties"]
-    assert {"output_dir", "extract", "plugin"}.issubset(binwalk_schema)
 
     jadx_schema = tools["security_tool_jadx"].inputSchema["properties"]
     assert {"binary_path", "output_dir", "decompile"}.issubset(jadx_schema)
@@ -2056,7 +2059,7 @@ async def test_whatweb_source_reviewed_parameters_build_cli_options(registry, sa
 
 
 @pytest.mark.asyncio
-async def test_local_analysis_named_parameters_build_cli_options(registry, safety):
+async def test_binwalk_source_reviewed_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
     from unittest.mock import AsyncMock, MagicMock
 
@@ -2071,16 +2074,25 @@ async def test_local_analysis_named_parameters_build_cli_options(registry, safet
         "security_tool_binwalk",
         {
             "target": "firmware.bin",
+            "quiet": True,
+            "verbose": True,
             "extract": True,
-            "entropy": True,
+            "carve": True,
             "matryoshka": True,
+            "search_all": True,
+            "log_file": "binwalk.json",
+            "threads": 4,
+            "exclude": "gzip,zlib",
             "output_dir": "out",
         },
     )
 
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "binwalk"
-    assert request.options == "-o out -e -E -M"
+    assert request.options == (
+        "--quiet --verbose --extract --carve --matryoshka --search-all "
+        "--log binwalk.json --threads 4 --exclude gzip,zlib --directory out"
+    )
 
 
 @pytest.mark.asyncio

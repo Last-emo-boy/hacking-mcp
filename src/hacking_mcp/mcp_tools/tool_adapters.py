@@ -1382,14 +1382,6 @@ def _adapter_parameters(
             AdapterParameterSpec("dump_files", bool, False, "Dump referenced files when supported."),
         ])
 
-    if tool.name == "binwalk":
-        params.extend([
-            AdapterParameterSpec("signature_scan", bool, False, "Run signature scan when supported."),
-            AdapterParameterSpec("entropy", bool, False, "Run entropy analysis when supported."),
-            AdapterParameterSpec("matryoshka", bool, False, "Recursively scan extracted files when supported."),
-            AdapterParameterSpec("carve", bool, False, "Carve files without full extraction when supported."),
-        ])
-
     if tool.name in {"steghide", "stegcracker"}:
         params.extend([
             AdapterParameterSpec("cover_file", str, "", "Cover file path when supported."),
@@ -2380,12 +2372,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "symbol_dir", "--symbol-dirs")
         _add_value(tokens, kwargs, "renderer", "--renderer")
         _add_bool(tokens, kwargs, "dump_files", "--dump")
-
-    if tool.name == "binwalk":
-        _add_bool(tokens, kwargs, "signature_scan", "-B")
-        _add_bool(tokens, kwargs, "entropy", "-E")
-        _add_bool(tokens, kwargs, "matryoshka", "-M")
-        _add_bool(tokens, kwargs, "carve", "--carve")
 
     if tool.name in {"steghide", "stegcracker"}:
         _add_value(tokens, kwargs, "cover_file", "-cf")

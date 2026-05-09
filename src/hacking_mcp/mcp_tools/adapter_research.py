@@ -30,6 +30,36 @@ class SourceReview:
 
 
 SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
+    "binwalk": SourceReview(
+        note=(
+            "Reviewed against upstream Binwalk v3 clap parser definitions for "
+            "input mode, listing, quiet/verbose output, extraction, carving, "
+            "recursive scans, search-all, entropy graph/logging outputs, "
+            "thread count, signature include/exclude filters, and extraction "
+            "directory."
+        ),
+        references=(
+            "https://github.com/ReFirmLabs/binwalk",
+            "https://raw.githubusercontent.com/ReFirmLabs/binwalk/master/src/cliparser.rs",
+        ),
+        verified_parameters=(
+            "list_signatures",
+            "stdin",
+            "quiet",
+            "verbose",
+            "extract",
+            "carve",
+            "matryoshka",
+            "search_all",
+            "entropy",
+            "png_output",
+            "log_file",
+            "threads",
+            "exclude",
+            "include",
+            "output_dir",
+        ),
+    ),
     "nmap": SourceReview(
         note=(
             "Reviewed against the official Nmap reference guide for target "

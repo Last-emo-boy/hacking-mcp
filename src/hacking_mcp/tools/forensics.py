@@ -77,10 +77,10 @@ FORENSICS_TOOLS: list[HackingToolDef] = [
     HackingToolDef(
         name="binwalk",
         title="Binwalk (Firmware Analysis)",
-        description="Analyze, reverse engineer, and extract firmware images. Usage: binwalk -e firmware.bin",
+        description="Analyze, reverse engineer, and extract firmware images. Usage: binwalk firmware.bin",
         category="Forensics",
         install_commands=["pip install --user binwalk"],
-        run_command="binwalk -e {target}",
+        run_command="binwalk {target}",
         project_url="https://github.com/ReFirmLabs/binwalk",
         tags=["forensics", "firmware", "extraction", "reverse"],
         safety_tier=SafetyTier.SAFE,
