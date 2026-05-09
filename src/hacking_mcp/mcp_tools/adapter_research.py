@@ -833,6 +833,32 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "cookie",
         ),
     ),
+    "xanxss": SourceReview(
+        note=(
+            "Reviewed against upstream XanXSS argparse definitions for "
+            "verification amount, number of findings, test time, inline/file "
+            "payloads, verbosity, proxy, headers, throttle, polyglot, prefix, "
+            "and suffix flags."
+        ),
+        references=(
+            "https://github.com/Ekultek/XanXSS",
+            "https://raw.githubusercontent.com/Ekultek/XanXSS/master/lib/cmd.py",
+        ),
+        verified_parameters=(
+            "verification_amount",
+            "amount_to_find",
+            "test_time",
+            "payloads",
+            "payload_file",
+            "verbose",
+            "proxy",
+            "headers",
+            "throttle",
+            "polyglot",
+            "prefix",
+            "suffix",
+        ),
+    ),
     "dsss": SourceReview(
         note=(
             "Reviewed against upstream DSSS option parsing for POST data, cookie, "

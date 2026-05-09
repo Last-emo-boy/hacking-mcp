@@ -108,6 +108,7 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "websploit",
         "wifiphisher",
         "wifite",
+        "xanxss",
         "xspear",
         "xsstrike",
         "xsscon",
@@ -874,6 +875,21 @@ def _adapter_parameters(
             AdapterParameterSpec("about", bool, False, "Print XSSCon tool information."),
             AdapterParameterSpec("cookie", str, "", "Cookie mapping string."),
         ])
+    elif tool.name == "xanxss":
+        params.extend([
+            AdapterParameterSpec("verification_amount", int, 0, "Verification steps; 0 leaves default."),
+            AdapterParameterSpec("amount_to_find", int, 0, "Number of working payloads to try to find; 0 leaves default."),
+            AdapterParameterSpec("test_time", int, 0, "Verification test time in seconds; 0 leaves default."),
+            AdapterParameterSpec("payloads", str, "", "Comma-separated payloads or payload string list."),
+            AdapterParameterSpec("payload_file", str, "", "Text file containing payloads."),
+            AdapterParameterSpec("verbose", bool, False, "Enable verbose output."),
+            AdapterParameterSpec("proxy", str, "", "Proxy URL in type://ip:port format."),
+            AdapterParameterSpec("headers", str, "", "Custom headers in key=value,key:value format."),
+            AdapterParameterSpec("throttle", int, 0, "Sleep time between requests in seconds; 0 leaves default."),
+            AdapterParameterSpec("polyglot", bool, False, "Generate and test a polyglot payload."),
+            AdapterParameterSpec("prefix", str, "", "Payload prefix."),
+            AdapterParameterSpec("suffix", str, "", "Payload suffix."),
+        ])
     elif tool.name == "dsss":
         params.extend([
             AdapterParameterSpec("data", str, "", "POST data, for example query=test."),
@@ -985,7 +1001,7 @@ def _adapter_parameters(
             AdapterParameterSpec("enumerate_databases", bool, False, "Request database enumeration when supported."),
         ])
 
-    if "xss" in tags and tool.name not in {"dalfox", "xspear", "xsstrike", "xsscon"}:
+    if "xss" in tags and tool.name not in {"dalfox", "xanxss", "xspear", "xsstrike", "xsscon"}:
         params.extend([
             AdapterParameterSpec("parameter", str, "", "Parameter name to test when supported."),
             AdapterParameterSpec("cookies", str, "", "Cookie header value when supported."),
@@ -1131,7 +1147,7 @@ def _adapter_parameters(
             AdapterParameterSpec("output_dir", str, "", "Output directory when supported."),
         ])
 
-    if ("payload" in tags or tool.category == "Payload Creation") and tool.name not in {"xsstrike"}:
+    if ("payload" in tags or tool.category == "Payload Creation") and tool.name not in {"xanxss", "xsstrike"}:
         params.extend([
             AdapterParameterSpec("payload_type", str, "", "Payload identifier when supported."),
             AdapterParameterSpec("platform", str, "", "Target platform when supported."),
@@ -1296,7 +1312,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "dsss", "sqlscan", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "dsss", "sqlscan", "xanxss", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -1959,6 +1975,19 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "proxy", "--proxy")
         _add_bool(tokens, kwargs, "about", "--about")
         _add_value(tokens, kwargs, "cookie", "--cookie")
+    elif tool.name == "xanxss":
+        _add_value(tokens, kwargs, "verification_amount", "-a")
+        _add_value(tokens, kwargs, "amount_to_find", "-f")
+        _add_value(tokens, kwargs, "test_time", "-t")
+        _add_value(tokens, kwargs, "payloads", "-p")
+        _add_value(tokens, kwargs, "payload_file", "-F")
+        _add_bool(tokens, kwargs, "verbose", "-v")
+        _add_value(tokens, kwargs, "proxy", "--proxy")
+        _add_value(tokens, kwargs, "headers", "--headers")
+        _add_value(tokens, kwargs, "throttle", "--throttle")
+        _add_bool(tokens, kwargs, "polyglot", "--polyglot")
+        _add_value(tokens, kwargs, "prefix", "--prefix")
+        _add_value(tokens, kwargs, "suffix", "--suffix")
     elif tool.name == "dsss":
         _add_value(tokens, kwargs, "data", "--data")
         _add_value(tokens, kwargs, "cookie", "--cookie")
@@ -2061,7 +2090,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "level", "--level")
         _add_bool(tokens, kwargs, "enumerate_databases", "--dbs")
 
-    if "xss" in tags and tool.name not in {"dalfox", "xspear", "xsstrike", "xsscon"}:
+    if "xss" in tags and tool.name not in {"dalfox", "xanxss", "xspear", "xsstrike", "xsscon"}:
         _add_value(tokens, kwargs, "parameter", "-p")
         _add_value(tokens, kwargs, "cookies", "--cookie")
         _add_value(tokens, kwargs, "blind_callback", "-b")
@@ -2178,7 +2207,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "domain", "--domain")
         _add_value(tokens, kwargs, "output_dir", "-o")
 
-    if ("payload" in tags or tool.category == "Payload Creation") and tool.name not in {"xsstrike"}:
+    if ("payload" in tags or tool.category == "Payload Creation") and tool.name not in {"xanxss", "xsstrike"}:
         _add_value(tokens, kwargs, "payload_type", "-p")
         _add_value(tokens, kwargs, "platform", "--platform")
         _add_value(tokens, kwargs, "architecture", "-a")
@@ -2319,7 +2348,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"dalfox", "dsss", "sqlscan", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
+        and tool.name not in {"dalfox", "dsss", "sqlscan", "xanxss", "xspear", "xsstrike", "xsscon", "nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")

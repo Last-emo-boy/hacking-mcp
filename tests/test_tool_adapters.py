@@ -200,6 +200,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["xsscon"].unverified_parameters == ()
     assert any("menkrep1337/XSSCon" in item for item in records["xsscon"].evidence)
 
+    assert records["xanxss"].source_status == "source-reviewed"
+    assert records["xanxss"].unverified_parameters == ()
+    assert any("Ekultek/XanXSS" in item for item in records["xanxss"].evidence)
+
     assert records["dsss"].source_status == "source-reviewed"
     assert records["dsss"].unverified_parameters == ()
     assert any("stamparm/DSSS" in item for item in records["dsss"].evidence)
@@ -428,6 +432,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "depth", "payload_level", "payload", "method", "user_agent",
         "single_url", "proxy", "about", "cookie",
     }.issubset(xsscon_schema)
+
+    xanxss_schema = tools["security_tool_xanxss"].inputSchema["properties"]
+    assert {
+        "verification_amount", "amount_to_find", "test_time", "payloads",
+        "payload_file", "verbose", "proxy", "headers", "throttle", "polyglot",
+        "prefix", "suffix",
+    }.issubset(xanxss_schema)
 
     dsss_schema = tools["security_tool_dsss"].inputSchema["properties"]
     assert {"data", "cookie", "user_agent", "referer", "proxy"}.issubset(
@@ -1238,6 +1249,49 @@ async def test_xspear_source_reviewed_parameters_build_cli_options(registry, saf
         "-d q=1 -a --no-xss --headers 'X-Test: 1' --cookie a=b "
         "--custom-payload payloads.json --raw request.txt -p q "
         "-b https://callback.test -t 8 -o json -c xspear.json -vv"
+    )
+
+
+@pytest.mark.asyncio
+async def test_xanxss_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_xanxss",
+        {
+            "target": "https://example.test/?q=1",
+            "confirm_authorized": True,
+            "verification_amount": 3,
+            "amount_to_find": 2,
+            "test_time": 5,
+            "payloads": "<script>alert(1)</script>",
+            "payload_file": "payloads.txt",
+            "verbose": True,
+            "proxy": "http://127.0.0.1:8080",
+            "headers": "X-Test=1",
+            "throttle": 1,
+            "polyglot": True,
+            "prefix": "pre",
+            "suffix": "suf",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "xanxss"
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+    assert request.options == (
+        "-a 3 -f 2 -t 5 -p '<script>alert(1)</script>' -F payloads.txt "
+        "-v --proxy http://127.0.0.1:8080 --headers X-Test=1 --throttle 1 "
+        "--polyglot --prefix pre --suffix suf"
     )
 
 
