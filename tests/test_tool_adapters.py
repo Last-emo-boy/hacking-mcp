@@ -167,6 +167,24 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         netexec_schema
     )
 
+    volatility_schema = tools["security_tool_volatility3"].inputSchema["properties"]
+    assert {"symbol_dir", "renderer", "dump_files"}.issubset(volatility_schema)
+
+    binwalk_schema = tools["security_tool_binwalk"].inputSchema["properties"]
+    assert {"signature_scan", "entropy", "matryoshka", "carve"}.issubset(
+        binwalk_schema
+    )
+
+    hashcat_schema = tools["security_tool_hashcat"].inputSchema["properties"]
+    assert {"rules", "mask", "session", "show", "potfile_path"}.issubset(
+        hashcat_schema
+    )
+
+    mobsf_schema = tools["security_tool_mobsf"].inputSchema["properties"]
+    assert {"server_url", "api_key", "frida_script", "runtime_command"}.issubset(
+        mobsf_schema
+    )
+
     bloodhound_schema = tools["security_tool_bloodhound"].inputSchema["properties"]
     assert {"domain", "username", "dc_ip", "collection_method"}.issubset(
         bloodhound_schema
@@ -287,6 +305,34 @@ async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     assert request.options == (
         "-severity critical,high -tags exposure -w workflows/ -headless"
     )
+
+
+@pytest.mark.asyncio
+async def test_local_analysis_named_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_binwalk",
+        {
+            "target": "firmware.bin",
+            "extract": True,
+            "entropy": True,
+            "matryoshka": True,
+            "output_dir": "out",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "binwalk"
+    assert request.options == "-o out -e -E -M"
 
 
 @pytest.mark.asyncio

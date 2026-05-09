@@ -475,7 +475,7 @@ def _adapter_parameters(
             AdapterParameterSpec("payload", str, "", "Payload/profile selector when supported."),
         ])
 
-    if tags & {"android", "malware", "keylogger", "reverse-shell"}:
+    if tags & {"android", "keylogger", "reverse-shell"}:
         params.extend([
             AdapterParameterSpec("apk_path", str, "", "APK path when supported."),
             AdapterParameterSpec("package_name", str, "", "Android package name when supported."),
@@ -598,6 +598,54 @@ def _adapter_parameters(
             AdapterParameterSpec("kerberos", bool, False, "Use Kerberos authentication when supported."),
             AdapterParameterSpec("local_auth", bool, False, "Use local authentication when supported."),
             AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
+        ])
+
+    if tool.name == "volatility3":
+        params.extend([
+            AdapterParameterSpec("symbol_dir", str, "", "Volatility symbol directory when supported."),
+            AdapterParameterSpec("renderer", str, "", "Renderer/output format when supported."),
+            AdapterParameterSpec("dump_files", bool, False, "Dump referenced files when supported."),
+        ])
+
+    if tool.name == "binwalk":
+        params.extend([
+            AdapterParameterSpec("signature_scan", bool, False, "Run signature scan when supported."),
+            AdapterParameterSpec("entropy", bool, False, "Run entropy analysis when supported."),
+            AdapterParameterSpec("matryoshka", bool, False, "Recursively scan extracted files when supported."),
+            AdapterParameterSpec("carve", bool, False, "Carve files without full extraction when supported."),
+        ])
+
+    if tool.name in {"steghide", "stegcracker"}:
+        params.extend([
+            AdapterParameterSpec("cover_file", str, "", "Cover file path when supported."),
+            AdapterParameterSpec("embed_file", str, "", "File to embed when supported."),
+            AdapterParameterSpec("compression_level", int, 0, "Compression level when supported; 0 leaves default."),
+            AdapterParameterSpec("encryption", str, "", "Encryption algorithm when supported."),
+        ])
+
+    if tool.name in {"hashcat", "john"}:
+        params.extend([
+            AdapterParameterSpec("rules", str, "", "Rule file/name when supported."),
+            AdapterParameterSpec("mask", str, "", "Mask attack pattern when supported."),
+            AdapterParameterSpec("session", str, "", "Session name when supported."),
+            AdapterParameterSpec("show", bool, False, "Show cracked hashes when supported."),
+            AdapterParameterSpec("potfile_path", str, "", "Potfile path when supported."),
+        ])
+
+    if tool.name in {"mobsf", "frida", "objection"}:
+        params.extend([
+            AdapterParameterSpec("server_url", str, "", "Mobile analysis server URL when supported."),
+            AdapterParameterSpec("api_key", str, "", "API key/profile when supported."),
+            AdapterParameterSpec("frida_script", str, "", "Frida script path or snippet when supported."),
+            AdapterParameterSpec("runtime_command", str, "", "Runtime command when supported."),
+        ])
+
+    if tool.name in {"jadx", "radare2", "ghidra"}:
+        params.extend([
+            AdapterParameterSpec("project_name", str, "", "Project name when supported."),
+            AdapterParameterSpec("analysis_level", str, "", "Analysis depth/profile when supported."),
+            AdapterParameterSpec("entrypoint", str, "", "Entrypoint/address when supported."),
+            AdapterParameterSpec("headless", bool, False, "Run in headless mode when supported."),
         ])
 
     params.extend([
@@ -809,7 +857,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "password", "-p")
         _add_value(tokens, kwargs, "payload", "--payload")
 
-    if tags & {"android", "malware", "keylogger", "reverse-shell"}:
+    if tags & {"android", "keylogger", "reverse-shell"}:
         _add_value(tokens, kwargs, "apk_path", "--apk")
         _add_value(tokens, kwargs, "package_name", "--package")
         _add_assignment(tokens, kwargs, "lhost", "LHOST")
@@ -902,6 +950,42 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "kerberos", "-k")
         _add_bool(tokens, kwargs, "local_auth", "--local-auth")
         _add_value(tokens, kwargs, "target_ip", "--target-ip")
+
+    if tool.name == "volatility3":
+        _add_value(tokens, kwargs, "symbol_dir", "--symbol-dirs")
+        _add_value(tokens, kwargs, "renderer", "--renderer")
+        _add_bool(tokens, kwargs, "dump_files", "--dump")
+
+    if tool.name == "binwalk":
+        _add_bool(tokens, kwargs, "signature_scan", "-B")
+        _add_bool(tokens, kwargs, "entropy", "-E")
+        _add_bool(tokens, kwargs, "matryoshka", "-M")
+        _add_bool(tokens, kwargs, "carve", "--carve")
+
+    if tool.name in {"steghide", "stegcracker"}:
+        _add_value(tokens, kwargs, "cover_file", "-cf")
+        _add_value(tokens, kwargs, "embed_file", "-ef")
+        _add_value(tokens, kwargs, "compression_level", "-z")
+        _add_value(tokens, kwargs, "encryption", "-e")
+
+    if tool.name in {"hashcat", "john"}:
+        _add_value(tokens, kwargs, "rules", "-r")
+        _add_value(tokens, kwargs, "mask", "--mask")
+        _add_value(tokens, kwargs, "session", "--session")
+        _add_bool(tokens, kwargs, "show", "--show")
+        _add_value(tokens, kwargs, "potfile_path", "--potfile-path")
+
+    if tool.name in {"mobsf", "frida", "objection"}:
+        _add_value(tokens, kwargs, "server_url", "--server")
+        _add_value(tokens, kwargs, "api_key", "--api-key")
+        _add_value(tokens, kwargs, "frida_script", "-l")
+        _add_value(tokens, kwargs, "runtime_command", "-c")
+
+    if tool.name in {"jadx", "radare2", "ghidra"}:
+        _add_value(tokens, kwargs, "project_name", "--project")
+        _add_value(tokens, kwargs, "analysis_level", "--analysis")
+        _add_value(tokens, kwargs, "entrypoint", "--entrypoint")
+        _add_bool(tokens, kwargs, "headless", "--headless")
 
     return tokens
 
