@@ -50,6 +50,7 @@ class TestServerCreation:
         assert "security_run_recon" in names
         assert "security_list_tool_adapters" in names
         assert "security_get_tool_adapter_info" in names
+        assert "security_preview_tool_adapter" in names
         assert len(adapter_names) == len(registry.get_tool_names())
 
     @pytest.mark.asyncio
@@ -94,6 +95,41 @@ class TestServerCreation:
         assert "`lhost`" in vegil_metadata["result"]
         assert "**Execution:** policy/info-only" in vegil_metadata["result"]
         assert "does not execute" in vegil_metadata["result"]
+
+    @pytest.mark.asyncio
+    async def test_tool_adapter_preview_generates_options_without_execution(self):
+        """Adapter preview should show generated options for executable and blocked tools."""
+        from hacking_mcp.server import create_server
+
+        server = create_server()
+        _, nmap_metadata = await server.call_tool(
+            "security_preview_tool_adapter",
+            {
+                "tool_name": "nmap",
+                "arguments_json": (
+                    '{"target":"127.0.0.1","ports":"80,443",'
+                    '"service_version":true,"timing":4}'
+                ),
+            },
+        )
+        _, vegil_metadata = await server.call_tool(
+            "security_preview_tool_adapter",
+            {
+                "tool_name": "vegil",
+                "arguments_json": (
+                    '{"target":"example.com","lhost":"127.0.0.1","lport":4444}'
+                ),
+            },
+        )
+
+        assert "**Endpoint:** `security_tool_nmap`" in nmap_metadata["result"]
+        assert "**Generated options:** `-p 80,443 -sV -T4`" in nmap_metadata["result"]
+        assert "No command was executed." in nmap_metadata["result"]
+
+        assert "**Endpoint:** `security_tool_vegil`" in vegil_metadata["result"]
+        assert "**Executable:** False" in vegil_metadata["result"]
+        assert "**Generated options:** `--lhost 127.0.0.1 --lport 4444`" in vegil_metadata["result"]
+        assert "No command was executed." in vegil_metadata["result"]
 
 
 class TestToolCoherence:

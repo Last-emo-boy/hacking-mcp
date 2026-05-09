@@ -238,6 +238,24 @@ def adapter_parameter_specs(
     return _adapter_parameters(tool, spec)
 
 
+def adapter_request_preview(
+    tool: HackingToolDef,
+    spec: ToolAdapterSpec,
+    kwargs: dict,
+) -> dict:
+    """Preview generated request parts without executing the adapter."""
+    target, options, confirm_authorized = _request_parts(tool, spec, kwargs)
+    return {
+        "tool_name": spec.tool_name,
+        "endpoint": spec.mcp_name,
+        "target": target,
+        "options": options,
+        "confirm_authorized": confirm_authorized,
+        "executable": spec.exposed,
+        "blocked_reason": spec.blocked_reason,
+    }
+
+
 def _adapter_parameters(
     tool: HackingToolDef,
     spec: ToolAdapterSpec,

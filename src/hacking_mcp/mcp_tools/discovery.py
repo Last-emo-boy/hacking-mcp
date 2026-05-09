@@ -6,6 +6,8 @@ Three levels of detail:
   Level 3: Full detail — security_get_tool_info("name")
 """
 
+import json
+
 from mcp.server.fastmcp import FastMCP, Context
 
 from hacking_mcp.registry import ToolRegistry
@@ -16,6 +18,7 @@ from hacking_mcp.ai_help import format_ai_help
 from hacking_mcp.mcp_tools.tool_adapters import (
     adapter_parameter_names,
     adapter_parameter_specs,
+    adapter_request_preview,
     build_adapter_specs,
 )
 
@@ -284,6 +287,59 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
                 "This adapter is registered for inventory and parameter visibility only; it does not execute."
             )
 
+        return "\n".join(lines)
+
+    @mcp.tool(
+        name="security_preview_tool_adapter",
+        description="Preview how a dedicated per-tool adapter converts structured "
+        "arguments into target/options without executing the underlying tool. "
+        "Pass arguments_json as a JSON object.",
+    )
+    async def security_preview_tool_adapter(
+        tool_name: str,
+        arguments_json: str = "{}",
+        ctx: Context = None,
+    ) -> str:
+        """Preview generated adapter request parts for one tool."""
+        tool = registry.get_tool(tool_name)
+        if not tool:
+            similar = [t.name for t in registry.search_tools(tool_name)[:5]]
+            msg = f"Tool '{tool_name}' not found."
+            if similar:
+                msg += f"\nDid you mean: {', '.join(similar)}?"
+            return msg
+
+        try:
+            arguments = json.loads(arguments_json or "{}")
+        except json.JSONDecodeError as e:
+            return f"Invalid arguments_json: {e}"
+        if not isinstance(arguments, dict):
+            return "Invalid arguments_json: expected a JSON object."
+
+        specs = build_adapter_specs(registry, safety)
+        spec = next((item for item in specs if item.tool_name == tool_name), None)
+        if spec is None:
+            return f"No adapter spec found for '{tool_name}'."
+
+        preview = adapter_request_preview(tool, spec, arguments)
+        lines = [
+            f"# Adapter Preview: {tool.title}",
+            "",
+            f"**Endpoint:** `{preview['endpoint']}`",
+            f"**Tool:** `{preview['tool_name']}`",
+            f"**Executable:** {preview['executable']}",
+            f"**Target:** `{preview['target']}`",
+            f"**Generated options:** `{preview['options']}`",
+            f"**confirm_authorized:** {preview['confirm_authorized']}",
+        ]
+        if not preview["executable"]:
+            lines.append(
+                f"**Policy:** {preview['blocked_reason'] or 'policy/info-only adapter'}"
+            )
+        lines.extend([
+            "",
+            "This is a preview only. No command was executed.",
+        ])
         return "\n".join(lines)
 
     @mcp.tool(
