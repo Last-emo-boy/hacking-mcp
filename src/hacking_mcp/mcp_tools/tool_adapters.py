@@ -245,6 +245,7 @@ def _register_one(
                 confirmation_message=(
                     f"Tool '{spec.tool_name}' requires explicit authorization."
                 ),
+                options_before_target=_options_before_target(tool),
             ),
             ctx=None,
         )
@@ -761,6 +762,69 @@ def _adapter_parameters(
             AdapterParameterSpec("json_output", bool, False, "Store output in JSONL format."),
             AdapterParameterSpec("silent", bool, False, "Enable silent output mode."),
         ])
+    elif tool.name == "testssl":
+        params.extend([
+            AdapterParameterSpec("input_file", str, "", "Mass testing input file."),
+            AdapterParameterSpec("mode", str, "", "Mass testing mode: serial or parallel."),
+            AdapterParameterSpec("warnings", str, "", "Warning handling: batch or off."),
+            AdapterParameterSpec("connect_timeout", int, 0, "TCP connect timeout in seconds; 0 leaves default."),
+            AdapterParameterSpec("openssl_timeout", int, 0, "OpenSSL connect timeout in seconds; 0 leaves default."),
+            AdapterParameterSpec("basic_auth", str, "", "HTTP basic auth credentials user:pass."),
+            AdapterParameterSpec("req_header", str, "", "Additional HTTP request header."),
+            AdapterParameterSpec("mtls_file", str, "", "PEM file containing client certificate and private key."),
+            AdapterParameterSpec("starttls", str, "", "STARTTLS protocol, for example smtp or imap."),
+            AdapterParameterSpec("xmpp_host", str, "", "XMPP domain for STARTTLS XMPP checks."),
+            AdapterParameterSpec("mx", str, "", "Domain or host whose MX records should be tested."),
+            AdapterParameterSpec("ip", str, "", "IP address or resolver mode instead of resolving target host."),
+            AdapterParameterSpec("proxy", str, "", "Proxy host:port or auto."),
+            AdapterParameterSpec("ipv6", bool, False, "Also perform IPv6 checks."),
+            AdapterParameterSpec("ssl_native", bool, False, "Use OpenSSL s_client for most checks."),
+            AdapterParameterSpec("openssl_path", str, "", "Path to the OpenSSL binary to use."),
+            AdapterParameterSpec("bugs", bool, False, "Enable OpenSSL bug workarounds for broken servers."),
+            AdapterParameterSpec("assume_http", bool, False, "Assume HTTP when protocol detection cannot prove it."),
+            AdapterParameterSpec("no_dns", str, "", "DNS lookup mode: min or none."),
+            AdapterParameterSpec("sneaky", bool, False, "Use a less verbose browser-like HTTP user agent."),
+            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value."),
+            AdapterParameterSpec("ids_friendly", bool, False, "Skip selected offensive vulnerability probes."),
+            AdapterParameterSpec("phone_out", bool, False, "Allow CRL and OCSP revocation lookups."),
+            AdapterParameterSpec("add_ca", str, "", "Additional CA file, directory, or comma-separated list."),
+            AdapterParameterSpec("each_cipher", bool, False, "Check each configured cipher."),
+            AdapterParameterSpec("cipher_per_proto", bool, False, "Check ciphers per protocol."),
+            AdapterParameterSpec("categories", bool, False, "Test cipher categories."),
+            AdapterParameterSpec("forward_secrecy", bool, False, "Check forward secrecy."),
+            AdapterParameterSpec("protocols", bool, False, "Check TLS/SSL protocols."),
+            AdapterParameterSpec("server_preference", bool, False, "Display server cipher preferences."),
+            AdapterParameterSpec("server_defaults", bool, False, "Display server defaults and certificate data."),
+            AdapterParameterSpec("single_cipher", str, "", "Single cipher pattern to test."),
+            AdapterParameterSpec("check_headers", bool, False, "Test HTTP response headers."),
+            AdapterParameterSpec("client_simulation", bool, False, "Run browser/client handshake simulation."),
+            AdapterParameterSpec("grease", bool, False, "Check GREASE tolerance."),
+            AdapterParameterSpec("vulnerabilities", bool, False, "Run vulnerability checks."),
+            AdapterParameterSpec("quiet", bool, False, "Suppress the banner."),
+            AdapterParameterSpec("wide", bool, False, "Use wide output."),
+            AdapterParameterSpec("mapping", str, "", "Cipher name mapping: openssl, iana, no-openssl, no-iana."),
+            AdapterParameterSpec("show_each", bool, False, "Display all ciphers tested in wide modes."),
+            AdapterParameterSpec("color", int, 0, "Color mode 0-3; 0 leaves default."),
+            AdapterParameterSpec("colorblind", bool, False, "Swap colors for colorblind readability."),
+            AdapterParameterSpec("debug", int, 0, "Debug level 0-6; 0 leaves default."),
+            AdapterParameterSpec("disable_rating", bool, False, "Disable rating output."),
+            AdapterParameterSpec("log", bool, False, "Write a log file using the default name."),
+            AdapterParameterSpec("logfile", str, "", "Log output file or directory."),
+            AdapterParameterSpec("json_output", bool, False, "Write flat JSON output using the default name."),
+            AdapterParameterSpec("jsonfile", str, "", "Flat JSON output file or directory."),
+            AdapterParameterSpec("json_pretty", bool, False, "Write pretty JSON output using the default name."),
+            AdapterParameterSpec("jsonfile_pretty", str, "", "Pretty JSON output file or directory."),
+            AdapterParameterSpec("csv_output", bool, False, "Write CSV output using the default name."),
+            AdapterParameterSpec("csvfile", str, "", "CSV output file or directory."),
+            AdapterParameterSpec("html_output", bool, False, "Write HTML output using the default name."),
+            AdapterParameterSpec("htmlfile", str, "", "HTML output file or directory."),
+            AdapterParameterSpec("out_file", str, "", "Base name or directory for all output formats."),
+            AdapterParameterSpec("outfile", str, "", "Base name or directory for flat JSON plus other outputs."),
+            AdapterParameterSpec("severity", str, "", "Minimum severity for CSV/JSON output."),
+            AdapterParameterSpec("append", bool, False, "Append to existing output files."),
+            AdapterParameterSpec("overwrite", bool, False, "Overwrite existing output files."),
+            AdapterParameterSpec("outprefix", str, "", "Prefix for generated output filenames."),
+        ])
     elif tool.name == "wafw00f":
         params.extend([
             AdapterParameterSpec("verbosity", int, 0, "Verbosity level 1-3; 0 leaves default."),
@@ -1108,7 +1172,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "wafw00f"}
+        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -1239,15 +1303,6 @@ def _adapter_parameters(
             AdapterParameterSpec("analysis_level", str, "", "Analysis depth/profile when supported."),
             AdapterParameterSpec("entrypoint", str, "", "Entrypoint/address when supported."),
             AdapterParameterSpec("headless", bool, False, "Run in headless mode when supported."),
-        ])
-
-    if tool.name == "testssl":
-        params.extend([
-            AdapterParameterSpec("ssl", bool, False, "Force SSL/TLS mode when supported."),
-            AdapterParameterSpec("evasion", str, "", "Evasion profile when supported."),
-            AdapterParameterSpec("tuning", str, "", "Scan tuning selector when supported."),
-            AdapterParameterSpec("no_color", bool, False, "Disable colored output when supported."),
-            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value when supported."),
         ])
 
     if tool.name == "ffuf":
@@ -1685,6 +1740,67 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "output_file", "-o")
         _add_bool(tokens, kwargs, "json_output", "-json")
         _add_bool(tokens, kwargs, "silent", "-silent")
+    elif tool.name == "testssl":
+        _add_value(tokens, kwargs, "input_file", "--file")
+        _add_value(tokens, kwargs, "mode", "--mode")
+        _add_value(tokens, kwargs, "warnings", "--warnings")
+        _add_value(tokens, kwargs, "connect_timeout", "--connect-timeout")
+        _add_value(tokens, kwargs, "openssl_timeout", "--openssl-timeout")
+        _add_value(tokens, kwargs, "basic_auth", "--basicauth")
+        _add_value(tokens, kwargs, "req_header", "--reqheader")
+        _add_value(tokens, kwargs, "mtls_file", "--mtls")
+        _add_value(tokens, kwargs, "starttls", "-t")
+        _add_value(tokens, kwargs, "xmpp_host", "--xmpphost")
+        _add_value(tokens, kwargs, "mx", "--mx")
+        _add_value(tokens, kwargs, "ip", "--ip")
+        _add_value(tokens, kwargs, "proxy", "--proxy")
+        _add_bool(tokens, kwargs, "ipv6", "-6")
+        _add_bool(tokens, kwargs, "ssl_native", "--ssl-native")
+        _add_value(tokens, kwargs, "openssl_path", "--openssl")
+        _add_bool(tokens, kwargs, "bugs", "--bugs")
+        _add_bool(tokens, kwargs, "assume_http", "--assuming-http")
+        _add_value(tokens, kwargs, "no_dns", "--nodns")
+        _add_bool(tokens, kwargs, "sneaky", "--sneaky")
+        _add_value(tokens, kwargs, "user_agent", "--user-agent")
+        _add_bool(tokens, kwargs, "ids_friendly", "--ids-friendly")
+        _add_bool(tokens, kwargs, "phone_out", "--phone-out")
+        _add_value(tokens, kwargs, "add_ca", "--add-ca")
+        _add_bool(tokens, kwargs, "each_cipher", "-e")
+        _add_bool(tokens, kwargs, "cipher_per_proto", "-E")
+        _add_bool(tokens, kwargs, "categories", "-s")
+        _add_bool(tokens, kwargs, "forward_secrecy", "-f")
+        _add_bool(tokens, kwargs, "protocols", "-p")
+        _add_bool(tokens, kwargs, "server_preference", "-P")
+        _add_bool(tokens, kwargs, "server_defaults", "-S")
+        _add_value(tokens, kwargs, "single_cipher", "-x")
+        _add_bool(tokens, kwargs, "check_headers", "-h")
+        _add_bool(tokens, kwargs, "client_simulation", "-c")
+        _add_bool(tokens, kwargs, "grease", "-g")
+        _add_bool(tokens, kwargs, "vulnerabilities", "-U")
+        _add_bool(tokens, kwargs, "quiet", "-q")
+        _add_bool(tokens, kwargs, "wide", "--wide")
+        _add_value(tokens, kwargs, "mapping", "--mapping")
+        _add_bool(tokens, kwargs, "show_each", "--show-each")
+        _add_value(tokens, kwargs, "color", "--color")
+        _add_bool(tokens, kwargs, "colorblind", "--colorblind")
+        _add_value(tokens, kwargs, "debug", "--debug")
+        _add_bool(tokens, kwargs, "disable_rating", "--disable-rating")
+        _add_bool(tokens, kwargs, "log", "--log")
+        _add_value(tokens, kwargs, "logfile", "--logfile")
+        _add_bool(tokens, kwargs, "json_output", "--json")
+        _add_value(tokens, kwargs, "jsonfile", "--jsonfile")
+        _add_bool(tokens, kwargs, "json_pretty", "--json-pretty")
+        _add_value(tokens, kwargs, "jsonfile_pretty", "--jsonfile-pretty")
+        _add_bool(tokens, kwargs, "csv_output", "--csv")
+        _add_value(tokens, kwargs, "csvfile", "--csvfile")
+        _add_bool(tokens, kwargs, "html_output", "--html")
+        _add_value(tokens, kwargs, "htmlfile", "--htmlfile")
+        _add_value(tokens, kwargs, "out_file", "--outFile")
+        _add_value(tokens, kwargs, "outfile", "--outfile")
+        _add_value(tokens, kwargs, "severity", "--severity")
+        _add_bool(tokens, kwargs, "append", "--append")
+        _add_bool(tokens, kwargs, "overwrite", "--overwrite")
+        _add_value(tokens, kwargs, "outprefix", "--outprefix")
     elif tool.name == "wafw00f":
         verbosity = _int_value(kwargs, "verbosity")
         if verbosity:
@@ -1975,7 +2091,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "wafw00f"}
+        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan", "rustscan", "nikto", "testssl", "wafw00f"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
@@ -2074,13 +2190,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "analysis_level", "--analysis")
         _add_value(tokens, kwargs, "entrypoint", "--entrypoint")
         _add_bool(tokens, kwargs, "headless", "--headless")
-
-    if tool.name == "testssl":
-        _add_bool(tokens, kwargs, "ssl", "-ssl")
-        _add_value(tokens, kwargs, "evasion", "-evasion")
-        _add_value(tokens, kwargs, "tuning", "-Tuning")
-        _add_bool(tokens, kwargs, "no_color", "--color=0")
-        _add_value(tokens, kwargs, "user_agent", "-useragent")
 
     if tool.name == "ffuf":
         _add_value(tokens, kwargs, "filter_codes", "-fc")
@@ -2247,3 +2356,7 @@ def _should_validate_scope(tool: HackingToolDef) -> bool:
     if tool.safety_tier == SafetyTier.SAFE and tags & {"git", "secrets"}:
         return False
     return True
+
+
+def _options_before_target(tool: HackingToolDef) -> bool:
+    return tool.name == "testssl"

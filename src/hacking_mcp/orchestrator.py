@@ -47,6 +47,8 @@ class ToolRequest:
     confirmation_message: str = ""
     # Output format
     output_format: OutputFormat = OutputFormat.MARKDOWN
+    # Some CLIs require options before the positional target.
+    options_before_target: bool = False
 
 
 @dataclass
@@ -236,6 +238,7 @@ class ToolOrchestrator:
             request.tool_name,
             args,
             confirm_authorized=request.confirm_authorized,
+            options_before_target=request.options_before_target,
         )
 
         # ── Step 9: Save to asset manager ────────────────────────────

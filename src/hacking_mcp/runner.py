@@ -64,6 +64,7 @@ class ToolRunner:
         timeout: int = 300,
         env: Optional[dict] = None,
         confirm_authorized: bool = False,
+        options_before_target: bool = False,
     ) -> RunResult:
         """Run a tool safely, adapting to the current OS environment.
 
@@ -191,10 +192,12 @@ class ToolRunner:
         # Build the command adapted to the execution environment
         extra_args = args[1:] if len(args) > 1 else []
 
-        parsed = parse_command(tool.run_command, target)
-        # Append extra user args to the parsed args
-        if extra_args:
-            parsed.args.extend(extra_args)
+        parsed = self._parse_tool_command(
+            tool,
+            target,
+            extra_args,
+            options_before_target=options_before_target,
+        )
 
         # Add chdir prefix if tool needs it
         if parsed.chdir:
@@ -529,7 +532,12 @@ class ToolRunner:
         finally:
             self._current_proc = None
 
-    def dry_run(self, tool_name: str, args: Optional[list[str]] = None) -> str:
+    def dry_run(
+        self,
+        tool_name: str,
+        args: Optional[list[str]] = None,
+        options_before_target: bool = False,
+    ) -> str:
         """Return the command that would be executed (for debugging)."""
         tool = self.registry.get_tool(tool_name)
         if tool is None:
@@ -538,9 +546,12 @@ class ToolRunner:
         target = args[0] if args else ""
         extra_args = args[1:] if len(args) > 1 else []
 
-        parsed = parse_command(tool.run_command, target)
-        if extra_args:
-            parsed.args.extend(extra_args)
+        parsed = self._parse_tool_command(
+            tool,
+            target,
+            extra_args,
+            options_before_target=options_before_target,
+        )
 
         if parsed.chdir:
             tools_dir = str(get_tools_dir())
@@ -549,6 +560,39 @@ class ToolRunner:
 
         cmd = build_command(parsed, self.env.backend, distro=self.env.wsl_distro)
         return " ".join(cmd) if cmd else f"# No run command for {tool_name}"
+
+    @staticmethod
+    def _parse_tool_command(
+        tool: HackingToolDef,
+        target: str,
+        extra_args: list[str],
+        *,
+        options_before_target: bool = False,
+    ):
+        if not options_before_target or "{target}" not in tool.run_command:
+            parsed = parse_command(tool.run_command, target)
+            if extra_args:
+                parsed.args.extend(extra_args)
+            return parsed
+
+        parsed = parse_command(tool.run_command, "")
+        ordered_args: list[str] = []
+        inserted = False
+        for arg in parsed.args:
+            if arg == "{target}":
+                ordered_args.extend(extra_args)
+                if target:
+                    ordered_args.append(target)
+                inserted = True
+            else:
+                ordered_args.append(arg)
+
+        if not inserted:
+            ordered_args.extend(extra_args)
+            if target:
+                ordered_args.append(target)
+        parsed.args = ordered_args
+        return parsed
 
     def get_install_instructions(self, tool_name: str) -> list[str]:
         """Return install commands for a tool (informational only).

@@ -34,6 +34,17 @@ class TestToolRunner:
         assert "nmap" in cmd
         assert "-sV" in cmd
 
+    def test_dry_run_can_place_options_before_target(self, runner):
+        cmd = runner.dry_run(
+            "testssl",
+            ["example.test", "--json", "--wide"],
+            options_before_target=True,
+        )
+        assert "--json" in cmd
+        assert "--wide" in cmd
+        assert "example.test" in cmd
+        assert cmd.index("--wide") < cmd.index("example.test")
+
     def test_dry_run_unknown_tool(self, runner):
         cmd = runner.dry_run("nonexistent")
         assert "Unknown" in cmd

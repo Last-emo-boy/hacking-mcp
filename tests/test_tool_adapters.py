@@ -180,6 +180,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["nikto"].unverified_parameters == ()
     assert any("sullo/nikto" in item for item in records["nikto"].evidence)
 
+    assert records["testssl"].source_status == "source-reviewed"
+    assert records["testssl"].unverified_parameters == ()
+    assert any("drwetter/testssl.sh" in item for item in records["testssl"].evidence)
+
     assert records["wafw00f"].source_status == "source-reviewed"
     assert records["wafw00f"].unverified_parameters == ()
     assert any("EnableSecurity/wafw00f" in item for item in records["wafw00f"].evidence)
@@ -352,6 +356,19 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "list_plugins", "mutate", "no_ssl", "output_file", "plugins", "port",
         "ssl", "tuning", "user_agent", "use_proxy", "vhost",
     }.issubset(nikto_schema)
+
+    testssl_schema = tools["security_tool_testssl"].inputSchema["properties"]
+    assert {
+        "input_file", "mode", "warnings", "connect_timeout", "openssl_timeout",
+        "basic_auth", "req_header", "mtls_file", "starttls", "xmpp_host", "mx",
+        "ip", "proxy", "ipv6", "ssl_native", "openssl_path", "bugs",
+        "assume_http", "no_dns", "sneaky", "user_agent", "ids_friendly",
+        "phone_out", "add_ca", "each_cipher", "cipher_per_proto", "categories",
+        "protocols", "server_defaults", "single_cipher", "check_headers",
+        "client_simulation", "vulnerabilities", "quiet", "wide", "mapping",
+        "show_each", "color", "debug", "log", "json_output", "jsonfile",
+        "csv_output", "csvfile", "html_output", "htmlfile", "severity",
+    }.issubset(testssl_schema)
 
     wafw00f_schema = tools["security_tool_wafw00f"].inputSchema["properties"]
     assert {
@@ -1083,6 +1100,105 @@ async def test_nikto_source_reviewed_parameters_build_cli_options(registry, safe
         "-Pause 1 -Plugins tests -port 443 -root /app -ssl -Tuning x "
         "-timeout 10 -useragent hacking-mcp -useproxy -vhost example.test "
         "-404code 404 -404string 'not found'"
+    )
+
+
+@pytest.mark.asyncio
+async def test_testssl_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_testssl",
+        {
+            "target": "example.test",
+            "input_file": "targets.txt",
+            "mode": "parallel",
+            "warnings": "batch",
+            "connect_timeout": 5,
+            "openssl_timeout": 6,
+            "basic_auth": "user:pass",
+            "req_header": "X-Test: 1",
+            "mtls_file": "client.pem",
+            "starttls": "smtp",
+            "xmpp_host": "jabber.example",
+            "mx": "example.test",
+            "ip": "one",
+            "proxy": "proxy.example:8080",
+            "ipv6": True,
+            "ssl_native": True,
+            "openssl_path": "/usr/bin/openssl",
+            "bugs": True,
+            "assume_http": True,
+            "no_dns": "min",
+            "sneaky": True,
+            "user_agent": "hacking-mcp",
+            "ids_friendly": True,
+            "phone_out": True,
+            "add_ca": "ca.pem",
+            "each_cipher": True,
+            "cipher_per_proto": True,
+            "categories": True,
+            "forward_secrecy": True,
+            "protocols": True,
+            "server_preference": True,
+            "server_defaults": True,
+            "single_cipher": "AES",
+            "check_headers": True,
+            "client_simulation": True,
+            "grease": True,
+            "vulnerabilities": True,
+            "quiet": True,
+            "wide": True,
+            "mapping": "iana",
+            "show_each": True,
+            "color": 1,
+            "colorblind": True,
+            "debug": 2,
+            "disable_rating": True,
+            "log": True,
+            "logfile": "testssl.log",
+            "json_output": True,
+            "jsonfile": "out.json",
+            "json_pretty": True,
+            "jsonfile_pretty": "out.pretty.json",
+            "csv_output": True,
+            "csvfile": "out.csv",
+            "html_output": True,
+            "htmlfile": "out.html",
+            "out_file": "all",
+            "outfile": "flat",
+            "severity": "HIGH",
+            "append": True,
+            "overwrite": True,
+            "outprefix": "scan",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "testssl"
+    assert request.options_before_target is True
+    assert request.options == (
+        "--file targets.txt --mode parallel --warnings batch "
+        "--connect-timeout 5 --openssl-timeout 6 --basicauth user:pass "
+        "--reqheader 'X-Test: 1' --mtls client.pem -t smtp "
+        "--xmpphost jabber.example --mx example.test --ip one "
+        "--proxy proxy.example:8080 -6 --ssl-native --openssl /usr/bin/openssl "
+        "--bugs --assuming-http --nodns min --sneaky --user-agent hacking-mcp "
+        "--ids-friendly --phone-out --add-ca ca.pem -e -E -s -f -p -P -S "
+        "-x AES -h -c -g -U -q --wide --mapping iana --show-each "
+        "--color 1 --colorblind --debug 2 --disable-rating --log "
+        "--logfile testssl.log --json --jsonfile out.json --json-pretty "
+        "--jsonfile-pretty out.pretty.json --csv --csvfile out.csv --html "
+        "--htmlfile out.html --outFile all --outfile flat --severity HIGH "
+        "--append --overwrite --outprefix scan"
     )
 
 
