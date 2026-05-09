@@ -131,6 +131,7 @@ def test_split_adapter_registry_includes_migrated_tools():
         "owasp-zap",
         "pspy",
         "sherlock",
+        "steghide",
         "theHarvester",
         "volatility3",
         "whatweb",
@@ -175,6 +176,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["haiti"].source_status == "source-reviewed"
     assert records["haiti"].unverified_parameters == ()
     assert any("noraj/haiti" in item for item in records["haiti"].evidence)
+
+    assert records["steghide"].source_status == "source-reviewed"
+    assert records["steghide"].unverified_parameters == ()
+    assert any("steghide" in item for item in records["steghide"].evidence)
 
     assert records["subfinder"].source_status == "source-reviewed"
     assert records["subfinder"].unverified_parameters == ()
@@ -423,6 +428,14 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "no_color", "extended", "short", "hashcat_only", "john_only",
         "ascii_art", "debug",
     }.issubset(haiti_schema)
+
+    steghide_schema = tools["security_tool_steghide"].inputSchema["properties"]
+    assert {
+        "command", "extract", "embed_file", "cover_file", "stego_file",
+        "extract_file", "output_file", "encryption", "compression_level",
+        "no_compress", "no_checksum", "no_embed_name", "passphrase", "verbose",
+        "quiet", "force",
+    }.issubset(steghide_schema)
 
     hashcat_schema = tools["security_tool_hashcat"].inputSchema["properties"]
     assert {"rules", "mask", "session", "show", "potfile_path"}.issubset(
@@ -2257,6 +2270,45 @@ async def test_haiti_source_reviewed_parameters_build_cli_options(registry, safe
     assert request.target == "d41d8cd98f00b204e9800998ecf8427e"
     assert request.options == (
         "--no-color --extended --short --hashcat-only --john-only --debug"
+    )
+
+
+@pytest.mark.asyncio
+async def test_steghide_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_steghide",
+        {
+            "target": "picture.jpg",
+            "command": "embed",
+            "embed_file": "secret.txt",
+            "stego_file": "out.jpg",
+            "encryption": "rijndael-128",
+            "compression_level": 9,
+            "no_checksum": True,
+            "no_embed_name": True,
+            "passphrase": "pass word",
+            "verbose": True,
+            "force": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "steghide"
+    assert request.target == "picture.jpg"
+    assert request.options == (
+        "embed --embedfile secret.txt --coverfile picture.jpg --stegofile "
+        "out.jpg --encryption rijndael-128 --compress 9 --nochecksum "
+        "--dontembedname --passphrase 'pass word' --verbose --force"
     )
 
 

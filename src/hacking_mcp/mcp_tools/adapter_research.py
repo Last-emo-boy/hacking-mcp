@@ -145,6 +145,36 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "debug",
         ),
     ),
+    "steghide": SourceReview(
+        note=(
+            "Reviewed against steghide documentation and packaged man page for "
+            "commands, embed/extract/info file arguments, encryption and "
+            "compression controls, checksum/name embedding toggles, passphrase, "
+            "verbosity, quiet mode, and overwrite behavior."
+        ),
+        references=(
+            "https://steghide.sourceforge.net/documentation.php",
+            "https://manpages.debian.org/bookworm/steghide/steghide.1.en.html",
+        ),
+        verified_parameters=(
+            "command",
+            "extract",
+            "embed_file",
+            "cover_file",
+            "stego_file",
+            "extract_file",
+            "output_file",
+            "encryption",
+            "compression_level",
+            "no_compress",
+            "no_checksum",
+            "no_embed_name",
+            "passphrase",
+            "verbose",
+            "quiet",
+            "force",
+        ),
+    ),
     "nmap": SourceReview(
         note=(
             "Reviewed against the official Nmap reference guide for target "
