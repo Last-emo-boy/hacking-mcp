@@ -7,8 +7,10 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 
 from hacking_mcp.tasks import TaskManager
-from hacking_mcp.models import TaskStatus, TaskRecord, RunResult
-from hacking_mcp.orchestrator import ToolResponse
+from hacking_mcp.models import TaskStatus, TaskRecord, RunResult, HackingToolDef, SafetyTier
+from hacking_mcp.orchestrator import ToolOrchestrator, ToolResponse
+from hacking_mcp.formatters import OutputFormatter
+from hacking_mcp.safety import SafetyPolicy
 
 
 @pytest.fixture
@@ -161,6 +163,92 @@ class TestTaskManager:
 
         success = await task_mgr.cancel_task(record.task_id)
         assert success is True
+
+    @pytest.mark.asyncio
+    async def test_cancel_one_task_does_not_kill_another_task_runner(self, tmp_path):
+        """Each real background task gets an isolated runner for cancellation."""
+        tool = HackingToolDef(
+            name="sleepy",
+            title="Sleepy",
+            description="Long-running test tool",
+            category="Information Gathering",
+            run_command="sleepy {target}",
+            safety_tier=SafetyTier.SAFE,
+            supported_os=["windows", "linux", "macos"],
+        )
+
+        class FakeRegistry:
+            def get_tool(self, name):
+                return tool if name == "sleepy" else None
+
+            def is_available(self, name):
+                return name == "sleepy"
+
+            def get_install_commands(self, name):
+                return []
+
+        class FakeRunner:
+            instances = []
+
+            def __init__(self, registry, safety):
+                self.started = asyncio.Event()
+                self.release = asyncio.Event()
+                self.killed = False
+                self.target = ""
+                FakeRunner.instances.append(self)
+
+            async def run(self, tool_name, args=None, **kwargs):
+                self.target = (args or [""])[0]
+                self.started.set()
+                await self.release.wait()
+                return RunResult(
+                    tool_name=tool_name,
+                    command=["sleepy", self.target],
+                    return_code=0,
+                    stdout="done",
+                    stderr="",
+                    duration_ms=1,
+                )
+
+            def kill_current(self):
+                self.killed = True
+                self.release.set()
+
+        safety = SafetyPolicy(_audit_path=tmp_path / "audit" / "audit.jsonl")
+        base_orchestrator = ToolOrchestrator(
+            registry=FakeRegistry(),
+            safety=safety,
+            runner=MagicMock(),
+            formatter=OutputFormatter(),
+        )
+
+        with (
+            patch("hacking_mcp.tasks.get_tasks_dir", return_value=Path(tmp_path / "tasks")),
+            patch("hacking_mcp.tasks.ToolRunner", FakeRunner),
+        ):
+            mgr = TaskManager(base_orchestrator)
+            first_record = await mgr.start_task("sleepy", "127.0.0.1")
+            second_record = await mgr.start_task("sleepy", "127.0.0.2")
+
+            for _ in range(50):
+                if len(FakeRunner.instances) == 2 and all(r.started.is_set() for r in FakeRunner.instances):
+                    break
+                await asyncio.sleep(0.01)
+
+            assert len(FakeRunner.instances) == 2
+            first_runner = next(r for r in FakeRunner.instances if r.target == "127.0.0.1")
+            second_runner = next(r for r in FakeRunner.instances if r.target == "127.0.0.2")
+
+            assert await mgr.cancel_task(first_record.task_id) is True
+            await asyncio.sleep(0.05)
+
+            assert first_runner.killed is True
+            assert second_runner.killed is False
+            assert mgr.get_task(first_record.task_id).status == TaskStatus.CANCELLED
+            assert mgr.get_task(second_record.task_id).status == TaskStatus.RUNNING
+
+            assert await mgr.cancel_task(second_record.task_id) is True
+            await asyncio.sleep(0.05)
 
     @pytest.mark.asyncio
     async def test_cancel_nonexistent_task(self, task_mgr):

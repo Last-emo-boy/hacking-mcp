@@ -9,6 +9,7 @@ All persistent data lives under ~/.hacking-mcp/:
   installs/ — install state tracking
   tasks/    — background task persistence
   assets/   — per-target scan output
+  audit/    — persistent JSONL audit log
 """
 
 import os
@@ -219,6 +220,11 @@ def get_assets_dir() -> Path:
     return get_data_dir() / "assets"
 
 
+def get_audit_dir() -> Path:
+    """Get the persistent audit log directory."""
+    return get_data_dir() / "audit"
+
+
 def ensure_data_dirs() -> None:
     """Create all data subdirectories if they don't exist."""
     for d in [
@@ -226,5 +232,6 @@ def ensure_data_dirs() -> None:
         get_installs_dir(),
         get_tasks_dir(),
         get_assets_dir(),
+        get_audit_dir(),
     ]:
         d.mkdir(parents=True, exist_ok=True)

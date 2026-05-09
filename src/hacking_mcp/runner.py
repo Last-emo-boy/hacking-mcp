@@ -78,6 +78,7 @@ class ToolRunner:
             RunResult with stdout, stderr, return code, timing info
         """
         args = args or []
+        target = args[0] if args else ""
 
         # Look up tool definition
         tool = self.registry.get_tool(tool_name)
@@ -96,7 +97,9 @@ class ToolRunner:
         # Safety check
         allowed, reason = self.safety.check_tool(tool)
         if not allowed:
-            self.safety.log_invocation(tool_name, "", args, allowed=False)
+            self.safety.log_invocation(
+                tool_name, target, args, allowed=False, reason=reason, action="policy_block"
+            )
             return RunResult(
                 tool_name=tool_name,
                 command=[],
@@ -108,13 +111,19 @@ class ToolRunner:
                 block_reason=reason,
             )
 
-        target = args[0] if args else ""
         if self.safety.requires_confirmation(tool) and not confirm_authorized:
             reason = (
                 f"Tool '{tool_name}' requires explicit authorization confirmation. "
                 "Set confirm_authorized=True only for targets you own or are authorized to test."
             )
-            self.safety.log_invocation(tool_name, target, args, allowed=False)
+            self.safety.log_invocation(
+                tool_name,
+                target,
+                args,
+                allowed=False,
+                reason=reason,
+                action="confirmation_required",
+            )
             return RunResult(
                 tool_name=tool_name,
                 command=[],
@@ -129,6 +138,10 @@ class ToolRunner:
         # Check if tool can run on this OS
         if not self._can_run(tool):
             avail = self.registry.get_availability(tool_name)
+            reason = f"Platform not supported: {self.env.system}"
+            self.safety.log_invocation(
+                tool_name, target, args, allowed=False, reason=reason, action="platform_reject"
+            )
             return RunResult(
                 tool_name=tool_name,
                 command=[],
@@ -145,7 +158,7 @@ class ToolRunner:
                 ),
                 duration_ms=0,
                 was_blocked=True,
-                block_reason=f"Platform not supported: {self.env.system}",
+                block_reason=reason,
             )
 
         # Check availability
@@ -156,6 +169,14 @@ class ToolRunner:
                 msg += "\n\n**Install commands (run in WSL2 terminal):**\n"
                 for cmd in install_cmds:
                     msg += f"```bash\n{cmd}\n```\n"
+            self.safety.log_invocation(
+                tool_name,
+                target,
+                args,
+                allowed=False,
+                reason="Tool is not installed",
+                action="not_installed",
+            )
             return RunResult(
                 tool_name=tool_name,
                 command=[],
@@ -185,18 +206,24 @@ class ToolRunner:
         cmd = build_command(parsed, self.env.backend, distro=self.env.wsl_distro)
 
         if not cmd:
+            reason = f"No run command defined for '{tool_name}'."
+            self.safety.log_invocation(
+                tool_name, target, args, allowed=False, reason=reason, action="no_run_command"
+            )
             return RunResult(
                 tool_name=tool_name,
                 command=[],
                 return_code=-1,
                 stdout="",
-                stderr=f"No run command defined for '{tool_name}'. This tool may be web-based or archived.",
+                stderr=f"{reason} This tool may be web-based or archived.",
                 duration_ms=0,
             )
 
         timeout = min(timeout, self.safety.max_timeout_seconds)
 
-        self.safety.log_invocation(tool_name, target, args, allowed=True)
+        self.safety.log_invocation(
+            tool_name, target, args, allowed=True, reason="", action="execute"
+        )
         logger.info("Running [%s]: %s (timeout=%ds)", self.env.backend.value, " ".join(cmd), timeout)
 
         start = time.monotonic()
@@ -235,6 +262,18 @@ class ToolRunner:
                 timed_out=timed_out,
             )
 
+        except asyncio.CancelledError:
+            proc = self._current_proc
+            if proc is not None:
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
+                try:
+                    await proc.wait()
+                except Exception:
+                    pass
+            raise
         except FileNotFoundError:
             duration_ms = int((time.monotonic() - start) * 1000)
             exe = parsed.executable or tool.run_command.split()[0]

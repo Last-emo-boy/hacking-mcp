@@ -16,9 +16,10 @@ def registry():
 
 
 @pytest.fixture
-def safety():
+def safety(tmp_path):
     return SafetyPolicy(
         disabled_categories=["DDOS Attack", "Phishing Attack"],
+        _audit_path=tmp_path / "audit" / "audit.jsonl",
     )
 
 
@@ -58,6 +59,8 @@ class TestToolRunner:
         result = await runner.run("sqlmap", ["http://127.0.0.1:8000"])
         assert result.was_blocked
         assert "requires explicit authorization confirmation" in result.stderr
+        audit = runner.safety.read_audit_log()
+        assert audit[-1]["action"] == "confirmation_required"
 
     @pytest.mark.asyncio
     async def test_run_tool_not_installed(self, runner):
@@ -89,3 +92,40 @@ class TestToolRunner:
         result = await runner.run("host2ip", ["localhost"], timeout=10)
         elapsed = time.monotonic() - start
         assert elapsed < 15  # Should complete quickly
+
+    @pytest.mark.asyncio
+    async def test_run_cancellation_kills_current_process(self, runner):
+        """Cancelling runner.run should kill the subprocess before clearing state."""
+        runner.registry.is_available = MagicMock(return_value=True)
+        started = asyncio.Event()
+
+        class FakeProcess:
+            returncode = None
+
+            def __init__(self):
+                self.killed = False
+
+            async def communicate(self):
+                started.set()
+                await asyncio.Event().wait()
+
+            def kill(self):
+                self.killed = True
+                self.returncode = -9
+
+            async def wait(self):
+                return self.returncode
+
+        proc = FakeProcess()
+
+        async def create_proc(*args, **kwargs):
+            return proc
+
+        with patch("asyncio.create_subprocess_exec", side_effect=create_proc):
+            task = asyncio.create_task(runner.run("nmap", ["127.0.0.1"]))
+            await asyncio.wait_for(started.wait(), timeout=1)
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+
+        assert proc.killed is True

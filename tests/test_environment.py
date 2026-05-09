@@ -9,6 +9,7 @@ from hacking_mcp.environment import (
     to_wsl_path,
     to_win_path,
     get_tools_dir,
+    get_audit_dir,
 )
 
 
@@ -78,5 +79,12 @@ class TestToolsDir:
         """Tools directory should be under user's home."""
         from pathlib import Path
         d = get_tools_dir()
+        home = Path.home()
+        assert str(home) in str(d)
+
+    def test_get_audit_dir_in_home(self):
+        """Audit directory should be under user's home."""
+        from pathlib import Path
+        d = get_audit_dir()
         home = Path.home()
         assert str(home) in str(d)

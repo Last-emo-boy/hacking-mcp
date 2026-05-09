@@ -109,6 +109,7 @@ class ToolOrchestrator:
         # ── Step 1: Resolve ──────────────────────────────────────────
         tool = self.registry.get_tool(request.tool_name)
         if not tool:
+            self._audit_request(request, allowed=False, reason="Unknown tool", action="resolve")
             return ToolResponse(
                 tool_name=request.tool_name,
                 error=self._unknown_tool_message(request.tool_name),
@@ -116,6 +117,12 @@ class ToolOrchestrator:
 
         if request.allowed_tools and request.tool_name not in request.allowed_tools:
             label = request.category_label or "this category"
+            self._audit_request(
+                request,
+                allowed=False,
+                reason=f"Tool is not in the {label} allowlist",
+                action="allowlist_reject",
+            )
             return ToolResponse(
                 tool_name=request.tool_name,
                 error=f"'{request.tool_name}' is not a {label} tool. "
@@ -125,6 +132,7 @@ class ToolOrchestrator:
         # ── Step 2: Safety gate ──────────────────────────────────────
         allowed, reason = self.safety.check_tool(tool)
         if not allowed:
+            self._audit_request(request, allowed=False, reason=reason, action="policy_block")
             return ToolResponse(
                 tool_name=request.tool_name,
                 error=f"⛔ **BLOCKED:** {reason}",
@@ -132,6 +140,12 @@ class ToolOrchestrator:
 
         # ── Step 3: Target validation ────────────────────────────────
         if request.target_required and not request.target:
+            self._audit_request(
+                request,
+                allowed=False,
+                reason="Target is required",
+                action="missing_target",
+            )
             return ToolResponse(
                 tool_name=request.tool_name,
                 error=f"'{request.tool_name}' requires a target.",
@@ -148,6 +162,7 @@ class ToolOrchestrator:
                 f"Tool '{request.tool_name}' ({tool.category}) requires explicit "
                 "authorization confirmation."
             )
+            self._audit_request(request, allowed=False, reason=msg, action="confirmation_required")
             return ToolResponse(
                 tool_name=request.tool_name,
                 error=(
@@ -159,6 +174,12 @@ class ToolOrchestrator:
 
         # ── Step 5: Availability ─────────────────────────────────────
         if not self.registry.is_available(request.tool_name):
+            self._audit_request(
+                request,
+                allowed=False,
+                reason="Tool is not installed",
+                action="not_installed",
+            )
             return ToolResponse(
                 tool_name=request.tool_name,
                 error=self._not_installed_message(request.tool_name),
@@ -167,6 +188,12 @@ class ToolOrchestrator:
         if request.validate_scope and request.target:
             scope_ok, scope_reason = self.safety.validate_target(request.target)
             if not scope_ok:
+                self._audit_request(
+                    request,
+                    allowed=False,
+                    reason=scope_reason,
+                    action="scope_reject",
+                )
                 return ToolResponse(
                     tool_name=request.tool_name,
                     error=f"⛔ Target rejected by scope policy: {scope_reason}",
@@ -194,6 +221,12 @@ class ToolOrchestrator:
             try:
                 args.extend(shlex.split(request.options))
             except ValueError as e:
+                self._audit_request(
+                    request,
+                    allowed=False,
+                    reason=f"Invalid options syntax: {e}",
+                    action="invalid_options",
+                )
                 return ToolResponse(
                     tool_name=request.tool_name,
                     error=f"Invalid options syntax: {e}",
@@ -246,6 +279,35 @@ class ToolOrchestrator:
             for cmd in install_cmds:
                 msg += f"```bash\n{cmd}\n```\n"
         return msg
+
+    def _audit_request(
+        self,
+        request: ToolRequest,
+        allowed: bool,
+        reason: str,
+        action: str,
+    ) -> None:
+        """Audit decisions that short-circuit before ToolRunner.run()."""
+        self.safety.log_invocation(
+            tool_name=request.tool_name,
+            target=request.target,
+            args=self._audit_args(request),
+            allowed=allowed,
+            reason=reason,
+            action=action,
+        )
+
+    @staticmethod
+    def _audit_args(request: ToolRequest) -> list[str]:
+        args = []
+        if request.target:
+            args.append(request.target)
+        if request.options:
+            try:
+                args.extend(shlex.split(request.options))
+            except ValueError:
+                args.append(request.options)
+        return args
 
     def dry_run(self, tool_name: str, target: str = "", options: str = "") -> str:
         """Preview the command that would be executed."""

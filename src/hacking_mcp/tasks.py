@@ -17,6 +17,7 @@ from typing import Optional
 
 from hacking_mcp.models import TaskStatus, TaskRecord, RunResult
 from hacking_mcp.orchestrator import ToolOrchestrator, ToolRequest
+from hacking_mcp.runner import ToolRunner
 from hacking_mcp.environment import get_tasks_dir
 
 logger = logging.getLogger("hacking-mcp.tasks")
@@ -37,6 +38,7 @@ class TaskManager:
         self._orchestrator = orchestrator
         self._asset_mgr = asset_mgr
         self._tasks: dict[str, asyncio.Task] = {}
+        self._task_runners: dict[str, ToolRunner] = {}
         self._records: dict[str, TaskRecord] = {}
         self._proc_map: dict[str, "asyncio.subprocess.Process"] = {}
         self._load_existing()
@@ -192,6 +194,7 @@ class TaskManager:
         self._save_record(record)
 
         try:
+            task_orchestrator = self._build_task_orchestrator(task_id)
             # Build a ToolRequest — goes through the full orchestrator pipeline
             # Safety gates run synchronously here (in the background task)
             request = ToolRequest(
@@ -200,7 +203,7 @@ class TaskManager:
                 options=record.options,
                 confirm_authorized=record.confirm_authorized,
             )
-            response = await self._orchestrator.execute(request, ctx=ctx)
+            response = await task_orchestrator.execute(request, ctx=ctx)
 
             record.result = response.result
             record.error = response.error
@@ -236,8 +239,12 @@ class TaskManager:
         except asyncio.CancelledError:
             record.status = TaskStatus.CANCELLED
             record.error = "Task cancelled by user"
-            # Kill the subprocess if running
-            self._orchestrator.runner.kill_current()
+            # Kill only this task's runner/process.
+            runner = self._task_runners.get(task_id)
+            if runner is not None:
+                runner.kill_current()
+            else:
+                self._orchestrator.runner.kill_current()
             raise
 
         except Exception as e:
@@ -248,8 +255,24 @@ class TaskManager:
         finally:
             record.completed_at = datetime.now(timezone.utc).isoformat()
             self._save_record(record)
+            self._task_runners.pop(task_id, None)
             # Clean up the asyncio.Task reference
             self._tasks.pop(task_id, None)
+
+    def _build_task_orchestrator(self, task_id: str) -> ToolOrchestrator:
+        """Create an isolated runner/orchestrator for one background task."""
+        if not isinstance(self._orchestrator, ToolOrchestrator):
+            return self._orchestrator
+
+        task_runner = ToolRunner(self._orchestrator.registry, self._orchestrator.safety)
+        self._task_runners[task_id] = task_runner
+        return ToolOrchestrator(
+            registry=self._orchestrator.registry,
+            safety=self._orchestrator.safety,
+            runner=task_runner,
+            formatter=self._orchestrator.formatter,
+            asset_manager=self._orchestrator.asset_mgr,
+        )
 
     def get_task(self, task_id: str) -> Optional[TaskRecord]:
         """Get a task record by ID."""

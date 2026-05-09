@@ -1,5 +1,6 @@
 """Tests for SafetyPolicy."""
 
+import json
 import pytest
 from pathlib import Path
 from hacking_mcp.safety import SafetyPolicy
@@ -7,7 +8,7 @@ from hacking_mcp.models import HackingToolDef, SafetyTier
 
 
 @pytest.fixture
-def safety():
+def safety(tmp_path):
     return SafetyPolicy(
         disabled_categories=["DDOS Attack", "Phishing Attack"],
         disabled_tools=["chrome-keylogger"],
@@ -16,6 +17,7 @@ def safety():
         max_output_bytes=1_000_000,
         allowed_cidrs=["10.0.0.0/8", "192.168.1.0/24"],
         allowed_domains=["example.com", "*.test.local"],
+        _audit_path=tmp_path / "audit" / "audit.jsonl",
     )
 
 
@@ -161,11 +163,41 @@ class TestSafetyPolicy:
         assert ok
 
     def test_audit_logging(self, safety, safe_tool):
-        safety.log_invocation("nmap", "10.0.0.1", ["-sV"], True)
+        safety.log_invocation(
+            "nmap",
+            "10.0.0.1",
+            ["-sV"],
+            True,
+            reason="",
+            action="execute",
+        )
         log = safety.get_audit_log()
         assert len(log) == 1
         assert log[0]["tool"] == "nmap"
         assert log[0]["allowed"] is True
+        assert log[0]["action"] == "execute"
+
+    def test_audit_logging_persists_jsonl(self, safety):
+        safety.log_invocation(
+            "sqlmap",
+            "http://127.0.0.1:8000",
+            ["http://127.0.0.1:8000"],
+            False,
+            reason="confirmation required",
+            action="confirmation_required",
+        )
+
+        assert safety._audit_path.exists()
+        lines = safety._audit_path.read_text(encoding="utf-8").splitlines()
+        assert len(lines) == 1
+        entry = json.loads(lines[0])
+        assert entry["tool"] == "sqlmap"
+        assert entry["allowed"] is False
+        assert entry["reason"] == "confirmation required"
+        assert entry["action"] == "confirmation_required"
+
+        persisted = safety.read_audit_log(limit=10)
+        assert persisted == [entry]
 
     def test_policy_summary(self, safety):
         summary = safety.get_policy_summary()

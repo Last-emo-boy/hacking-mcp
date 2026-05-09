@@ -1,6 +1,7 @@
 """Safety policy — tier-based allow/deny, scope validation, audit logging."""
 
 import ipaddress
+import json
 import logging
 import time
 from datetime import datetime, timezone
@@ -11,6 +12,7 @@ from urllib.parse import urlsplit
 import yaml
 
 from hacking_mcp.models import HackingToolDef, SafetyTier
+from hacking_mcp.environment import get_audit_dir
 
 logger = logging.getLogger("hacking-mcp.safety")
 
@@ -33,6 +35,7 @@ class SafetyPolicy:
         allowed_domains: Optional[list[str]] = None,
         _proxy_config: Optional[dict] = None,
         _mirrors_config: Optional[dict] = None,
+        _audit_path: Optional[Path] = None,
     ):
         self.disabled_categories: set[str] = set(
             disabled_categories or []
@@ -58,6 +61,7 @@ class SafetyPolicy:
 
         # Audit log: list of invocation records
         self._audit_log: list[dict] = []
+        self._audit_path = _audit_path or (get_audit_dir() / "audit.jsonl")
 
     @classmethod
     def from_yaml(cls, path: Path) -> "SafetyPolicy":
@@ -201,6 +205,8 @@ class SafetyPolicy:
         target: str,
         args: list[str],
         allowed: bool,
+        reason: str = "",
+        action: str = "execute",
     ) -> None:
         """Record a tool invocation in the audit log."""
         entry = {
@@ -209,13 +215,48 @@ class SafetyPolicy:
             "target": target,
             "args": args,
             "allowed": allowed,
+            "reason": reason,
+            "action": action,
         }
         self._audit_log.append(entry)
         logger.info("AUDIT: %s", entry)
+        self._append_audit_entry(entry)
 
     def get_audit_log(self) -> list[dict]:
         """Return the audit log."""
         return list(self._audit_log)
+
+    def read_audit_log(self, limit: int = 100) -> list[dict]:
+        """Read persisted audit log entries from disk.
+
+        Returns newest entries up to the requested limit in file order.
+        Invalid JSONL rows are skipped.
+        """
+        if limit <= 0 or not self._audit_path.exists():
+            return []
+        try:
+            lines = self._audit_path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            logger.warning("Failed to read audit log: %s", self._audit_path)
+            return []
+
+        entries: list[dict] = []
+        for line in lines[-limit:]:
+            if not line.strip():
+                continue
+            try:
+                entries.append(json.loads(line))
+            except json.JSONDecodeError:
+                logger.warning("Skipping invalid audit log row")
+        return entries
+
+    def _append_audit_entry(self, entry: dict) -> None:
+        try:
+            self._audit_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._audit_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        except OSError as e:
+            logger.warning("Failed to persist audit log entry: %s", e)
 
     def get_proxy_config(self) -> dict:
         """Return proxy configuration for install downloads."""

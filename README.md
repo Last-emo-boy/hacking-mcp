@@ -11,7 +11,7 @@
 [![Tools](https://img.shields.io/badge/Tools-184-00FF88?style=flat-square)](.)
 [![Categories](https://img.shields.io/badge/Categories-20-7B61FF?style=flat-square)](.)
 [![MCP Endpoints](https://img.shields.io/badge/MCP_Endpoints-22-FF61DC?style=flat-square)](.)
-[![Tests](https://img.shields.io/badge/Tests-203_passing-00FF88?style=flat-square)](.)
+[![Tests](https://img.shields.io/badge/Tests-207_passing-00FF88?style=flat-square)](.)
 [![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-FFA116?style=flat-square)](.)
 
 [![Star](https://img.shields.io/github/stars/Last-emo-boy/hacking-mcp?style=social)](.)
@@ -41,7 +41,7 @@
 | 📂 | **Asset Management** | Per-target output in `~/.hacking-mcp/assets/192.168.1.1/` — structured JSON, always queryable |
 | 🐳 | **WSL2 Auto-Routing** | Windows → auto-detects WSL2 distro and routes Linux tools through `wsl bash -c` |
 | 🚀 | **Extensible** | `ToolProvider` ABC — add Docker tools, API wrappers, custom YAML configs |
-| 🏢 | **Audit Logging** | Every invocation recorded: timestamp, tool, target, args, allowed/blocked |
+| 🏢 | **Audit Logging** | Every invocation recorded to persistent JSONL: timestamp, tool, target, args, allowed/blocked |
 
 ---
 
@@ -110,6 +110,8 @@
 │   │   └── 2026-05-05T110000Z_nuclei.json
 │   └── example.com/
 │       └── ...
+├── audit/
+│   └── audit.jsonl         # Persistent invocation and policy-decision log
 └── safety_policy.yaml      # Your custom safety config (auto-generated)
 ```
 

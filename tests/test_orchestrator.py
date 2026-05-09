@@ -21,10 +21,11 @@ def registry():
 
 
 @pytest.fixture
-def safety():
+def safety(tmp_path):
     return SafetyPolicy(
         disabled_categories=["DDOS Attack", "Phishing Attack"],
         require_confirmation_categories=["SQL Injection", "Exploit Framework", "XSS Attack"],
+        _audit_path=tmp_path / "audit" / "audit.jsonl",
     )
 
 
@@ -177,6 +178,11 @@ class TestToolOrchestrator:
         assert response.error
         assert "CONFIRMATION REQUIRED" in response.error
         assert "confirm_authorized=True" in response.error
+
+        audit = orchestrator.safety.read_audit_log()
+        assert audit[-1]["tool"] == "sqlmap"
+        assert audit[-1]["allowed"] is False
+        assert audit[-1]["action"] == "confirmation_required"
 
     @pytest.mark.asyncio
     async def test_execute_confirmed_tool_reaches_runner(self, orchestrator):
