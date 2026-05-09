@@ -134,6 +134,24 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     jadx_schema = tools["security_tool_jadx"].inputSchema["properties"]
     assert {"binary_path", "output_dir", "decompile"}.issubset(jadx_schema)
 
+    setoolkit_schema = tools["security_tool_setoolkit"].inputSchema["properties"]
+    assert {"template", "listener_host", "listener_port", "tunnel"}.issubset(
+        setoolkit_schema
+    )
+
+    msfvenom_schema = tools["security_tool_msfvenom"].inputSchema["properties"]
+    assert {"payload_type", "platform", "lhost", "lport", "format"}.issubset(
+        msfvenom_schema
+    )
+
+    wifite_schema = tools["security_tool_wifite"].inputSchema["properties"]
+    assert {"interface", "bssid", "essid", "channel", "wordlist"}.issubset(
+        wifite_schema
+    )
+
+    vegil_schema = tools["security_tool_vegil"].inputSchema["properties"]
+    assert {"lhost", "lport", "listener", "protocol"}.issubset(vegil_schema)
+
 
 @pytest.mark.asyncio
 async def test_structured_parameters_build_cli_options(registry, safety):
@@ -205,7 +223,7 @@ async def test_blocked_adapter_does_not_execute_orchestrator(registry, safety):
     register(mcp, orchestrator, registry, safety)
     content, metadata = await mcp.call_tool(
         "security_tool_vegil",
-        {"target": "example.com", "options": "--anything"},
+        {"target": "example.com", "lhost": "127.0.0.1", "lport": 4444},
     )
 
     assert "classified DANGEROUS" in metadata["result"]

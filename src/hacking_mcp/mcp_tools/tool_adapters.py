@@ -376,6 +376,72 @@ def _adapter_parameters(
             AdapterParameterSpec("analysis_command", str, "", "Analysis command/script when supported."),
         ])
 
+    if "ddos" in tags or tool.category == "DDOS Attack":
+        params.extend([
+            AdapterParameterSpec("method", str, "", "Stress-test method/profile when supported."),
+            AdapterParameterSpec("port", int, 0, "Target port when supported; 0 leaves default."),
+            AdapterParameterSpec("duration", int, 0, "Duration in seconds when supported; 0 leaves default."),
+            AdapterParameterSpec("threads", int, 0, "Thread count when supported; 0 leaves default."),
+            AdapterParameterSpec("connections", int, 0, "Connection count when supported; 0 leaves default."),
+            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value when supported."),
+        ])
+
+    if "phishing" in tags or tool.category == "Phishing Attack":
+        params.extend([
+            AdapterParameterSpec("template", str, "", "Template/site profile name when supported."),
+            AdapterParameterSpec("landing_url", str, "", "Authorized training landing URL when supported."),
+            AdapterParameterSpec("listener_host", str, "", "Listener host for lab use when supported."),
+            AdapterParameterSpec("listener_port", int, 0, "Listener port when supported; 0 leaves default."),
+            AdapterParameterSpec("tunnel", str, "", "Tunnel provider/profile when supported."),
+            AdapterParameterSpec("domain", str, "", "Authorized domain when supported."),
+            AdapterParameterSpec("output_dir", str, "", "Output directory when supported."),
+        ])
+
+    if "payload" in tags or tool.category == "Payload Creation":
+        params.extend([
+            AdapterParameterSpec("payload_type", str, "", "Payload identifier when supported."),
+            AdapterParameterSpec("platform", str, "", "Target platform when supported."),
+            AdapterParameterSpec("architecture", str, "", "Target architecture when supported."),
+            AdapterParameterSpec("lhost", str, "", "Listener host for authorized lab use."),
+            AdapterParameterSpec("lport", int, 0, "Listener port when supported; 0 leaves default."),
+            AdapterParameterSpec("format", str, "", "Output format when supported."),
+            AdapterParameterSpec("encoder", str, "", "Encoder when supported."),
+            AdapterParameterSpec("output_file", str, "", "Output file path when supported."),
+        ])
+
+    if "wireless" in tags or tool.category == "Wireless Attack":
+        params.extend([
+            AdapterParameterSpec("interface", str, "", "Wireless interface name when supported."),
+            AdapterParameterSpec("bssid", str, "", "Authorized AP BSSID when supported."),
+            AdapterParameterSpec("essid", str, "", "Authorized AP ESSID when supported."),
+            AdapterParameterSpec("channel", str, "", "Wireless channel when supported."),
+            AdapterParameterSpec("wordlist", str, "", "Wordlist path when supported."),
+            AdapterParameterSpec("handshake_file", str, "", "Handshake/capture file path when supported."),
+            AdapterParameterSpec("monitor_mode", bool, False, "Request monitor mode when supported."),
+        ])
+
+    if "anonymity" in tags or tool.category == "Anonymously Hiding":
+        params.extend([
+            AdapterParameterSpec("tor_port", int, 0, "Tor SOCKS port when supported; 0 leaves default."),
+            AdapterParameterSpec("control_port", int, 0, "Tor control port when supported; 0 leaves default."),
+            AdapterParameterSpec("country", str, "", "Exit country selector when supported."),
+            AdapterParameterSpec("instances", int, 0, "Number of Tor instances when supported; 0 leaves default."),
+        ])
+
+    if (
+        "rat" in tags
+        or "c2" in tags
+        or "post-exploit" in tags
+        or tool.category == "Remote Administration (RAT)"
+    ) and tool.category != "Payload Creation":
+        params.extend([
+            AdapterParameterSpec("lhost", str, "", "Listener host for authorized lab use."),
+            AdapterParameterSpec("lport", int, 0, "Listener port when supported; 0 leaves default."),
+            AdapterParameterSpec("session_id", str, "", "Session identifier when supported."),
+            AdapterParameterSpec("listener", str, "", "Listener/profile name when supported."),
+            AdapterParameterSpec("protocol", str, "", "Protocol selector when supported."),
+        ])
+
     params.extend([
         AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
         AdapterParameterSpec(
@@ -514,6 +580,60 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "decompile", "--decompile")
         _add_value(tokens, kwargs, "analysis_command", "-c")
 
+    if "ddos" in tags or tool.category == "DDOS Attack":
+        _add_value(tokens, kwargs, "method", "--method")
+        _add_value(tokens, kwargs, "port", "-p")
+        _add_value(tokens, kwargs, "duration", "--duration")
+        _add_value(tokens, kwargs, "threads", "--threads")
+        _add_value(tokens, kwargs, "connections", "--connections")
+        _add_value(tokens, kwargs, "user_agent", "--user-agent")
+
+    if "phishing" in tags or tool.category == "Phishing Attack":
+        _add_value(tokens, kwargs, "template", "--template")
+        _add_value(tokens, kwargs, "landing_url", "--url")
+        _add_value(tokens, kwargs, "listener_host", "--host")
+        _add_value(tokens, kwargs, "listener_port", "--port")
+        _add_value(tokens, kwargs, "tunnel", "--tunnel")
+        _add_value(tokens, kwargs, "domain", "--domain")
+        _add_value(tokens, kwargs, "output_dir", "-o")
+
+    if "payload" in tags or tool.category == "Payload Creation":
+        _add_value(tokens, kwargs, "payload_type", "-p")
+        _add_value(tokens, kwargs, "platform", "--platform")
+        _add_value(tokens, kwargs, "architecture", "-a")
+        _add_assignment(tokens, kwargs, "lhost", "LHOST")
+        _add_assignment(tokens, kwargs, "lport", "LPORT")
+        _add_value(tokens, kwargs, "format", "-f")
+        _add_value(tokens, kwargs, "encoder", "-e")
+        _add_value(tokens, kwargs, "output_file", "-o")
+
+    if "wireless" in tags or tool.category == "Wireless Attack":
+        _add_value(tokens, kwargs, "interface", "-i")
+        _add_value(tokens, kwargs, "bssid", "--bssid")
+        _add_value(tokens, kwargs, "essid", "--essid")
+        _add_value(tokens, kwargs, "channel", "-c")
+        _add_value(tokens, kwargs, "wordlist", "-w")
+        _add_value(tokens, kwargs, "handshake_file", "-r")
+        _add_bool(tokens, kwargs, "monitor_mode", "--monitor")
+
+    if "anonymity" in tags or tool.category == "Anonymously Hiding":
+        _add_value(tokens, kwargs, "tor_port", "--tor-port")
+        _add_value(tokens, kwargs, "control_port", "--control-port")
+        _add_value(tokens, kwargs, "country", "--country")
+        _add_value(tokens, kwargs, "instances", "--instances")
+
+    if (
+        "rat" in tags
+        or "c2" in tags
+        or "post-exploit" in tags
+        or tool.category == "Remote Administration (RAT)"
+    ) and tool.category != "Payload Creation":
+        _add_value(tokens, kwargs, "lhost", "--lhost")
+        _add_value(tokens, kwargs, "lport", "--lport")
+        _add_value(tokens, kwargs, "session_id", "--session")
+        _add_value(tokens, kwargs, "listener", "--listener")
+        _add_value(tokens, kwargs, "protocol", "--protocol")
+
     return tokens
 
 
@@ -527,6 +647,13 @@ def _add_value(tokens: list[str], kwargs: dict, key: str, flag: str) -> None:
 def _add_bool(tokens: list[str], kwargs: dict, key: str, flag: str) -> None:
     if kwargs.get(key):
         tokens.append(flag)
+
+
+def _add_assignment(tokens: list[str], kwargs: dict, key: str, name: str) -> None:
+    value = kwargs.get(key)
+    if value in (None, "", 0, False):
+        return
+    tokens.append(f"{name}={value}")
 
 
 def _add_scan_type(tokens: list[str], kwargs: dict) -> None:
