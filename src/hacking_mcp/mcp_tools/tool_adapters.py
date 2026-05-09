@@ -433,6 +433,11 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "casing": "foo_bar",
         "cookies": "session=value",
         "status_codes": "200,301,302",
+        "methods": "GET,POST",
+        "query": "token=value",
+        "filter_regex": "^ignore",
+        "filter_lines": "20",
+        "time_limit": "10m",
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -592,6 +597,55 @@ def _adapter_parameters(
             AdapterParameterSpec("no_progress", bool, False, "Disable progress output."),
             AdapterParameterSpec("expanded", bool, False, "Expanded mode: print full URLs."),
             AdapterParameterSpec("add_slash", bool, False, "Append slash to each request."),
+        ])
+    elif tool.name == "feroxbuster":
+        params.extend([
+            AdapterParameterSpec("wordlist", str, "", "Wordlist path or URL."),
+            AdapterParameterSpec("extensions", str, "", "File extensions to search for."),
+            AdapterParameterSpec("methods", str, "", "HTTP methods to send."),
+            AdapterParameterSpec("data", str, "", "Request body data."),
+            AdapterParameterSpec("headers", str, "", "Custom HTTP header."),
+            AdapterParameterSpec("cookies", str, "", "HTTP cookies."),
+            AdapterParameterSpec("query", str, "", "URL query parameter."),
+            AdapterParameterSpec("add_slash", bool, False, "Append slash to request URLs."),
+            AdapterParameterSpec("protocol", str, "", "Protocol for request-file/domain-only targets."),
+            AdapterParameterSpec("dont_scan", str, "", "URL or regex pattern to exclude from scanning."),
+            AdapterParameterSpec("scope", str, "", "Additional in-scope URL or domain."),
+            AdapterParameterSpec("filter_size", str, "", "Filter responses by size."),
+            AdapterParameterSpec("filter_regex", str, "", "Filter responses by regex."),
+            AdapterParameterSpec("filter_words", str, "", "Filter responses by word count."),
+            AdapterParameterSpec("filter_lines", str, "", "Filter responses by line count."),
+            AdapterParameterSpec("filter_codes", str, "", "Filter/deny-list status codes."),
+            AdapterParameterSpec("status_codes", str, "", "Allow-list status codes."),
+            AdapterParameterSpec("unique", bool, False, "Only show unique responses."),
+            AdapterParameterSpec("timeout", int, 0, "Client timeout in seconds; 0 leaves default."),
+            AdapterParameterSpec("follow_redirects", bool, False, "Follow HTTP redirects."),
+            AdapterParameterSpec("insecure", bool, False, "Disable TLS certificate validation."),
+            AdapterParameterSpec("threads", int, 0, "Number of concurrent threads; 0 leaves default."),
+            AdapterParameterSpec("no_recursion", bool, False, "Disable recursive scanning."),
+            AdapterParameterSpec("depth", int, 0, "Maximum recursion depth; 0 leaves default."),
+            AdapterParameterSpec("force_recursion", bool, False, "Force recursion attempts."),
+            AdapterParameterSpec("dont_extract_links", bool, False, "Disable link extraction from responses."),
+            AdapterParameterSpec("scan_limit", int, 0, "Total concurrent scans; 0 leaves default."),
+            AdapterParameterSpec("parallelism", int, 0, "Parallel feroxbuster child scans; 0 leaves default."),
+            AdapterParameterSpec("rate_limit", int, 0, "Requests per second per directory; 0 leaves default."),
+            AdapterParameterSpec("response_size_limit", str, "", "Limit response body read size."),
+            AdapterParameterSpec("time_limit", str, "", "Total runtime limit, for example 10m."),
+            AdapterParameterSpec("auto_tune", bool, False, "Automatically lower scan rate on errors."),
+            AdapterParameterSpec("auto_bail", bool, False, "Stop scanning on excessive errors."),
+            AdapterParameterSpec("dont_filter", bool, False, "Disable auto-filtering wildcard responses."),
+            AdapterParameterSpec("collect_extensions", bool, False, "Discover and add extensions dynamically."),
+            AdapterParameterSpec("collect_backups", str, "", "Backup extensions to request."),
+            AdapterParameterSpec("collect_words", bool, False, "Discover words from responses."),
+            AdapterParameterSpec("dont_collect", str, "", "Extensions to ignore during collection."),
+            AdapterParameterSpec("verbosity", int, 0, "Verbosity level 1-3; 0 leaves default."),
+            AdapterParameterSpec("silent", bool, False, "Only print URLs or JSON output."),
+            AdapterParameterSpec("quiet", bool, False, "Hide progress bars and banner."),
+            AdapterParameterSpec("json_output", bool, False, "Emit JSON logs."),
+            AdapterParameterSpec("output_file", str, "", "Output file path."),
+            AdapterParameterSpec("debug_log", str, "", "Debug log output path."),
+            AdapterParameterSpec("no_state", bool, False, "Disable state output file."),
+            AdapterParameterSpec("limit_bars", int, 0, "Maximum directory scan bars; 0 leaves default."),
         ])
     elif tool.name == "httpx":
         params.extend([
@@ -1088,7 +1142,7 @@ def _adapter_parameters(
             AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value when supported."),
         ])
 
-    if tool.name in {"ffuf", "dirsearch", "feroxbuster"}:
+    if tool.name in {"ffuf", "dirsearch"}:
         params.extend([
             AdapterParameterSpec("filter_codes", str, "", "HTTP status codes to filter out."),
             AdapterParameterSpec("filter_size", str, "", "Response size filter when supported."),
@@ -1377,6 +1431,55 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "no_progress", "--no-progress")
         _add_bool(tokens, kwargs, "expanded", "-e")
         _add_bool(tokens, kwargs, "add_slash", "-f")
+    elif tool.name == "feroxbuster":
+        _add_value(tokens, kwargs, "wordlist", "-w")
+        _add_value(tokens, kwargs, "extensions", "-x")
+        _add_value(tokens, kwargs, "methods", "-m")
+        _add_value(tokens, kwargs, "data", "--data")
+        _add_value(tokens, kwargs, "headers", "-H")
+        _add_value(tokens, kwargs, "cookies", "-b")
+        _add_value(tokens, kwargs, "query", "-Q")
+        _add_bool(tokens, kwargs, "add_slash", "-f")
+        _add_value(tokens, kwargs, "protocol", "--protocol")
+        _add_value(tokens, kwargs, "dont_scan", "--dont-scan")
+        _add_value(tokens, kwargs, "scope", "--scope")
+        _add_value(tokens, kwargs, "filter_size", "-S")
+        _add_value(tokens, kwargs, "filter_regex", "-X")
+        _add_value(tokens, kwargs, "filter_words", "-W")
+        _add_value(tokens, kwargs, "filter_lines", "-N")
+        _add_value(tokens, kwargs, "filter_codes", "-C")
+        _add_value(tokens, kwargs, "status_codes", "-s")
+        _add_bool(tokens, kwargs, "unique", "--unique")
+        _add_value(tokens, kwargs, "timeout", "-T")
+        _add_bool(tokens, kwargs, "follow_redirects", "-r")
+        _add_bool(tokens, kwargs, "insecure", "-k")
+        _add_value(tokens, kwargs, "threads", "-t")
+        _add_bool(tokens, kwargs, "no_recursion", "-n")
+        _add_value(tokens, kwargs, "depth", "-d")
+        _add_bool(tokens, kwargs, "force_recursion", "--force-recursion")
+        _add_bool(tokens, kwargs, "dont_extract_links", "--dont-extract-links")
+        _add_value(tokens, kwargs, "scan_limit", "-L")
+        _add_value(tokens, kwargs, "parallelism", "--parallel")
+        _add_value(tokens, kwargs, "rate_limit", "--rate-limit")
+        _add_value(tokens, kwargs, "response_size_limit", "--response-size-limit")
+        _add_value(tokens, kwargs, "time_limit", "--time-limit")
+        _add_bool(tokens, kwargs, "auto_tune", "--auto-tune")
+        _add_bool(tokens, kwargs, "auto_bail", "--auto-bail")
+        _add_bool(tokens, kwargs, "dont_filter", "-D")
+        _add_bool(tokens, kwargs, "collect_extensions", "-E")
+        _add_value(tokens, kwargs, "collect_backups", "-B")
+        _add_bool(tokens, kwargs, "collect_words", "-g")
+        _add_value(tokens, kwargs, "dont_collect", "-I")
+        verbosity = _int_value(kwargs, "verbosity")
+        if verbosity:
+            tokens.append("-" + ("v" * min(verbosity, 3)))
+        _add_bool(tokens, kwargs, "silent", "--silent")
+        _add_bool(tokens, kwargs, "quiet", "-q")
+        _add_bool(tokens, kwargs, "json_output", "--json")
+        _add_value(tokens, kwargs, "output_file", "-o")
+        _add_value(tokens, kwargs, "debug_log", "--debug-log")
+        _add_bool(tokens, kwargs, "no_state", "--no-state")
+        _add_value(tokens, kwargs, "limit_bars", "--limit-bars")
     elif tool.name == "httpx":
         _add_value(tokens, kwargs, "input_file", "-l")
         _add_bool(tokens, kwargs, "status_code", "-sc")
@@ -1778,7 +1881,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "no_color", "--color=0")
         _add_value(tokens, kwargs, "user_agent", "-useragent")
 
-    if tool.name in {"ffuf", "dirsearch", "feroxbuster"}:
+    if tool.name in {"ffuf", "dirsearch"}:
         _add_value(tokens, kwargs, "filter_codes", "-fc")
         _add_value(tokens, kwargs, "filter_size", "-fs")
         _add_value(tokens, kwargs, "filter_words", "-fw")

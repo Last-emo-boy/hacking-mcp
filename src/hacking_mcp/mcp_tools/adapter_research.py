@@ -443,6 +443,67 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "add_slash",
         ),
     ),
+    "feroxbuster": SourceReview(
+        note=(
+            "Reviewed against official feroxbuster command-line docs for "
+            "wordlists/extensions/methods/request data, headers/cookies/query, "
+            "filters/status allow-lists, timeout/redirects/TLS, recursion and "
+            "rate controls, collection, verbosity/output, debug/state, and "
+            "progress limiting flags."
+        ),
+        references=(
+            "https://github.com/epi052/feroxbuster",
+            "https://epi052.github.io/feroxbuster-docs/docs/configuration/command-line/",
+        ),
+        verified_parameters=(
+            "wordlist",
+            "extensions",
+            "methods",
+            "data",
+            "headers",
+            "cookies",
+            "query",
+            "add_slash",
+            "protocol",
+            "dont_scan",
+            "scope",
+            "filter_size",
+            "filter_regex",
+            "filter_words",
+            "filter_lines",
+            "filter_codes",
+            "status_codes",
+            "unique",
+            "timeout",
+            "follow_redirects",
+            "insecure",
+            "threads",
+            "no_recursion",
+            "depth",
+            "force_recursion",
+            "dont_extract_links",
+            "scan_limit",
+            "parallelism",
+            "rate_limit",
+            "response_size_limit",
+            "time_limit",
+            "auto_tune",
+            "auto_bail",
+            "dont_filter",
+            "collect_extensions",
+            "collect_backups",
+            "collect_words",
+            "dont_collect",
+            "verbosity",
+            "silent",
+            "quiet",
+            "json_output",
+            "output_file",
+            "debug_log",
+            "no_state",
+            "limit_bars",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}

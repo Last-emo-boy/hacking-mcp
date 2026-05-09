@@ -168,6 +168,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["gobuster"].unverified_parameters == ()
     assert any("OJ/gobuster" in item for item in records["gobuster"].evidence)
 
+    assert records["feroxbuster"].source_status == "source-reviewed"
+    assert records["feroxbuster"].unverified_parameters == ()
+    assert any("feroxbuster" in item for item in records["feroxbuster"].evidence)
+
     assert records["gitleaks"].source_status == "source-reviewed"
     assert records["gitleaks"].unverified_parameters == ()
     assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
@@ -315,6 +319,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "status_codes", "threads", "delay", "user_agent", "timeout",
         "output_file", "quiet", "no_progress", "expanded", "add_slash",
     }.issubset(gobuster_schema)
+
+    feroxbuster_schema = tools["security_tool_feroxbuster"].inputSchema["properties"]
+    assert {
+        "wordlist", "extensions", "methods", "headers", "cookies", "filter_codes",
+        "status_codes", "follow_redirects", "insecure", "no_recursion", "depth",
+        "rate_limit", "collect_extensions", "verbosity", "json_output",
+    }.issubset(feroxbuster_schema)
 
     katana_schema = tools["security_tool_katana"].inputSchema["properties"]
     assert {
@@ -859,6 +870,68 @@ async def test_gobuster_source_reviewed_parameters_build_cli_options(registry, s
         "-w words.txt -x php,txt -H 'X-Test: 1' -c session=value -l "
         "-s 200,301,302 -t 20 --delay 1s -a hacking-mcp --timeout 10s "
         "-o gobuster.txt -q --no-progress -e -f"
+    )
+
+
+@pytest.mark.asyncio
+async def test_feroxbuster_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_feroxbuster",
+        {
+            "target": "https://example.test",
+            "wordlist": "words.txt",
+            "extensions": "php,txt",
+            "methods": "GET,POST",
+            "headers": "X-Test: 1",
+            "cookies": "session=value",
+            "query": "token=value",
+            "add_slash": True,
+            "filter_size": "1234",
+            "filter_regex": "^ignore",
+            "filter_words": "20",
+            "filter_lines": "5",
+            "filter_codes": "404,403",
+            "status_codes": "200,301,302",
+            "unique": True,
+            "timeout": 10,
+            "follow_redirects": True,
+            "insecure": True,
+            "threads": 20,
+            "no_recursion": True,
+            "depth": 3,
+            "scan_limit": 4,
+            "parallelism": 2,
+            "rate_limit": 50,
+            "time_limit": "10m",
+            "collect_extensions": True,
+            "collect_backups": "bak,old",
+            "collect_words": True,
+            "verbosity": 2,
+            "json_output": True,
+            "output_file": "ferox.json",
+            "no_state": True,
+            "limit_bars": 5,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "feroxbuster"
+    assert request.options == (
+        "-w words.txt -x php,txt -m GET,POST -H 'X-Test: 1' "
+        "-b session=value -Q token=value -f -S 1234 -X '^ignore' "
+        "-W 20 -N 5 -C 404,403 -s 200,301,302 --unique -T 10 -r -k "
+        "-t 20 -n -d 3 -L 4 --parallel 2 --rate-limit 50 --time-limit 10m "
+        "-E -B bak,old -g -vv --json -o ferox.json --no-state --limit-bars 5"
     )
 
 
