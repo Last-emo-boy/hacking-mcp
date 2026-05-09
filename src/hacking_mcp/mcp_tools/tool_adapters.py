@@ -442,6 +442,56 @@ def _adapter_parameters(
             AdapterParameterSpec("protocol", str, "", "Protocol selector when supported."),
         ])
 
+    if tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}:
+        params.extend([
+            AdapterParameterSpec("sources", str, "", "Comma-separated OSINT sources when supported."),
+            AdapterParameterSpec("passive", bool, False, "Use passive enumeration when supported."),
+            AdapterParameterSpec("resolvers", str, "", "Resolver file path when supported."),
+            AdapterParameterSpec("api_key", str, "", "API key/profile name when supported."),
+            AdapterParameterSpec("output_file", str, "", "Output file path when supported."),
+            AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
+        ])
+
+    if tags & {"exploit", "iot", "router", "embedded"}:
+        params.extend([
+            AdapterParameterSpec("module", str, "", "Exploit/module path when supported."),
+            AdapterParameterSpec("rhost", str, "", "Remote host when supported."),
+            AdapterParameterSpec("rport", int, 0, "Remote port when supported; 0 leaves default."),
+            AdapterParameterSpec("username", str, "", "Username for authorized lab use."),
+            AdapterParameterSpec(
+                "password",
+                str,
+                "",
+                "Password for lab/authorized use; may be present in process/audit logs.",
+            ),
+            AdapterParameterSpec("payload", str, "", "Payload/profile selector when supported."),
+        ])
+
+    if tags & {"android", "malware", "keylogger", "reverse-shell"}:
+        params.extend([
+            AdapterParameterSpec("apk_path", str, "", "APK path when supported."),
+            AdapterParameterSpec("package_name", str, "", "Android package name when supported."),
+            AdapterParameterSpec("lhost", str, "", "Listener host for authorized lab use."),
+            AdapterParameterSpec("lport", int, 0, "Listener port when supported; 0 leaves default."),
+            AdapterParameterSpec("output_file", str, "", "Output file path when supported."),
+        ])
+
+    if tags & {"utility", "terminal", "multiplexer"}:
+        params.extend([
+            AdapterParameterSpec("command", str, "", "Command or shell profile when supported."),
+            AdapterParameterSpec("session_name", str, "", "Terminal/session name when supported."),
+            AdapterParameterSpec("layout", str, "", "Layout/profile name when supported."),
+        ])
+
+    if tags & {"scanner", "vuln", "recon", "app", "check"}:
+        params.extend([
+            AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
+            AdapterParameterSpec("timeout", int, 0, "Timeout in seconds when supported; 0 leaves default."),
+            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value when supported."),
+            AdapterParameterSpec("output_file", str, "", "Output file path when supported."),
+            AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
+        ])
+
     params.extend([
         AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
         AdapterParameterSpec(
@@ -633,6 +683,41 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "session_id", "--session")
         _add_value(tokens, kwargs, "listener", "--listener")
         _add_value(tokens, kwargs, "protocol", "--protocol")
+
+    if tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}:
+        _add_value(tokens, kwargs, "sources", "-sources")
+        _add_bool(tokens, kwargs, "passive", "-passive")
+        _add_value(tokens, kwargs, "resolvers", "-r")
+        _add_value(tokens, kwargs, "api_key", "--api-key")
+        _add_value(tokens, kwargs, "output_file", "-o")
+        _add_bool(tokens, kwargs, "json_output", "-json")
+
+    if tags & {"exploit", "iot", "router", "embedded"}:
+        _add_value(tokens, kwargs, "module", "--module")
+        _add_assignment(tokens, kwargs, "rhost", "RHOST")
+        _add_assignment(tokens, kwargs, "rport", "RPORT")
+        _add_value(tokens, kwargs, "username", "-u")
+        _add_value(tokens, kwargs, "password", "-p")
+        _add_value(tokens, kwargs, "payload", "--payload")
+
+    if tags & {"android", "malware", "keylogger", "reverse-shell"}:
+        _add_value(tokens, kwargs, "apk_path", "--apk")
+        _add_value(tokens, kwargs, "package_name", "--package")
+        _add_assignment(tokens, kwargs, "lhost", "LHOST")
+        _add_assignment(tokens, kwargs, "lport", "LPORT")
+        _add_value(tokens, kwargs, "output_file", "-o")
+
+    if tags & {"utility", "terminal", "multiplexer"}:
+        _add_value(tokens, kwargs, "command", "-c")
+        _add_value(tokens, kwargs, "session_name", "-s")
+        _add_value(tokens, kwargs, "layout", "-l")
+
+    if tags & {"scanner", "vuln", "recon", "app", "check"}:
+        _add_value(tokens, kwargs, "scan_depth", "--depth")
+        _add_value(tokens, kwargs, "timeout", "--timeout")
+        _add_value(tokens, kwargs, "user_agent", "--user-agent")
+        _add_value(tokens, kwargs, "output_file", "-o")
+        _add_bool(tokens, kwargs, "json_output", "--json")
 
     return tokens
 

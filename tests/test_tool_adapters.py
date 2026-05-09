@@ -82,6 +82,20 @@ def test_disabled_safe_categories_are_not_exposed(registry, safety):
         assert specs["howmanypeople"].exposed is False
 
 
+def test_every_adapter_has_tool_specific_parameters(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    base_params = {"target", "options", "confirm_authorized"}
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    missing = []
+    for tool in registry.list_all_tools():
+        params = set(adapter_parameter_names(tool, specs[tool.name]))
+        if not (params - base_params):
+            missing.append(tool.name)
+
+    assert missing == []
+
+
 @pytest.mark.asyncio
 async def test_register_adds_every_tool_name(registry, safety):
     from mcp.server.fastmcp import FastMCP
