@@ -13,7 +13,10 @@ from hacking_mcp.safety import SafetyPolicy
 from hacking_mcp.runner import get_environment
 from hacking_mcp.environment import get_tools_dir
 from hacking_mcp.ai_help import format_ai_help
-from hacking_mcp.mcp_tools.tool_adapters import build_adapter_specs
+from hacking_mcp.mcp_tools.tool_adapters import (
+    adapter_parameter_names,
+    build_adapter_specs,
+)
 
 
 def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
@@ -204,9 +207,13 @@ def register(mcp: FastMCP, registry: ToolRegistry, safety: SafetyPolicy):
             reason = ""
             if not spec.exposed:
                 reason = f" - {spec.blocked_reason or 'not executable by policy'}"
+            tool = registry.get_tool(spec.tool_name)
+            params = adapter_parameter_names(tool, spec) if tool else []
+            param_list = ", ".join(params)
             lines.append(
                 f"- `{spec.mcp_name}` -> `{spec.tool_name}` "
-                f"({spec.category}, {spec.safety_tier}, {state}{confirm}){reason}"
+                f"({spec.category}, {spec.safety_tier}, {state}{confirm}; "
+                f"params: {param_list}){reason}"
             )
 
         if len(specs) > limit:

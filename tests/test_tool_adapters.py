@@ -102,6 +102,58 @@ async def test_register_adds_every_tool_name(registry, safety):
 
 
 @pytest.mark.asyncio
+async def test_adapter_schema_includes_tool_specific_parameters(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock()
+
+    register(mcp, orchestrator, registry, safety)
+    tools = {tool.name: tool for tool in await mcp.list_tools()}
+
+    nmap_schema = tools["security_tool_nmap"].inputSchema["properties"]
+    assert {"target", "ports", "scan_type", "service_version", "timing"}.issubset(
+        nmap_schema
+    )
+
+    sqlmap_schema = tools["security_tool_sqlmap"].inputSchema["properties"]
+    assert {"target", "data", "dbms", "risk", "level", "enumerate_databases"}.issubset(
+        sqlmap_schema
+    )
+
+
+@pytest.mark.asyncio
+async def test_structured_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_nmap",
+        {
+            "target": "127.0.0.1",
+            "ports": "80,443",
+            "service_version": True,
+            "timing": 4,
+            "options": "--reason",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "nmap"
+    assert request.target == "127.0.0.1"
+    assert request.options == "-p 80,443 -sV -T4 --reason"
+
+
+@pytest.mark.asyncio
 async def test_blocked_adapter_does_not_execute_orchestrator(registry, safety):
     from mcp.server.fastmcp import FastMCP
     from unittest.mock import AsyncMock, MagicMock

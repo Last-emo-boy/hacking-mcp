@@ -11,7 +11,7 @@
 [![Tools](https://img.shields.io/badge/Tools-184-00FF88?style=flat-square)](.)
 [![Categories](https://img.shields.io/badge/Categories-20-7B61FF?style=flat-square)](.)
 [![MCP Endpoints](https://img.shields.io/badge/MCP_Endpoints-209-FF61DC?style=flat-square)](.)
-[![Tests](https://img.shields.io/badge/Tests-216_passing-00FF88?style=flat-square)](.)
+[![Tests](https://img.shields.io/badge/Tests-218_passing-00FF88?style=flat-square)](.)
 [![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-FFA116?style=flat-square)](.)
 
 [![Star](https://img.shields.io/github/stars/Last-emo-boy/hacking-mcp?style=social)](.)
@@ -146,6 +146,9 @@ The server exposes 25 base workflow endpoints plus 184 generated per-tool adapte
 `security_tool_<tool_name>`. Safety-eligible adapters execute through the normal
 orchestrator gates; dangerous, archived, no-command, or policy-disabled adapters return
 policy information only and never execute the underlying tool.
+Adapters expose generated tool-specific parameters such as `ports`, `wordlist`,
+`severity`, `risk`, and `profile` where applicable, while keeping `options` for raw
+CLI flags.
 
 ### Discovery
 

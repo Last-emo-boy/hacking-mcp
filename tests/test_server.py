@@ -67,6 +67,7 @@ class TestServerCreation:
         assert "Executable adapters: 123" in result
         assert "Policy/info-only adapters: 61" in result
         assert "policy/info-only" in result
+        assert "params:" in result
         assert content
 
 
