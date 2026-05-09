@@ -415,6 +415,11 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "results": "verified,unknown",
         "concurrency": 12,
         "filter_entropy": 3.0,
+        "source_ip": "192.168.1.200",
+        "source_port": 61000,
+        "output_xml": "scan.xml",
+        "include_file": "targets.txt",
+        "readscan": "scan.bin",
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -443,7 +448,26 @@ def _adapter_parameters(
     ]
     tags = set(tool.tags)
 
-    if "port-scan" in tags or "network" in tags:
+    if tool.name == "masscan":
+        params.extend([
+            AdapterParameterSpec("ports", str, "", "Ports or ranges to scan, for example 80,8000-8100."),
+            AdapterParameterSpec("rate", int, 0, "Transmit rate in packets per second; 0 leaves default."),
+            AdapterParameterSpec("config_file", str, "", "Masscan configuration file."),
+            AdapterParameterSpec("echo", bool, False, "Dump current configuration and exit."),
+            AdapterParameterSpec("banners", bool, False, "Grab simple banner information where supported."),
+            AdapterParameterSpec("source_ip", str, "", "Source IP address for banner checks."),
+            AdapterParameterSpec("source_port", int, 0, "Source port for banner checks; 0 leaves default."),
+            AdapterParameterSpec("exclude_file", str, "", "File containing excluded IP ranges."),
+            AdapterParameterSpec("include_file", str, "", "File containing included IP ranges."),
+            AdapterParameterSpec("output_xml", str, "", "XML output file path."),
+            AdapterParameterSpec("output_json", str, "", "JSON output file path."),
+            AdapterParameterSpec("output_list", str, "", "List output file path."),
+            AdapterParameterSpec("output_grepable", str, "", "Grepable output file path."),
+            AdapterParameterSpec("output_format", str, "", "Output format, for example xml, json, list, grepable."),
+            AdapterParameterSpec("output_filename", str, "", "Output filename when using output_format."),
+            AdapterParameterSpec("readscan", str, "", "Read binary scan results from file."),
+        ])
+    elif "port-scan" in tags or "network" in tags:
         params.extend([
             AdapterParameterSpec("ports", str, "", "Ports or ranges, for example 80,443 or 1-1000."),
             AdapterParameterSpec(
@@ -818,7 +842,7 @@ def _adapter_parameters(
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"nmap", "nuclei", "httpx", "amass"}
+        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan"}
     ):
         params.extend([
             AdapterParameterSpec("scan_depth", int, 0, "Scan depth when supported; 0 leaves default."),
@@ -951,7 +975,7 @@ def _adapter_parameters(
             AdapterParameterSpec("headless", bool, False, "Run in headless mode when supported."),
         ])
 
-    if tool.name in {"masscan", "rustscan"}:
+    if tool.name == "rustscan":
         params.extend([
             AdapterParameterSpec("exclude_file", str, "", "File containing targets to exclude when supported."),
             AdapterParameterSpec("adapter_ip", str, "", "Source/adapter IP address when supported."),
@@ -1149,7 +1173,24 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
     tokens: list[str] = []
     tags = set(tool.tags)
 
-    if "port-scan" in tags or "network" in tags:
+    if tool.name == "masscan":
+        _add_value(tokens, kwargs, "ports", "-p")
+        _add_value(tokens, kwargs, "rate", "--rate")
+        _add_value(tokens, kwargs, "config_file", "-c")
+        _add_bool(tokens, kwargs, "echo", "--echo")
+        _add_bool(tokens, kwargs, "banners", "--banners")
+        _add_value(tokens, kwargs, "source_ip", "--source-ip")
+        _add_value(tokens, kwargs, "source_port", "--source-port")
+        _add_value(tokens, kwargs, "exclude_file", "--excludefile")
+        _add_value(tokens, kwargs, "include_file", "--includefile")
+        _add_value(tokens, kwargs, "output_xml", "-oX")
+        _add_value(tokens, kwargs, "output_json", "-oJ")
+        _add_value(tokens, kwargs, "output_list", "-oL")
+        _add_value(tokens, kwargs, "output_grepable", "-oG")
+        _add_value(tokens, kwargs, "output_format", "--output-format")
+        _add_value(tokens, kwargs, "output_filename", "--output-filename")
+        _add_value(tokens, kwargs, "readscan", "--readscan")
+    elif "port-scan" in tags or "network" in tags:
         _add_value(tokens, kwargs, "ports", "-p")
         _add_scan_type(tokens, kwargs)
         _add_bool(tokens, kwargs, "service_version", "-sV")
@@ -1458,7 +1499,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
 
     if (
         tags & {"scanner", "vuln", "recon", "app", "check"}
-        and tool.name not in {"nmap", "nuclei", "httpx", "amass"}
+        and tool.name not in {"nmap", "nuclei", "httpx", "amass", "masscan"}
     ):
         _add_value(tokens, kwargs, "scan_depth", "--depth")
         _add_value(tokens, kwargs, "timeout", "--timeout")
@@ -1558,7 +1599,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "entrypoint", "--entrypoint")
         _add_bool(tokens, kwargs, "headless", "--headless")
 
-    if tool.name in {"masscan", "rustscan"}:
+    if tool.name == "rustscan":
         _add_value(tokens, kwargs, "exclude_file", "--excludefile")
         _add_value(tokens, kwargs, "adapter_ip", "--adapter-ip")
         _add_value(tokens, kwargs, "adapter_port", "--adapter-port")

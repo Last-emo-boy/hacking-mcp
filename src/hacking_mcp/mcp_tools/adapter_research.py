@@ -284,6 +284,34 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "wordlist_masks",
         ),
     ),
+    "masscan": SourceReview(
+        note=(
+            "Reviewed against the upstream masscan README for port selection, "
+            "rate/config echo, banner-grabbing source settings, include/exclude "
+            "files, output formats/files, and readscan replay."
+        ),
+        references=(
+            "https://github.com/robertdavidgraham/masscan",
+        ),
+        verified_parameters=(
+            "ports",
+            "rate",
+            "config_file",
+            "echo",
+            "banners",
+            "source_ip",
+            "source_port",
+            "exclude_file",
+            "include_file",
+            "output_xml",
+            "output_json",
+            "output_list",
+            "output_grepable",
+            "output_format",
+            "output_filename",
+            "readscan",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}
