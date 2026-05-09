@@ -184,6 +184,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["testssl"].unverified_parameters == ()
     assert any("drwetter/testssl.sh" in item for item in records["testssl"].evidence)
 
+    assert records["dalfox"].source_status == "source-reviewed"
+    assert records["dalfox"].unverified_parameters == ()
+    assert any("dalfox.hahwul.com" in item for item in records["dalfox"].evidence)
+
     assert records["wafw00f"].source_status == "source-reviewed"
     assert records["wafw00f"].unverified_parameters == ()
     assert any("EnableSecurity/wafw00f" in item for item in records["wafw00f"].evidence)
@@ -369,6 +373,20 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "show_each", "color", "debug", "log", "json_output", "jsonfile",
         "csv_output", "csvfile", "html_output", "htmlfile", "severity",
     }.issubset(testssl_schema)
+
+    dalfox_schema = tools["security_tool_dalfox"].inputSchema["properties"]
+    assert {
+        "blind_callback", "config_file", "cookies", "custom_payload", "data",
+        "deep_domxss", "follow_redirects", "headers", "ignore_param",
+        "ignore_return", "method", "parameter", "proxy", "timeout",
+        "user_agent", "waf_evasion", "max_cpu", "workers", "mining_dict",
+        "mining_dom", "skip_mining_all", "only_custom_payload",
+        "only_discovery", "skip_bav", "skip_discovery", "skip_headless",
+        "skip_xss_scanning", "format", "found_action", "grep_file",
+        "har_file_path", "no_color", "only_poc", "output_file",
+        "output_request", "output_response", "poc_type", "report",
+        "report_format", "silence",
+    }.issubset(dalfox_schema)
 
     wafw00f_schema = tools["security_tool_wafw00f"].inputSchema["properties"]
     assert {
@@ -1100,6 +1118,104 @@ async def test_nikto_source_reviewed_parameters_build_cli_options(registry, safe
         "-Pause 1 -Plugins tests -port 443 -root /app -ssl -Tuning x "
         "-timeout 10 -useragent hacking-mcp -useproxy -vhost example.test "
         "-404code 404 -404string 'not found'"
+    )
+
+
+@pytest.mark.asyncio
+async def test_dalfox_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_dalfox",
+        {
+            "target": "https://example.test/?q=1",
+            "confirm_authorized": True,
+            "blind_callback": "https://callback.test",
+            "config_file": "dalfox.toml",
+            "cookies": "a=b",
+            "custom_alert_type": "str",
+            "custom_alert_value": "alert",
+            "custom_payload": "payloads.txt",
+            "data": "q=1",
+            "deep_domxss": True,
+            "delay": 100,
+            "follow_redirects": True,
+            "force_headless_verification": True,
+            "headers": "X-Test: 1",
+            "ignore_param": "token",
+            "ignore_return": "302",
+            "method": "POST",
+            "parameter": "q",
+            "proxy": "http://127.0.0.1:8080",
+            "remote_payloads": "portswigger",
+            "timeout": 10,
+            "user_agent": "hacking-mcp",
+            "waf_evasion": True,
+            "max_cpu": 80,
+            "workers": 20,
+            "mining_dict": True,
+            "mining_dict_word": "extra",
+            "mining_dom": True,
+            "remote_wordlists": "burp",
+            "skip_mining_all": True,
+            "skip_mining_dict": True,
+            "skip_mining_dom": True,
+            "only_custom_payload": True,
+            "only_discovery": True,
+            "skip_bav": True,
+            "skip_discovery": True,
+            "skip_grepping": True,
+            "skip_headless": True,
+            "skip_xss_scanning": True,
+            "use_bav": True,
+            "debug": True,
+            "format": "json",
+            "found_action": "notify.sh",
+            "found_action_shell": "bash",
+            "grep_file": "gf.json",
+            "har_file_path": "dalfox.har",
+            "no_color": True,
+            "no_spinner": True,
+            "only_poc": "g",
+            "output_file": "dalfox.json",
+            "output_all": True,
+            "output_request": True,
+            "output_response": True,
+            "poc_type": "curl",
+            "report": True,
+            "report_format": "json",
+            "silence": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "dalfox"
+    assert request.confirm_authorized is True
+    assert request.options == (
+        "-b https://callback.test --config dalfox.toml -C a=b "
+        "--custom-alert-type str --custom-alert-value alert "
+        "--custom-payload payloads.txt -d q=1 --deep-domxss --delay 100 "
+        "--follow-redirects --force-headless-verification -H 'X-Test: 1' "
+        "--ignore-param token --ignore-return 302 -X POST -p q "
+        "--proxy http://127.0.0.1:8080 --remote-payloads portswigger "
+        "--timeout 10 --user-agent hacking-mcp --waf-evasion --max-cpu 80 "
+        "-w 20 --mining-dict --mining-dict-word extra --mining-dom "
+        "--remote-wordlists burp --skip-mining-all --skip-mining-dict "
+        "--skip-mining-dom --only-custom-payload --only-discovery --skip-bav "
+        "--skip-discovery --skip-grepping --skip-headless --skip-xss-scanning "
+        "--use-bav --debug --format json --found-action notify.sh "
+        "--found-action-shell bash --grep gf.json --har-file-path dalfox.har "
+        "--no-color --no-spinner --only-poc g -o dalfox.json --output-all "
+        "--output-request --output-response --poc-type curl --report "
+        "--report-format json --silence"
     )
 
 
