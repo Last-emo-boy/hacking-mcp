@@ -127,6 +127,7 @@ def test_split_adapter_registry_includes_migrated_tools():
 
     migrated = {
         "binwalk",
+        "frida",
         "haiti",
         "owasp-zap",
         "pspy",
@@ -285,6 +286,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["whatweb"].source_status == "source-reviewed"
     assert records["whatweb"].unverified_parameters == ()
     assert any("urbanadventurer/WhatWeb" in item for item in records["whatweb"].evidence)
+
+    assert records["frida"].source_status == "source-reviewed"
+    assert records["frida"].unverified_parameters == ()
+    assert any("frida/frida-tools" in item for item in records["frida"].evidence)
 
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
@@ -487,6 +492,19 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
 
     mobsf_schema = tools["security_tool_mobsf"].inputSchema["properties"]
     assert {"bind_host", "bind_port"}.issubset(mobsf_schema)
+
+    frida_schema = tools["security_tool_frida"].inputSchema["properties"]
+    assert {
+        "device_id", "usb", "remote", "host", "certificate", "origin",
+        "token", "keepalive_interval", "device_option", "p2p",
+        "stun_server", "relay", "spawn_file", "attach_frontmost",
+        "attach_name", "attach_identifier", "attach_pid", "await_spawn",
+        "stdio", "aux", "realm", "runtime", "debug", "squelch_crash",
+        "options_file", "load_script", "parameters_json", "cmodule",
+        "toolchain", "codeshare", "eval_code", "quiet", "timeout", "pause",
+        "output_file", "eternalize", "exit_on_error", "kill_on_exit",
+        "auto_perform", "auto_reload", "no_auto_reload", "version",
+    }.issubset(frida_schema)
 
     masscan_schema = tools["security_tool_masscan"].inputSchema["properties"]
     assert {
@@ -2548,6 +2566,49 @@ async def test_mobsf_source_reviewed_parameters_build_cli_options(registry, safe
     assert request.tool_name == "mobsf"
     assert request.target == ""
     assert request.options == "127.0.0.1:8080"
+
+
+@pytest.mark.asyncio
+async def test_frida_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_frida",
+        {
+            "target": "com.example.app",
+            "usb": True,
+            "spawn_file": "com.example.app",
+            "load_script": "hook.js",
+            "parameters_json": '{"mode":"test"}',
+            "eval_code": "console.log(1)",
+            "quiet": True,
+            "timeout": 10,
+            "pause": True,
+            "output_file": "frida.log",
+            "runtime": "v8",
+            "debug": True,
+            "exit_on_error": True,
+            "no_auto_reload": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "frida"
+    assert request.target == "com.example.app"
+    assert request.options_before_target is True
+    assert request.options == (
+        "-U -f com.example.app --runtime v8 --debug -l hook.js "
+        "-P '{\"mode\":\"test\"}' -e 'console.log(1)' -q -t 10 --pause "
+        "-o frida.log --exit-on-error --no-auto-reload"
+    )
 
 
 @pytest.mark.asyncio

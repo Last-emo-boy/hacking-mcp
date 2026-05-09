@@ -12,6 +12,7 @@ from hacking_mcp.mcp_tools.tool_adapters import (
     adapter_parameter_names,
     build_adapter_specs,
 )
+from hacking_mcp.mcp_tools.adapters import has_split_adapter
 from hacking_mcp.registry import ToolRegistry
 from hacking_mcp.safety import SafetyPolicy
 
@@ -395,6 +396,65 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
         verified_parameters=(
             "bind_host",
             "bind_port",
+        ),
+    ),
+    "frida": SourceReview(
+        note=(
+            "Reviewed against upstream frida-tools REPL and application "
+            "argparse definitions for device/remote connection selectors, "
+            "target attachment/spawn modes, stdio/aux/realm/runtime/debug "
+            "controls, options files and version output, script loading, "
+            "parameters, CModule/codeshare/eval inputs, quiet/timeout/pause "
+            "behavior, logging, lifecycle, Java.perform, and auto-reload flags."
+        ),
+        references=(
+            "https://github.com/frida/frida-tools",
+            "https://raw.githubusercontent.com/frida/frida-tools/main/frida_tools/application.py",
+            "https://raw.githubusercontent.com/frida/frida-tools/main/frida_tools/repl.py",
+        ),
+        verified_parameters=(
+            "device_id",
+            "usb",
+            "remote",
+            "host",
+            "certificate",
+            "origin",
+            "token",
+            "keepalive_interval",
+            "device_option",
+            "p2p",
+            "stun_server",
+            "relay",
+            "spawn_file",
+            "attach_frontmost",
+            "attach_name",
+            "attach_identifier",
+            "attach_pid",
+            "await_spawn",
+            "stdio",
+            "aux",
+            "realm",
+            "runtime",
+            "debug",
+            "squelch_crash",
+            "options_file",
+            "load_script",
+            "parameters_json",
+            "cmodule",
+            "toolchain",
+            "codeshare",
+            "eval_code",
+            "quiet",
+            "timeout",
+            "pause",
+            "output_file",
+            "eternalize",
+            "exit_on_error",
+            "kill_on_exit",
+            "auto_perform",
+            "auto_reload",
+            "no_auto_reload",
+            "version",
         ),
     ),
     "steghide": SourceReview(
@@ -1543,6 +1603,7 @@ def build_adapter_research_records(
         source_review = SOURCE_REVIEWED_TOOLS.get(tool.name)
         source_reviewed = source_review is not None
         named_override = tool.name in NAMED_OVERRIDE_TOOL_NAMES
+        split_adapter = has_split_adapter(tool.name)
         verified_params = sorted(source_review.verified_parameters) if source_review else []
         unverified_params = (
             sorted(set(reviewable_params) - set(verified_params))
@@ -1561,7 +1622,9 @@ def build_adapter_research_records(
             "registry metadata: category, tags, run_command, install_commands, project_url",
             f"generated adapter parameter schema with {len(params)} parameters",
         ]
-        if named_override:
+        if split_adapter:
+            evidence.append("dedicated split adapter module is registered")
+        elif named_override:
             evidence.append("tool-specific named override exists in tool_adapters.py")
         else:
             evidence.append("parameters are derived from category/tag adapter rules")

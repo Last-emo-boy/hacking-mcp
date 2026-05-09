@@ -5,6 +5,7 @@ from collections.abc import Callable
 from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 from hacking_mcp.mcp_tools.adapters import (
     binwalk,
+    frida,
     haiti,
     hashcat,
     jadx,
@@ -27,6 +28,7 @@ OptionsBuilder = Callable[[dict], list[str]]
 
 PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
     "binwalk": binwalk.parameters,
+    "frida": frida.parameters,
     "haiti": haiti.parameters,
     "hashcat": hashcat.parameters,
     "jadx": jadx.parameters,
@@ -44,6 +46,7 @@ PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
 
 OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
     "binwalk": binwalk.build_options,
+    "frida": frida.build_options,
     "haiti": haiti.build_options,
     "hashcat": hashcat.build_options,
     "jadx": jadx.build_options,
