@@ -160,6 +160,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["katana"].unverified_parameters == ()
     assert any("katana/usage" in item for item in records["katana"].evidence)
 
+    assert records["arjun"].source_status == "source-reviewed"
+    assert records["arjun"].unverified_parameters == ()
+    assert any("Arjun/wiki/Usage" in item for item in records["arjun"].evidence)
+
     assert records["gitleaks"].source_status == "source-reviewed"
     assert records["gitleaks"].unverified_parameters == ()
     assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
@@ -306,6 +310,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "input_file", "depth", "strategy", "js_crawl", "known_files",
         "automatic_form_fill", "headless", "proxy", "rate_limit", "json_output",
     }.issubset(katana_schema)
+
+    arjun_schema = tools["security_tool_arjun"].inputSchema["properties"]
+    assert {
+        "input_file", "output_json", "output_burp", "output_text", "method",
+        "include_data", "threads", "delay", "timeout", "stable", "rate_limit",
+        "wordlist", "chunk_size", "disable_redirects", "passive", "headers",
+    }.issubset(arjun_schema)
 
     evil_winrm_schema = tools["security_tool_evil_winrm"].inputSchema["properties"]
     assert {"ssl", "key_file", "cert_file", "upload", "download"}.issubset(
@@ -748,6 +759,52 @@ async def test_katana_source_reviewed_parameters_build_cli_options(registry, saf
         "-aff -fx -headless -nos -system-chrome -proxy http://127.0.0.1:8080 "
         "-H 'X-Test: 1' -timeout 10 -retry 2 -rl 50 -c 10 -p 2 "
         "-delay 1s -ct 5m -o katana.jsonl -jsonl -field url -silent -no-color"
+    )
+
+
+@pytest.mark.asyncio
+async def test_arjun_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_arjun",
+        {
+            "target": "https://example.test",
+            "input_file": "targets.txt",
+            "output_json": "arjun.json",
+            "output_burp": "burp.xml",
+            "output_text": "arjun.txt",
+            "method": "POST",
+            "include_data": "api_key=test",
+            "threads": 20,
+            "delay": 1,
+            "timeout": 10,
+            "stable": True,
+            "rate_limit": 5,
+            "wordlist": "large",
+            "chunk_size": 250,
+            "disable_redirects": True,
+            "passive": "-",
+            "casing": "foo_bar",
+            "headers": "X-Test: 1",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "arjun"
+    assert request.options == (
+        "-i targets.txt -oJ arjun.json -oB burp.xml -oT arjun.txt "
+        "-m POST --include api_key=test -t 20 -d 1 -T 10 --stable "
+        "--ratelimit 5 -w large -c 250 --disable-redirects --passive - "
+        "--casing foo_bar --headers 'X-Test: 1'"
     )
 
 

@@ -426,6 +426,11 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
         "delay": "1s",
         "crawl_duration": "5m",
         "field": "url",
+        "output_json": "result.json",
+        "output_text": "result.txt",
+        "include_data": "api_key=test",
+        "chunk_size": 250,
+        "casing": "foo_bar",
     }
     for name in names:
         if name in {"target", "options", "confirm_authorized"}:
@@ -547,6 +552,26 @@ def _adapter_parameters(
             AdapterParameterSpec("field", str, "", "Field to display, for example url or qurl."),
             AdapterParameterSpec("silent", bool, False, "Show only output."),
             AdapterParameterSpec("no_color", bool, False, "Disable colored output."),
+        ])
+    elif tool.name == "arjun":
+        params.extend([
+            AdapterParameterSpec("input_file", str, "", "Targets file, Burp export, or raw request file."),
+            AdapterParameterSpec("output_json", str, "", "JSON output file path."),
+            AdapterParameterSpec("output_burp", str, "", "BurpSuite output target/path."),
+            AdapterParameterSpec("output_text", str, "", "Text output file path."),
+            AdapterParameterSpec("method", str, "", "HTTP method: GET, POST, JSON, or XML."),
+            AdapterParameterSpec("include_data", str, "", "Persistent data to include in each request."),
+            AdapterParameterSpec("threads", int, 0, "Number of threads; 0 leaves default."),
+            AdapterParameterSpec("delay", int, 0, "Delay between requests in seconds; 0 leaves default."),
+            AdapterParameterSpec("timeout", int, 0, "HTTP request timeout in seconds; 0 leaves default."),
+            AdapterParameterSpec("stable", bool, False, "Enable stable mode for rate-limited targets."),
+            AdapterParameterSpec("rate_limit", int, 0, "Requests per second; 0 leaves default."),
+            AdapterParameterSpec("wordlist", str, "", "Wordlist path or built-in size: small, medium, large."),
+            AdapterParameterSpec("chunk_size", int, 0, "Parameters sent per request; 0 leaves default."),
+            AdapterParameterSpec("disable_redirects", bool, False, "Disable HTTP redirects."),
+            AdapterParameterSpec("passive", str, "", "Passive discovery domain, or '-' to use target URL domain."),
+            AdapterParameterSpec("casing", str, "", "Parameter casing style."),
+            AdapterParameterSpec("headers", str, "", "Custom HTTP headers."),
         ])
     elif tool.name == "httpx":
         params.extend([
@@ -1048,15 +1073,6 @@ def _adapter_parameters(
             AdapterParameterSpec("add_slash", bool, False, "Append trailing slash to discovered paths when supported."),
         ])
 
-    if tool.name == "arjun":
-        params.extend([
-            AdapterParameterSpec("depth", int, 0, "Crawl or discovery depth when supported; 0 leaves default."),
-            AdapterParameterSpec("scope", str, "", "Scope selector such as fqdn/rdir when supported."),
-            AdapterParameterSpec("known_files", str, "", "Known files selector when supported."),
-            AdapterParameterSpec("headless", bool, False, "Enable headless crawling when supported."),
-            AdapterParameterSpec("passive", bool, False, "Enable passive discovery when supported."),
-        ])
-
     if tool.name in {"owasp-zap", "xspear", "xsscon"}:
         params.extend([
             AdapterParameterSpec("scan_policy", str, "", "Scan policy/profile when supported."),
@@ -1304,6 +1320,24 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "field", "-field")
         _add_bool(tokens, kwargs, "silent", "-silent")
         _add_bool(tokens, kwargs, "no_color", "-no-color")
+    elif tool.name == "arjun":
+        _add_value(tokens, kwargs, "input_file", "-i")
+        _add_value(tokens, kwargs, "output_json", "-oJ")
+        _add_value(tokens, kwargs, "output_burp", "-oB")
+        _add_value(tokens, kwargs, "output_text", "-oT")
+        _add_value(tokens, kwargs, "method", "-m")
+        _add_value(tokens, kwargs, "include_data", "--include")
+        _add_value(tokens, kwargs, "threads", "-t")
+        _add_value(tokens, kwargs, "delay", "-d")
+        _add_value(tokens, kwargs, "timeout", "-T")
+        _add_bool(tokens, kwargs, "stable", "--stable")
+        _add_value(tokens, kwargs, "rate_limit", "--ratelimit")
+        _add_value(tokens, kwargs, "wordlist", "-w")
+        _add_value(tokens, kwargs, "chunk_size", "-c")
+        _add_bool(tokens, kwargs, "disable_redirects", "--disable-redirects")
+        _add_value(tokens, kwargs, "passive", "--passive")
+        _add_value(tokens, kwargs, "casing", "--casing")
+        _add_value(tokens, kwargs, "headers", "--headers")
     elif tool.name == "httpx":
         _add_value(tokens, kwargs, "input_file", "-l")
         _add_bool(tokens, kwargs, "status_code", "-sc")
@@ -1707,13 +1741,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "filter_size", "-fs")
         _add_value(tokens, kwargs, "filter_words", "-fw")
         _add_bool(tokens, kwargs, "add_slash", "--add-slash")
-
-    if tool.name == "arjun":
-        _add_value(tokens, kwargs, "depth", "-d")
-        _add_value(tokens, kwargs, "scope", "-scope")
-        _add_value(tokens, kwargs, "known_files", "-known-files")
-        _add_bool(tokens, kwargs, "headless", "-headless")
-        _add_bool(tokens, kwargs, "passive", "-passive")
 
     if tool.name in {"owasp-zap", "xspear", "xsscon"}:
         _add_value(tokens, kwargs, "scan_policy", "--scan-policy")

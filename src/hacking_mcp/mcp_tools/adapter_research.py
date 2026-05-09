@@ -384,6 +384,37 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "no_color",
         ),
     ),
+    "arjun": SourceReview(
+        note=(
+            "Reviewed against the upstream Arjun usage guide for target files, "
+            "JSON/Burp/text outputs, HTTP method and included data, thread/"
+            "delay/timeout/rate controls, wordlist/chunk settings, redirects, "
+            "passive discovery, casing, and custom headers."
+        ),
+        references=(
+            "https://github.com/s0md3v/Arjun",
+            "https://github.com/s0md3v/Arjun/wiki/Usage",
+        ),
+        verified_parameters=(
+            "input_file",
+            "output_json",
+            "output_burp",
+            "output_text",
+            "method",
+            "include_data",
+            "threads",
+            "delay",
+            "timeout",
+            "stable",
+            "rate_limit",
+            "wordlist",
+            "chunk_size",
+            "disable_redirects",
+            "passive",
+            "casing",
+            "headers",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}
