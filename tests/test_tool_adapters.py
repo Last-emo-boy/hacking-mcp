@@ -172,6 +172,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["feroxbuster"].unverified_parameters == ()
     assert any("feroxbuster" in item for item in records["feroxbuster"].evidence)
 
+    assert records["dirsearch"].source_status == "source-reviewed"
+    assert records["dirsearch"].unverified_parameters == ()
+    assert any("maurosoria/dirsearch" in item for item in records["dirsearch"].evidence)
+
     assert records["gitleaks"].source_status == "source-reviewed"
     assert records["gitleaks"].unverified_parameters == ()
     assert any("gitleaks/gitleaks" in item for item in records["gitleaks"].evidence)
@@ -326,6 +330,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "status_codes", "follow_redirects", "insecure", "no_recursion", "depth",
         "rate_limit", "collect_extensions", "verbosity", "json_output",
     }.issubset(feroxbuster_schema)
+
+    dirsearch_schema = tools["security_tool_dirsearch"].inputSchema["properties"]
+    assert {
+        "wordlist", "extensions", "include_status", "exclude_status",
+        "exclude_sizes", "recursive", "recursion_depth", "method", "headers",
+        "follow_redirects", "proxy", "max_rate", "json_report", "no_color",
+    }.issubset(dirsearch_schema)
 
     katana_schema = tools["security_tool_katana"].inputSchema["properties"]
     assert {
@@ -932,6 +943,68 @@ async def test_feroxbuster_source_reviewed_parameters_build_cli_options(registry
         "-W 20 -N 5 -C 404,403 -s 200,301,302 --unique -T 10 -r -k "
         "-t 20 -n -d 3 -L 4 --parallel 2 --rate-limit 50 --time-limit 10m "
         "-E -B bak,old -g -vv --json -o ferox.json --no-state --limit-bars 5"
+    )
+
+
+@pytest.mark.asyncio
+async def test_dirsearch_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_dirsearch",
+        {
+            "target": "https://example.test",
+            "wordlist": "words.txt",
+            "extensions": "php,txt",
+            "include_status": "200,301,302",
+            "exclude_status": "404,403",
+            "exclude_sizes": "0B",
+            "exclude_text": "not found",
+            "prefixes": "admin",
+            "suffixes": "backup",
+            "threads": 20,
+            "recursive": True,
+            "recursion_depth": 3,
+            "subdirs": "api,admin",
+            "method": "POST",
+            "data": "a=b",
+            "headers": "X-Test: 1",
+            "follow_redirects": True,
+            "random_agent": True,
+            "user_agent": "hacking-mcp",
+            "cookies": "session=value",
+            "proxy": "http://127.0.0.1:8080",
+            "timeout": 10,
+            "delay": "1s",
+            "max_rate": 50,
+            "retries": 2,
+            "format": "json",
+            "output_file": "dirsearch.out",
+            "json_report": "dirsearch.json",
+            "quiet": True,
+            "full_url": True,
+            "no_color": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "dirsearch"
+    assert request.options == (
+        "-w words.txt -e php,txt -i 200,301,302 -x 404,403 -X 0B "
+        "--exclude-text 'not found' --prefixes admin --suffixes backup "
+        "-t 20 -r -R 3 --subdirs api,admin -m POST -d a=b -H 'X-Test: 1' "
+        "-F --random-agent --user-agent hacking-mcp --cookie session=value "
+        "--proxy http://127.0.0.1:8080 --timeout 10 --delay 1s --max-rate 50 "
+        "--retries 2 --format json -o dirsearch.out --json-report dirsearch.json "
+        "--quiet --full-url --no-color"
     )
 
 

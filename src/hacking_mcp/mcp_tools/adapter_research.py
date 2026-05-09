@@ -504,6 +504,62 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "limit_bars",
         ),
     ),
+    "dirsearch": SourceReview(
+        note=(
+            "Reviewed against the upstream dirsearch README Options section for "
+            "wordlists/extensions, status/size/text/regex filters, prefixes/"
+            "suffixes, recursion controls, HTTP method/data/headers, redirect/"
+            "agent/cookie/proxy/rate settings, report formats, output, quiet, "
+            "full-url, and color controls."
+        ),
+        references=(
+            "https://github.com/maurosoria/dirsearch",
+        ),
+        verified_parameters=(
+            "wordlist",
+            "extensions",
+            "include_status",
+            "exclude_status",
+            "exclude_sizes",
+            "exclude_text",
+            "exclude_regex",
+            "prefixes",
+            "suffixes",
+            "threads",
+            "recursive",
+            "deep_recursive",
+            "force_recursive",
+            "recursion_depth",
+            "recursion_status",
+            "subdirs",
+            "exclude_subdirs",
+            "method",
+            "data",
+            "headers",
+            "header_list",
+            "follow_redirects",
+            "random_agent",
+            "user_agent",
+            "cookies",
+            "proxy",
+            "proxy_list",
+            "timeout",
+            "delay",
+            "max_rate",
+            "retries",
+            "format",
+            "output_file",
+            "json_report",
+            "plain_text_report",
+            "csv_report",
+            "markdown_report",
+            "xml_report",
+            "sqlite_report",
+            "quiet",
+            "full_url",
+            "no_color",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}
