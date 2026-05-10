@@ -230,6 +230,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["striker"].unverified_parameters == ()
     assert any("s0md3v/Striker" in item for item in records["striker"].evidence)
 
+    assert records["recondog"].source_status == "source-reviewed"
+    assert records["recondog"].unverified_parameters == ()
+    assert any("s0md3v/ReconDog" in item for item in records["recondog"].evidence)
+
     assert records["katana"].source_status == "source-reviewed"
     assert records["katana"].unverified_parameters == ()
     assert any("katana/usage" in item for item in records["katana"].evidence)
@@ -1885,6 +1889,47 @@ def test_striker_source_reviewed_and_previewable(registry, safety):
     )
     assert preview["target"] == "example.com"
     assert preview["options"] == ""
+
+
+def test_recondog_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["recondog"].source_status == "source-reviewed"
+    assert records["recondog"].unverified_parameters == ()
+    assert records["recondog"].gap == ""
+    assert any("s0md3v/ReconDog" in item for item in records["recondog"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("recondog"), specs["recondog"])
+    for removed in (
+        "api_key",
+        "json_output",
+        "output_file",
+        "passive",
+        "resolvers",
+        "scan_depth",
+        "sources",
+        "timeout",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "choice" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("recondog"),
+        specs["recondog"],
+        {
+            "target": "example.com",
+            "choice": "0",
+        },
+    )
+    assert preview["target"] == "example.com"
+    assert preview["options"] == "-c 0"
 
 
 def test_isitdown_source_reviewed_and_previewable(registry, safety):
@@ -4334,6 +4379,32 @@ async def test_striker_source_reviewed_parameters_build_target(registry, safety)
     assert request.tool_name == "striker"
     assert request.target == "example.com"
     assert request.options == ""
+
+
+@pytest.mark.asyncio
+async def test_recondog_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_recondog",
+        {
+            "target": "example.com",
+            "choice": "0",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "recondog"
+    assert request.target == "example.com"
+    assert request.options == "-c 0"
 
 
 @pytest.mark.asyncio

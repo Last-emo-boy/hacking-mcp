@@ -1896,6 +1896,21 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "domain",
         ),
     ),
+    "recondog": SourceReview(
+        note=(
+            "Reviewed against upstream ReconDog argparse definitions. The "
+            "registry command now supplies -t with the MCP target; the adapter "
+            "exposes the real -c module choice parameter and does not expose "
+            "generic OSINT/API/output flags that the tool does not accept."
+        ),
+        references=(
+            "https://github.com/s0md3v/ReconDog",
+            "https://raw.githubusercontent.com/s0md3v/ReconDog/master/dog",
+        ),
+        verified_parameters=(
+            "choice",
+        ),
+    ),
     "katana": SourceReview(
         note=(
             "Reviewed against official ProjectDiscovery Katana usage docs for "
