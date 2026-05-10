@@ -45,6 +45,13 @@ class TestToolRunner:
         assert "example.test" in cmd
         assert cmd.index("--wide") < cmd.index("example.test")
 
+    def test_dry_run_keeps_first_arg_without_target_placeholder(self, runner):
+        cmd = runner.dry_run("chisel", ["client", "https://pivot.example:443", "socks"])
+        assert "chisel" in cmd
+        assert "client" in cmd
+        assert "https://pivot.example:443" in cmd
+        assert "socks" in cmd
+
     def test_dry_run_unknown_tool(self, runner):
         cmd = runner.dry_run("nonexistent")
         assert "Unknown" in cmd

@@ -78,9 +78,6 @@ class ToolRunner:
         Returns:
             RunResult with stdout, stderr, return code, timing info
         """
-        args = args or []
-        target = args[0] if args else ""
-
         # Look up tool definition
         tool = self.registry.get_tool(tool_name)
         if tool is None:
@@ -94,6 +91,9 @@ class ToolRunner:
                 was_blocked=True,
                 block_reason=f"Tool '{tool_name}' not found in registry.",
             )
+
+        args = args or []
+        target = args[0] if args and "{target}" in tool.run_command else ""
 
         # Safety check
         allowed, reason = self.safety.check_tool(tool)
@@ -190,7 +190,10 @@ class ToolRunner:
             )
 
         # Build the command adapted to the execution environment
-        extra_args = args[1:] if len(args) > 1 else []
+        if "{target}" in tool.run_command:
+            extra_args = args[1:] if len(args) > 1 else []
+        else:
+            extra_args = args
 
         parsed = self._parse_tool_command(
             tool,
@@ -543,8 +546,11 @@ class ToolRunner:
         if tool is None:
             return f"# Unknown tool: {tool_name}"
         args = args or []
-        target = args[0] if args else ""
-        extra_args = args[1:] if len(args) > 1 else []
+        target = args[0] if args and "{target}" in tool.run_command else ""
+        if "{target}" in tool.run_command:
+            extra_args = args[1:] if len(args) > 1 else []
+        else:
+            extra_args = args
 
         parsed = self._parse_tool_command(
             tool,
