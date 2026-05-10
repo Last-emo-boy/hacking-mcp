@@ -1430,6 +1430,31 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "fast",
         ),
     ),
+    "secretfinder": SourceReview(
+        note=(
+            "Reviewed against upstream SecretFinder argparse definitions for "
+            "URL/file/folder input, JavaScript extraction, output destination, "
+            "regex filtering, Burp export mode, cookies, ignore/only filters, "
+            "custom headers, and proxy settings. The registry command now uses "
+            "-i {target} instead of the help-only command."
+        ),
+        references=(
+            "https://github.com/m4ll0k/SecretFinder",
+            "https://raw.githubusercontent.com/m4ll0k/SecretFinder/master/SecretFinder.py",
+            "https://raw.githubusercontent.com/m4ll0k/SecretFinder/master/README.md",
+        ),
+        verified_parameters=(
+            "extract",
+            "output_file",
+            "regex",
+            "burp",
+            "cookie",
+            "ignore",
+            "only",
+            "headers",
+            "proxy",
+        ),
+    ),
     "maigret": SourceReview(
         note=(
             "Reviewed against upstream Maigret ArgumentParser definitions for "

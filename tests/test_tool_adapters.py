@@ -1414,6 +1414,76 @@ def test_breacher_source_reviewed_and_previewable(registry, safety):
     assert preview["options"] == "--path /admin --type php --fast"
 
 
+def test_secretfinder_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert registry.get_tool("secretfinder").run_command == (
+        "cd secretfinder && python3 SecretFinder.py -i {target}"
+    )
+    assert records["secretfinder"].source_status == "source-reviewed"
+    assert records["secretfinder"].unverified_parameters == ()
+    assert records["secretfinder"].gap == ""
+    assert any("m4ll0k/SecretFinder" in item for item in records["secretfinder"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("secretfinder"), specs["secretfinder"])
+    for removed in (
+        "api_key",
+        "extensions",
+        "follow_redirects",
+        "json_output",
+        "match_codes",
+        "passive",
+        "recursive",
+        "redact",
+        "resolvers",
+        "since_commit",
+        "sources",
+        "threads",
+        "wordlist",
+    ):
+        assert removed not in params
+    for verified in (
+        "extract",
+        "output_file",
+        "regex",
+        "burp",
+        "cookie",
+        "ignore",
+        "only",
+        "headers",
+        "proxy",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("secretfinder"),
+        specs["secretfinder"],
+        {
+            "target": "https://example.com/app.js",
+            "extract": True,
+            "output_file": "cli",
+            "regex": "api",
+            "burp": True,
+            "cookie": "SID=abc",
+            "ignore": "vendor",
+            "only": "api",
+            "headers": "X-Test:1",
+            "proxy": "127.0.0.1:8080",
+        },
+    )
+    assert preview["target"] == "https://example.com/app.js"
+    assert preview["options"] == (
+        "--extract --output cli --regex api --burp --cookie SID=abc "
+        "--ignore vendor --only api --headers X-Test:1 --proxy 127.0.0.1:8080"
+    )
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP

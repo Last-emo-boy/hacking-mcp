@@ -151,7 +151,7 @@ INFORMATION_GATHERING_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/m4ll0k/SecretFinder.git secretfinder",
             "cd secretfinder && sudo pip3 install -r requirements.txt",
         ],
-        run_command="cd secretfinder && python3 SecretFinder.py -h",
+        run_command="cd secretfinder && python3 SecretFinder.py -i {target}",
         project_url="https://github.com/m4ll0k/SecretFinder",
         tags=["osint", "secrets", "web", "api"],
         safety_tier=SafetyTier.SAFE,
