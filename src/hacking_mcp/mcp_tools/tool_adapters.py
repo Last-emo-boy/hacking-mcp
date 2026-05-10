@@ -33,31 +33,24 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "blackeye",
         "blackphish",
         "brutal",
-        "chisel",
-        "evil-winrm",
         "evilginx3",
         "fluxion",
         "hashcat",
-        "havoc",
         "hcxdumptool",
         "hcxtools",
         "hiddeneye",
         "jadx",
         "john",
-        "ligolo-ng",
         "maskphish",
         "mobdroid",
         "mobsf",
         "msfvenom",
         "multitor",
         "owasp-zap",
-        "peass-ng",
-        "pwncat-cs",
         "pyphisher",
         "setoolkit",
         "shellphish",
         "sherlock",
-        "sliver",
         "steghide",
         "stegcracker",
         "theHarvester",
@@ -683,31 +676,6 @@ def _adapter_parameters(
             AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
         ])
 
-    if tool.name in {"evil-winrm", "pwncat-cs"}:
-        params.extend([
-            AdapterParameterSpec("ssl", bool, False, "Use SSL/TLS when supported."),
-            AdapterParameterSpec("key_file", str, "", "Private key path when supported."),
-            AdapterParameterSpec("cert_file", str, "", "Certificate path when supported."),
-            AdapterParameterSpec("upload", str, "", "Upload file path when supported."),
-            AdapterParameterSpec("download", str, "", "Download path when supported."),
-        ])
-
-    if tool.name in {"sliver", "havoc", "ligolo-ng", "chisel"}:
-        params.extend([
-            AdapterParameterSpec("mode", str, "", "Mode such as server/client/proxy/agent when supported."),
-            AdapterParameterSpec("listen_addr", str, "", "Listen address when supported."),
-            AdapterParameterSpec("connect_addr", str, "", "Connect address when supported."),
-            AdapterParameterSpec("auth_token", str, "", "Auth token/profile when supported."),
-            AdapterParameterSpec("tun_name", str, "", "Tunnel interface name when supported."),
-        ])
-
-    if tool.name == "peass-ng":
-        params.extend([
-            AdapterParameterSpec("peas_variant", str, "", "PEASS variant such as linpeas or winpeas."),
-            AdapterParameterSpec("checks", str, "", "Checks/profile selector when supported."),
-            AdapterParameterSpec("quiet", bool, False, "Reduce output when supported."),
-        ])
-
     if tool.name in {
         "setoolkit", "pyphisher", "hiddeneye", "blackeye", "shellphish",
         "evilginx3", "maskphish", "blackphish",
@@ -1021,25 +989,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "user_agent", "--user-agent")
         _add_value(tokens, kwargs, "output_file", "-o")
         _add_bool(tokens, kwargs, "json_output", "--json")
-
-    if tool.name in {"evil-winrm", "pwncat-cs"}:
-        _add_bool(tokens, kwargs, "ssl", "-S")
-        _add_value(tokens, kwargs, "key_file", "-k")
-        _add_value(tokens, kwargs, "cert_file", "-c")
-        _add_value(tokens, kwargs, "upload", "--upload")
-        _add_value(tokens, kwargs, "download", "--download")
-
-    if tool.name in {"sliver", "havoc", "ligolo-ng", "chisel"}:
-        _add_value(tokens, kwargs, "mode", "--mode")
-        _add_value(tokens, kwargs, "listen_addr", "--listen")
-        _add_value(tokens, kwargs, "connect_addr", "--connect")
-        _add_value(tokens, kwargs, "auth_token", "--auth")
-        _add_value(tokens, kwargs, "tun_name", "--tun")
-
-    if tool.name == "peass-ng":
-        _add_value(tokens, kwargs, "peas_variant", "--variant")
-        _add_value(tokens, kwargs, "checks", "--checks")
-        _add_bool(tokens, kwargs, "quiet", "-q")
 
     if tool.name in {
         "setoolkit", "pyphisher", "hiddeneye", "blackeye", "shellphish",
