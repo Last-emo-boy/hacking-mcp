@@ -128,6 +128,7 @@ def test_split_adapter_registry_includes_migrated_tools():
     migrated = {
         "androguard",
         "amass",
+        "arjun",
         "apk2gold",
         "binwalk",
         "dirsearch",
@@ -141,8 +142,10 @@ def test_split_adapter_registry_includes_migrated_tools():
         "httpx",
         "jadx",
         "john",
+        "katana",
         "masscan",
         "mobsf",
+        "nikto",
         "nmap",
         "nuclei",
         "objection",
@@ -154,8 +157,10 @@ def test_split_adapter_registry_includes_migrated_tools():
         "stegcracker",
         "steghide",
         "subfinder",
+        "testssl",
         "theHarvester",
         "volatility3",
+        "wafw00f",
         "whatweb",
     }
     assert migrated.issubset(PARAMETER_PROVIDERS)

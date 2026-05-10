@@ -6,6 +6,7 @@ from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 from hacking_mcp.mcp_tools.adapters import (
     androguard,
     amass,
+    arjun,
     apk2gold,
     binwalk,
     dirsearch,
@@ -19,8 +20,10 @@ from hacking_mcp.mcp_tools.adapters import (
     httpx,
     jadx,
     john,
+    katana,
     masscan,
     mobsf,
+    nikto,
     nmap,
     nuclei,
     objection,
@@ -32,8 +35,10 @@ from hacking_mcp.mcp_tools.adapters import (
     stegcracker,
     steghide,
     subfinder,
+    testssl,
     theharvester,
     volatility3,
+    wafw00f,
     whatweb,
 )
 
@@ -45,6 +50,7 @@ OptionsBuilder = Callable[[dict], list[str]]
 PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
     "androguard": androguard.parameters,
     "amass": amass.parameters,
+    "arjun": arjun.parameters,
     "apk2gold": apk2gold.parameters,
     "binwalk": binwalk.parameters,
     "dirsearch": dirsearch.parameters,
@@ -58,8 +64,10 @@ PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
     "httpx": httpx.parameters,
     "jadx": jadx.parameters,
     "john": john.parameters,
+    "katana": katana.parameters,
     "masscan": masscan.parameters,
     "mobsf": mobsf.parameters,
+    "nikto": nikto.parameters,
     "nmap": nmap.parameters,
     "nuclei": nuclei.parameters,
     "objection": objection.parameters,
@@ -71,14 +79,17 @@ PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
     "stegcracker": stegcracker.parameters,
     "steghide": steghide.parameters,
     "subfinder": subfinder.parameters,
+    "testssl": testssl.parameters,
     "theHarvester": theharvester.parameters,
     "volatility3": volatility3.parameters,
+    "wafw00f": wafw00f.parameters,
     "whatweb": whatweb.parameters,
 }
 
 OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
     "androguard": androguard.build_options,
     "amass": amass.build_options,
+    "arjun": arjun.build_options,
     "apk2gold": apk2gold.build_options,
     "binwalk": binwalk.build_options,
     "dirsearch": dirsearch.build_options,
@@ -92,8 +103,10 @@ OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
     "httpx": httpx.build_options,
     "jadx": jadx.build_options,
     "john": john.build_options,
+    "katana": katana.build_options,
     "masscan": masscan.build_options,
     "mobsf": mobsf.build_options,
+    "nikto": nikto.build_options,
     "nmap": nmap.build_options,
     "nuclei": nuclei.build_options,
     "objection": objection.build_options,
@@ -105,8 +118,10 @@ OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
     "stegcracker": stegcracker.build_options,
     "steghide": steghide.build_options,
     "subfinder": subfinder.build_options,
+    "testssl": testssl.build_options,
     "theHarvester": theharvester.build_options,
     "volatility3": volatility3.build_options,
+    "wafw00f": wafw00f.build_options,
     "whatweb": whatweb.build_options,
 }
 

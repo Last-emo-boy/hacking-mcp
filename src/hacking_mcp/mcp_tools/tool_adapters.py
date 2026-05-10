@@ -28,7 +28,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
     {
         "airgeddon",
         "anonsurf",
-        "arjun",
         "bettercap",
         "binwalk",
         "blackeye",
@@ -54,7 +53,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "impacket",
         "jadx",
         "john",
-        "katana",
         "kerbrute",
         "leviathan",
         "ligolo-ng",
@@ -64,7 +62,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "msfvenom",
         "multitor",
         "netexec",
-        "nikto",
         "nosqlmap",
         "owasp-zap",
         "pacu",
@@ -83,14 +80,12 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "sqlmap",
         "steghide",
         "stegcracker",
-        "testssl",
         "theHarvester",
         "thefatrat",
         "trivy",
         "trufflehog",
         "venom",
         "volatility3",
-        "wafw00f",
         "websploit",
         "whatweb",
         "wifiphisher",
@@ -486,91 +481,7 @@ def _adapter_parameters(
             AdapterParameterSpec("rate", int, 0, "Packet/request rate limit when supported; 0 leaves default."),
         ])
 
-    if tool.name == "nikto":
-        params.extend([
-            AdapterParameterSpec("ask", str, "", "Interactive prompt behavior."),
-            AdapterParameterSpec("cgi_dirs", str, "", "CGI directories to scan."),
-            AdapterParameterSpec("config_file", str, "", "Nikto config file path."),
-            AdapterParameterSpec("display", str, "", "Display selector."),
-            AdapterParameterSpec("dbcheck", bool, False, "Check database and syntax errors."),
-            AdapterParameterSpec("evasion", str, "", "IDS evasion technique."),
-            AdapterParameterSpec("output_format", str, "", "Output format."),
-            AdapterParameterSpec("auth", str, "", "Host authentication credential pair."),
-            AdapterParameterSpec("list_plugins", bool, False, "List installed plugins."),
-            AdapterParameterSpec("max_time", str, "", "Maximum testing time."),
-            AdapterParameterSpec("mutate", str, "", "Guess additional file names."),
-            AdapterParameterSpec("mutate_options", str, "", "Mutate option values."),
-            AdapterParameterSpec("no_interactive", bool, False, "Disable interactive prompts."),
-            AdapterParameterSpec("no_lookup", bool, False, "Disable DNS lookups."),
-            AdapterParameterSpec("no_ssl", bool, False, "Disable SSL/TLS."),
-            AdapterParameterSpec("no_404", bool, False, "Disable 404 checks."),
-            AdapterParameterSpec("output_file", str, "", "Output file path."),
-            AdapterParameterSpec("pause", int, 0, "Pause between tests in seconds; 0 leaves default."),
-            AdapterParameterSpec("plugins", str, "", "Plugin selector."),
-            AdapterParameterSpec("port", str, "", "Ports to scan."),
-            AdapterParameterSpec("rsa_cert", str, "", "Client certificate file."),
-            AdapterParameterSpec("root", str, "", "Prepend root path to requests."),
-            AdapterParameterSpec("save_dir", str, "", "Directory to save positive responses."),
-            AdapterParameterSpec("ssl", bool, False, "Force SSL/TLS mode."),
-            AdapterParameterSpec("tuning", str, "", "Scan tuning selector."),
-            AdapterParameterSpec("timeout", int, 0, "Request timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value."),
-            AdapterParameterSpec("until", str, "", "Run until specified time or duration."),
-            AdapterParameterSpec("update", bool, False, "Update plugins and databases."),
-            AdapterParameterSpec("use_proxy", bool, False, "Use configured HTTP proxy."),
-            AdapterParameterSpec("vhost", str, "", "Virtual host header."),
-            AdapterParameterSpec("notfound_code", str, "", "Treat this HTTP code as 404."),
-            AdapterParameterSpec("notfound_string", str, "", "Treat response body containing this string as 404."),
-        ])
-    elif tool.name == "katana":
-        params.extend([
-            AdapterParameterSpec("input_file", str, "", "Input file containing targets to crawl."),
-            AdapterParameterSpec("depth", int, 0, "Maximum crawl depth; 0 leaves default."),
-            AdapterParameterSpec("strategy", str, "", "Crawling strategy, for example depth-first or breadth-first."),
-            AdapterParameterSpec("js_crawl", bool, False, "Enable JavaScript file crawling."),
-            AdapterParameterSpec("known_files", str, "", "Known files to crawl, for example robots.txt,sitemap.xml."),
-            AdapterParameterSpec("automatic_form_fill", bool, False, "Enable automatic form filling."),
-            AdapterParameterSpec("form_extraction", bool, False, "Extract forms and inputs."),
-            AdapterParameterSpec("headless", bool, False, "Enable headless browser crawling."),
-            AdapterParameterSpec("headless_options", str, "", "Headless browser options."),
-            AdapterParameterSpec("no_sandbox", bool, False, "Start Chrome without sandbox."),
-            AdapterParameterSpec("system_chrome", bool, False, "Use locally installed Chrome."),
-            AdapterParameterSpec("proxy", str, "", "HTTP proxy URL."),
-            AdapterParameterSpec("headers", str, "", "Custom HTTP header to send."),
-            AdapterParameterSpec("timeout", int, 0, "Request timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("retry", int, 0, "Number of retries; 0 leaves default."),
-            AdapterParameterSpec("rate_limit", int, 0, "Maximum requests per second; 0 leaves default."),
-            AdapterParameterSpec("concurrency", int, 0, "Number of concurrent fetchers; 0 leaves default."),
-            AdapterParameterSpec("parallelism", int, 0, "Number of parallel input targets; 0 leaves default."),
-            AdapterParameterSpec("delay", str, "", "Delay between requests, for example 1s."),
-            AdapterParameterSpec("crawl_duration", str, "", "Maximum crawl duration, for example 5m."),
-            AdapterParameterSpec("output_file", str, "", "Output file path."),
-            AdapterParameterSpec("json_output", bool, False, "Write JSONL output."),
-            AdapterParameterSpec("field", str, "", "Field to display, for example url or qurl."),
-            AdapterParameterSpec("silent", bool, False, "Show only output."),
-            AdapterParameterSpec("no_color", bool, False, "Disable colored output."),
-        ])
-    elif tool.name == "arjun":
-        params.extend([
-            AdapterParameterSpec("input_file", str, "", "Targets file, Burp export, or raw request file."),
-            AdapterParameterSpec("output_json", str, "", "JSON output file path."),
-            AdapterParameterSpec("output_burp", str, "", "BurpSuite output target/path."),
-            AdapterParameterSpec("output_text", str, "", "Text output file path."),
-            AdapterParameterSpec("method", str, "", "HTTP method: GET, POST, JSON, or XML."),
-            AdapterParameterSpec("include_data", str, "", "Persistent data to include in each request."),
-            AdapterParameterSpec("threads", int, 0, "Number of threads; 0 leaves default."),
-            AdapterParameterSpec("delay", int, 0, "Delay between requests in seconds; 0 leaves default."),
-            AdapterParameterSpec("timeout", int, 0, "HTTP request timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("stable", bool, False, "Enable stable mode for rate-limited targets."),
-            AdapterParameterSpec("rate_limit", int, 0, "Requests per second; 0 leaves default."),
-            AdapterParameterSpec("wordlist", str, "", "Wordlist path or built-in size: small, medium, large."),
-            AdapterParameterSpec("chunk_size", int, 0, "Parameters sent per request; 0 leaves default."),
-            AdapterParameterSpec("disable_redirects", bool, False, "Disable HTTP redirects."),
-            AdapterParameterSpec("passive", str, "", "Passive discovery domain, or '-' to use target URL domain."),
-            AdapterParameterSpec("casing", str, "", "Parameter casing style."),
-            AdapterParameterSpec("headers", str, "", "Custom HTTP headers."),
-        ])
-    elif tool.name == "dalfox":
+    if tool.name == "dalfox":
         params.extend([
             AdapterParameterSpec("blind_callback", str, "", "Blind XSS callback URL."),
             AdapterParameterSpec("config_file", str, "", "DalFox configuration file path."),
@@ -707,85 +618,6 @@ def _adapter_parameters(
         params.append(
             AdapterParameterSpec("scan", bool, True, "Run sqlscan scanner mode.")
         )
-    elif tool.name == "testssl":
-        params.extend([
-            AdapterParameterSpec("input_file", str, "", "Mass testing input file."),
-            AdapterParameterSpec("mode", str, "", "Mass testing mode: serial or parallel."),
-            AdapterParameterSpec("warnings", str, "", "Warning handling: batch or off."),
-            AdapterParameterSpec("connect_timeout", int, 0, "TCP connect timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("openssl_timeout", int, 0, "OpenSSL connect timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("basic_auth", str, "", "HTTP basic auth credentials user:pass."),
-            AdapterParameterSpec("req_header", str, "", "Additional HTTP request header."),
-            AdapterParameterSpec("mtls_file", str, "", "PEM file containing client certificate and private key."),
-            AdapterParameterSpec("starttls", str, "", "STARTTLS protocol, for example smtp or imap."),
-            AdapterParameterSpec("xmpp_host", str, "", "XMPP domain for STARTTLS XMPP checks."),
-            AdapterParameterSpec("mx", str, "", "Domain or host whose MX records should be tested."),
-            AdapterParameterSpec("ip", str, "", "IP address or resolver mode instead of resolving target host."),
-            AdapterParameterSpec("proxy", str, "", "Proxy host:port or auto."),
-            AdapterParameterSpec("ipv6", bool, False, "Also perform IPv6 checks."),
-            AdapterParameterSpec("ssl_native", bool, False, "Use OpenSSL s_client for most checks."),
-            AdapterParameterSpec("openssl_path", str, "", "Path to the OpenSSL binary to use."),
-            AdapterParameterSpec("bugs", bool, False, "Enable OpenSSL bug workarounds for broken servers."),
-            AdapterParameterSpec("assume_http", bool, False, "Assume HTTP when protocol detection cannot prove it."),
-            AdapterParameterSpec("no_dns", str, "", "DNS lookup mode: min or none."),
-            AdapterParameterSpec("sneaky", bool, False, "Use a less verbose browser-like HTTP user agent."),
-            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value."),
-            AdapterParameterSpec("ids_friendly", bool, False, "Skip selected offensive vulnerability probes."),
-            AdapterParameterSpec("phone_out", bool, False, "Allow CRL and OCSP revocation lookups."),
-            AdapterParameterSpec("add_ca", str, "", "Additional CA file, directory, or comma-separated list."),
-            AdapterParameterSpec("each_cipher", bool, False, "Check each configured cipher."),
-            AdapterParameterSpec("cipher_per_proto", bool, False, "Check ciphers per protocol."),
-            AdapterParameterSpec("categories", bool, False, "Test cipher categories."),
-            AdapterParameterSpec("forward_secrecy", bool, False, "Check forward secrecy."),
-            AdapterParameterSpec("protocols", bool, False, "Check TLS/SSL protocols."),
-            AdapterParameterSpec("server_preference", bool, False, "Display server cipher preferences."),
-            AdapterParameterSpec("server_defaults", bool, False, "Display server defaults and certificate data."),
-            AdapterParameterSpec("single_cipher", str, "", "Single cipher pattern to test."),
-            AdapterParameterSpec("check_headers", bool, False, "Test HTTP response headers."),
-            AdapterParameterSpec("client_simulation", bool, False, "Run browser/client handshake simulation."),
-            AdapterParameterSpec("grease", bool, False, "Check GREASE tolerance."),
-            AdapterParameterSpec("vulnerabilities", bool, False, "Run vulnerability checks."),
-            AdapterParameterSpec("quiet", bool, False, "Suppress the banner."),
-            AdapterParameterSpec("wide", bool, False, "Use wide output."),
-            AdapterParameterSpec("mapping", str, "", "Cipher name mapping: openssl, iana, no-openssl, no-iana."),
-            AdapterParameterSpec("show_each", bool, False, "Display all ciphers tested in wide modes."),
-            AdapterParameterSpec("color", int, 0, "Color mode 0-3; 0 leaves default."),
-            AdapterParameterSpec("colorblind", bool, False, "Swap colors for colorblind readability."),
-            AdapterParameterSpec("debug", int, 0, "Debug level 0-6; 0 leaves default."),
-            AdapterParameterSpec("disable_rating", bool, False, "Disable rating output."),
-            AdapterParameterSpec("log", bool, False, "Write a log file using the default name."),
-            AdapterParameterSpec("logfile", str, "", "Log output file or directory."),
-            AdapterParameterSpec("json_output", bool, False, "Write flat JSON output using the default name."),
-            AdapterParameterSpec("jsonfile", str, "", "Flat JSON output file or directory."),
-            AdapterParameterSpec("json_pretty", bool, False, "Write pretty JSON output using the default name."),
-            AdapterParameterSpec("jsonfile_pretty", str, "", "Pretty JSON output file or directory."),
-            AdapterParameterSpec("csv_output", bool, False, "Write CSV output using the default name."),
-            AdapterParameterSpec("csvfile", str, "", "CSV output file or directory."),
-            AdapterParameterSpec("html_output", bool, False, "Write HTML output using the default name."),
-            AdapterParameterSpec("htmlfile", str, "", "HTML output file or directory."),
-            AdapterParameterSpec("out_file", str, "", "Base name or directory for all output formats."),
-            AdapterParameterSpec("outfile", str, "", "Base name or directory for flat JSON plus other outputs."),
-            AdapterParameterSpec("severity", str, "", "Minimum severity for CSV/JSON output."),
-            AdapterParameterSpec("append", bool, False, "Append to existing output files."),
-            AdapterParameterSpec("overwrite", bool, False, "Overwrite existing output files."),
-            AdapterParameterSpec("outprefix", str, "", "Prefix for generated output filenames."),
-        ])
-    elif tool.name == "wafw00f":
-        params.extend([
-            AdapterParameterSpec("verbosity", int, 0, "Verbosity level 1-3; 0 leaves default."),
-            AdapterParameterSpec("find_all", bool, False, "Find all matching WAF signatures."),
-            AdapterParameterSpec("no_redirect", bool, False, "Do not follow HTTP 3xx redirects."),
-            AdapterParameterSpec("test_waf", str, "", "Test for one specific WAF name."),
-            AdapterParameterSpec("output_file", str, "", "Output file path, or - for stdout."),
-            AdapterParameterSpec("output_format", str, "", "Force output format: csv, json, or text."),
-            AdapterParameterSpec("input_file", str, "", "Input file containing targets."),
-            AdapterParameterSpec("list_wafs", bool, False, "List detectable WAF names and exit."),
-            AdapterParameterSpec("proxy", str, "", "HTTP or SOCKS proxy URL."),
-            AdapterParameterSpec("version", bool, False, "Print WAFW00F version and exit."),
-            AdapterParameterSpec("headers_file", str, "", "Text file containing custom headers."),
-            AdapterParameterSpec("timeout", int, 0, "Request timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("no_color", bool, False, "Disable ANSI colors in output."),
-        ])
     elif tags & {"web", "http", "url", "discovery", "fuzzing"}:
         params.extend([
             AdapterParameterSpec("wordlist", str, "", "Wordlist path for discovery or fuzzing tools."),
@@ -1277,85 +1109,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "top_ports", "--top-ports")
         _add_value(tokens, kwargs, "rate", "--rate")
 
-    if tool.name == "nikto":
-        _add_value(tokens, kwargs, "ask", "-ask")
-        _add_value(tokens, kwargs, "cgi_dirs", "-Cgidirs")
-        _add_value(tokens, kwargs, "config_file", "-config")
-        _add_value(tokens, kwargs, "display", "-Display")
-        _add_bool(tokens, kwargs, "dbcheck", "-dbcheck")
-        _add_value(tokens, kwargs, "evasion", "-evasion")
-        _add_value(tokens, kwargs, "output_format", "-Format")
-        _add_value(tokens, kwargs, "auth", "-id")
-        _add_bool(tokens, kwargs, "list_plugins", "-list-plugins")
-        _add_value(tokens, kwargs, "max_time", "-maxtime")
-        _add_value(tokens, kwargs, "mutate", "-mutate")
-        _add_value(tokens, kwargs, "mutate_options", "-mutate-options")
-        _add_bool(tokens, kwargs, "no_interactive", "-nointeractive")
-        _add_bool(tokens, kwargs, "no_lookup", "-nolookup")
-        _add_bool(tokens, kwargs, "no_ssl", "-nossl")
-        _add_bool(tokens, kwargs, "no_404", "-no404")
-        _add_value(tokens, kwargs, "output_file", "-output")
-        _add_value(tokens, kwargs, "pause", "-Pause")
-        _add_value(tokens, kwargs, "plugins", "-Plugins")
-        _add_value(tokens, kwargs, "port", "-port")
-        _add_value(tokens, kwargs, "rsa_cert", "-RSAcert")
-        _add_value(tokens, kwargs, "root", "-root")
-        _add_value(tokens, kwargs, "save_dir", "-Save")
-        _add_bool(tokens, kwargs, "ssl", "-ssl")
-        _add_value(tokens, kwargs, "tuning", "-Tuning")
-        _add_value(tokens, kwargs, "timeout", "-timeout")
-        _add_value(tokens, kwargs, "user_agent", "-useragent")
-        _add_value(tokens, kwargs, "until", "-until")
-        _add_bool(tokens, kwargs, "update", "-update")
-        _add_bool(tokens, kwargs, "use_proxy", "-useproxy")
-        _add_value(tokens, kwargs, "vhost", "-vhost")
-        _add_value(tokens, kwargs, "notfound_code", "-404code")
-        _add_value(tokens, kwargs, "notfound_string", "-404string")
-    elif tool.name == "katana":
-        _add_value(tokens, kwargs, "input_file", "-list")
-        _add_value(tokens, kwargs, "depth", "-d")
-        _add_value(tokens, kwargs, "strategy", "-strategy")
-        _add_bool(tokens, kwargs, "js_crawl", "-jc")
-        _add_value(tokens, kwargs, "known_files", "-kf")
-        _add_bool(tokens, kwargs, "automatic_form_fill", "-aff")
-        _add_bool(tokens, kwargs, "form_extraction", "-fx")
-        _add_bool(tokens, kwargs, "headless", "-headless")
-        _add_value(tokens, kwargs, "headless_options", "-ho")
-        _add_bool(tokens, kwargs, "no_sandbox", "-nos")
-        _add_bool(tokens, kwargs, "system_chrome", "-system-chrome")
-        _add_value(tokens, kwargs, "proxy", "-proxy")
-        _add_value(tokens, kwargs, "headers", "-H")
-        _add_value(tokens, kwargs, "timeout", "-timeout")
-        _add_value(tokens, kwargs, "retry", "-retry")
-        _add_value(tokens, kwargs, "rate_limit", "-rl")
-        _add_value(tokens, kwargs, "concurrency", "-c")
-        _add_value(tokens, kwargs, "parallelism", "-p")
-        _add_value(tokens, kwargs, "delay", "-delay")
-        _add_value(tokens, kwargs, "crawl_duration", "-ct")
-        _add_value(tokens, kwargs, "output_file", "-o")
-        _add_bool(tokens, kwargs, "json_output", "-jsonl")
-        _add_value(tokens, kwargs, "field", "-field")
-        _add_bool(tokens, kwargs, "silent", "-silent")
-        _add_bool(tokens, kwargs, "no_color", "-no-color")
-    elif tool.name == "arjun":
-        _add_value(tokens, kwargs, "input_file", "-i")
-        _add_value(tokens, kwargs, "output_json", "-oJ")
-        _add_value(tokens, kwargs, "output_burp", "-oB")
-        _add_value(tokens, kwargs, "output_text", "-oT")
-        _add_value(tokens, kwargs, "method", "-m")
-        _add_value(tokens, kwargs, "include_data", "--include")
-        _add_value(tokens, kwargs, "threads", "-t")
-        _add_value(tokens, kwargs, "delay", "-d")
-        _add_value(tokens, kwargs, "timeout", "-T")
-        _add_bool(tokens, kwargs, "stable", "--stable")
-        _add_value(tokens, kwargs, "rate_limit", "--ratelimit")
-        _add_value(tokens, kwargs, "wordlist", "-w")
-        _add_value(tokens, kwargs, "chunk_size", "-c")
-        _add_bool(tokens, kwargs, "disable_redirects", "--disable-redirects")
-        _add_value(tokens, kwargs, "passive", "--passive")
-        _add_value(tokens, kwargs, "casing", "--casing")
-        _add_value(tokens, kwargs, "headers", "--headers")
-    elif tool.name == "dalfox":
+    if tool.name == "dalfox":
         _add_value(tokens, kwargs, "blind_callback", "-b")
         _add_value(tokens, kwargs, "config_file", "--config")
         _add_value(tokens, kwargs, "cookies", "-C")
@@ -1481,83 +1235,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
     elif tool.name == "sqlscan":
         if kwargs.get("scan", True):
             tokens.append("--scan")
-    elif tool.name == "testssl":
-        _add_value(tokens, kwargs, "input_file", "--file")
-        _add_value(tokens, kwargs, "mode", "--mode")
-        _add_value(tokens, kwargs, "warnings", "--warnings")
-        _add_value(tokens, kwargs, "connect_timeout", "--connect-timeout")
-        _add_value(tokens, kwargs, "openssl_timeout", "--openssl-timeout")
-        _add_value(tokens, kwargs, "basic_auth", "--basicauth")
-        _add_value(tokens, kwargs, "req_header", "--reqheader")
-        _add_value(tokens, kwargs, "mtls_file", "--mtls")
-        _add_value(tokens, kwargs, "starttls", "-t")
-        _add_value(tokens, kwargs, "xmpp_host", "--xmpphost")
-        _add_value(tokens, kwargs, "mx", "--mx")
-        _add_value(tokens, kwargs, "ip", "--ip")
-        _add_value(tokens, kwargs, "proxy", "--proxy")
-        _add_bool(tokens, kwargs, "ipv6", "-6")
-        _add_bool(tokens, kwargs, "ssl_native", "--ssl-native")
-        _add_value(tokens, kwargs, "openssl_path", "--openssl")
-        _add_bool(tokens, kwargs, "bugs", "--bugs")
-        _add_bool(tokens, kwargs, "assume_http", "--assuming-http")
-        _add_value(tokens, kwargs, "no_dns", "--nodns")
-        _add_bool(tokens, kwargs, "sneaky", "--sneaky")
-        _add_value(tokens, kwargs, "user_agent", "--user-agent")
-        _add_bool(tokens, kwargs, "ids_friendly", "--ids-friendly")
-        _add_bool(tokens, kwargs, "phone_out", "--phone-out")
-        _add_value(tokens, kwargs, "add_ca", "--add-ca")
-        _add_bool(tokens, kwargs, "each_cipher", "-e")
-        _add_bool(tokens, kwargs, "cipher_per_proto", "-E")
-        _add_bool(tokens, kwargs, "categories", "-s")
-        _add_bool(tokens, kwargs, "forward_secrecy", "-f")
-        _add_bool(tokens, kwargs, "protocols", "-p")
-        _add_bool(tokens, kwargs, "server_preference", "-P")
-        _add_bool(tokens, kwargs, "server_defaults", "-S")
-        _add_value(tokens, kwargs, "single_cipher", "-x")
-        _add_bool(tokens, kwargs, "check_headers", "-h")
-        _add_bool(tokens, kwargs, "client_simulation", "-c")
-        _add_bool(tokens, kwargs, "grease", "-g")
-        _add_bool(tokens, kwargs, "vulnerabilities", "-U")
-        _add_bool(tokens, kwargs, "quiet", "-q")
-        _add_bool(tokens, kwargs, "wide", "--wide")
-        _add_value(tokens, kwargs, "mapping", "--mapping")
-        _add_bool(tokens, kwargs, "show_each", "--show-each")
-        _add_value(tokens, kwargs, "color", "--color")
-        _add_bool(tokens, kwargs, "colorblind", "--colorblind")
-        _add_value(tokens, kwargs, "debug", "--debug")
-        _add_bool(tokens, kwargs, "disable_rating", "--disable-rating")
-        _add_bool(tokens, kwargs, "log", "--log")
-        _add_value(tokens, kwargs, "logfile", "--logfile")
-        _add_bool(tokens, kwargs, "json_output", "--json")
-        _add_value(tokens, kwargs, "jsonfile", "--jsonfile")
-        _add_bool(tokens, kwargs, "json_pretty", "--json-pretty")
-        _add_value(tokens, kwargs, "jsonfile_pretty", "--jsonfile-pretty")
-        _add_bool(tokens, kwargs, "csv_output", "--csv")
-        _add_value(tokens, kwargs, "csvfile", "--csvfile")
-        _add_bool(tokens, kwargs, "html_output", "--html")
-        _add_value(tokens, kwargs, "htmlfile", "--htmlfile")
-        _add_value(tokens, kwargs, "out_file", "--outFile")
-        _add_value(tokens, kwargs, "outfile", "--outfile")
-        _add_value(tokens, kwargs, "severity", "--severity")
-        _add_bool(tokens, kwargs, "append", "--append")
-        _add_bool(tokens, kwargs, "overwrite", "--overwrite")
-        _add_value(tokens, kwargs, "outprefix", "--outprefix")
-    elif tool.name == "wafw00f":
-        verbosity = _int_value(kwargs, "verbosity")
-        if verbosity:
-            tokens.extend(["-v"] * min(verbosity, 3))
-        _add_bool(tokens, kwargs, "find_all", "-a")
-        _add_bool(tokens, kwargs, "no_redirect", "-r")
-        _add_value(tokens, kwargs, "test_waf", "-t")
-        _add_value(tokens, kwargs, "output_file", "-o")
-        _add_value(tokens, kwargs, "output_format", "-f")
-        _add_value(tokens, kwargs, "input_file", "-i")
-        _add_bool(tokens, kwargs, "list_wafs", "-l")
-        _add_value(tokens, kwargs, "proxy", "-p")
-        _add_bool(tokens, kwargs, "version", "-V")
-        _add_value(tokens, kwargs, "headers_file", "-H")
-        _add_value(tokens, kwargs, "timeout", "-T")
-        _add_bool(tokens, kwargs, "no_color", "--no-colors")
     elif tags & {"web", "http", "url", "discovery", "fuzzing"}:
         _add_value(tokens, kwargs, "wordlist", "-w")
         _add_value(tokens, kwargs, "threads", "-t")
