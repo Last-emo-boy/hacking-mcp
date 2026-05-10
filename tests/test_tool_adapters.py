@@ -270,6 +270,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["caido"].unverified_parameters == ()
     assert any("caido" in item.lower() for item in records["caido"].evidence)
 
+    assert records["mitmproxy"].source_status == "source-reviewed"
+    assert records["mitmproxy"].unverified_parameters == ()
+    assert any("mitmproxy" in item.lower() for item in records["mitmproxy"].evidence)
+
     assert records["nikto"].source_status == "source-reviewed"
     assert records["nikto"].unverified_parameters == ()
     assert any("sullo/nikto" in item for item in records["nikto"].evidence)
@@ -2366,6 +2370,38 @@ def test_caido_source_reviewed_and_previewable(registry, safety):
         specs["caido"],
         {
             "help": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["confirm_authorized"] is True
+
+
+def test_mitmproxy_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["mitmproxy"].source_status == "source-reviewed"
+    assert records["mitmproxy"].unverified_parameters == ()
+    assert records["mitmproxy"].gap == ""
+    assert any("mitmproxy" in item.lower() for item in records["mitmproxy"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("mitmproxy"), specs["mitmproxy"])
+    for removed in ("extensions", "follow_redirects", "match_codes", "proxy", "recursive", "threads", "wordlist"):
+        assert removed not in params
+    assert "version" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("mitmproxy"),
+        specs["mitmproxy"],
+        {
+            "version": True,
             "confirm_authorized": True,
         },
     )
@@ -4921,6 +4957,34 @@ async def test_caido_source_reviewed_parameters_build_cli_options(registry, safe
 
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "caido"
+    assert request.target == ""
+    assert request.options == ""
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_mitmproxy_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_mitmproxy",
+        {
+            "version": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "mitmproxy"
     assert request.target == ""
     assert request.options == ""
     assert request.require_confirmation is True

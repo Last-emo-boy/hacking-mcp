@@ -2288,6 +2288,22 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "mitmproxy": SourceReview(
+        note=(
+            "Reviewed against the mitmproxy project/docs for the current "
+            "registry command shape. The MCP adapter is intentionally "
+            "version-only and runs mitmproxy --version; it does not expose "
+            "generated crawling, wordlist, recursion, or proxy parameters "
+            "that are not part of this registered command."
+        ),
+        references=(
+            "https://github.com/mitmproxy/mitmproxy",
+            "https://docs.mitmproxy.org/stable/",
+        ),
+        verified_parameters=(
+            "version",
+        ),
+    ),
     "nikto": SourceReview(
         note=(
             "Reviewed against the upstream Nikto README help/options for CGI "

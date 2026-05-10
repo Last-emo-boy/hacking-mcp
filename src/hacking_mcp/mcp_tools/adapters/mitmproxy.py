@@ -1,14 +1,18 @@
-"""Registry-derived adapter metadata for Mitmproxy."""
+"""Dedicated adapter metadata for mitmproxy."""
 
-from hacking_mcp.mcp_tools.adapters.generic import build_options_for, parameters_for
-
-
-TOOL_NAME = 'mitmproxy'
+from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 
 
-def parameters():
-    return parameters_for(TOOL_NAME)
+def parameters() -> list[AdapterParameterSpec]:
+    return [
+        AdapterParameterSpec(
+            "version",
+            bool,
+            True,
+            "This adapter is intentionally version-only and runs the registry command mitmproxy --version.",
+        ),
+    ]
 
 
 def build_options(kwargs: dict) -> list[str]:
-    return build_options_for(TOOL_NAME, kwargs)
+    return []
