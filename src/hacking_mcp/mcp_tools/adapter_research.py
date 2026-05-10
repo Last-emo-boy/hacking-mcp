@@ -3418,6 +3418,43 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "verbose",
         ),
     ),
+    "evil-winrm": SourceReview(
+        note=(
+            "Reviewed against upstream Evil-WinRM README help text and "
+            "evil-winrm.rb OptionParser definitions. The registry target maps "
+            "to -i/--ip, and the adapter now exposes the documented "
+            "authentication, SSL/certificate, Kerberos, script/executable path, "
+            "URL, user-agent, version, color/path-completion, and logging "
+            "flags instead of generic post-exploitation placeholders. Upload "
+            "and download are interactive shell commands, not startup CLI "
+            "options."
+        ),
+        references=(
+            "https://github.com/Hackplayers/evil-winrm",
+            "https://raw.githubusercontent.com/Hackplayers/evil-winrm/master/README.md",
+            "https://raw.githubusercontent.com/Hackplayers/evil-winrm/master/evil-winrm.rb",
+        ),
+        verified_parameters=(
+            "username",
+            "password",
+            "nt_hash",
+            "port",
+            "ssl",
+            "public_key",
+            "private_key",
+            "realm",
+            "ccache",
+            "scripts_path",
+            "spn",
+            "executables_path",
+            "url",
+            "user_agent",
+            "version",
+            "no_colors",
+            "no_rpath_completion",
+            "log_session",
+        ),
+    ),
     "explo": SourceReview(
         note=(
             "Reviewed against upstream explo argparse parser and README usage. "

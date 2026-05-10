@@ -795,9 +795,12 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     }.issubset(arjun_schema)
 
     evil_winrm_schema = tools["security_tool_evil_winrm"].inputSchema["properties"]
-    assert {"ssl", "key_file", "cert_file", "upload", "download"}.issubset(
-        evil_winrm_schema
-    )
+    assert {
+        "username", "password", "nt_hash", "port", "ssl", "public_key",
+        "private_key", "realm", "ccache", "scripts_path", "spn",
+        "executables_path", "url", "user_agent", "version", "no_colors",
+        "no_rpath_completion", "log_session",
+    }.issubset(evil_winrm_schema)
 
     commix_schema = tools["security_tool_commix"].inputSchema["properties"]
     assert {"parameter", "method", "delay", "time_sec", "os_cmd", "batch"}.issubset(
@@ -1449,6 +1452,84 @@ def test_pwncat_cs_source_reviewed_and_previewable(registry, safety):
     assert preview["options"] == (
         "-p 4444 -m windows -S --ssl-cert cert.pem "
         "--ssl-key key.pem -i id_rsa -V"
+    )
+    assert preview["confirm_authorized"] is True
+
+
+def test_evil_winrm_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("evil-winrm")
+
+    assert tool.run_command == "evil-winrm -i {target}"
+    assert specs["evil-winrm"].requires_confirmation is True
+    assert records["evil-winrm"].source_status == "source-reviewed"
+    assert records["evil-winrm"].unverified_parameters == ()
+    assert records["evil-winrm"].gap == ""
+    assert any("Hackplayers/evil-winrm" in item for item in records["evil-winrm"].evidence)
+
+    params = adapter_parameter_names(tool, specs["evil-winrm"])
+    for removed in (
+        "cert_file",
+        "download",
+        "key_file",
+        "lhost",
+        "listener",
+        "lport",
+        "protocol",
+        "session_id",
+        "upload",
+    ):
+        assert removed not in params
+    for expected in (
+        "username",
+        "password",
+        "nt_hash",
+        "port",
+        "ssl",
+        "public_key",
+        "private_key",
+        "realm",
+        "ccache",
+        "scripts_path",
+        "spn",
+        "executables_path",
+        "url",
+        "user_agent",
+        "version",
+        "no_colors",
+        "no_rpath_completion",
+        "log_session",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["evil-winrm"],
+        {
+            "target": "192.0.2.10",
+            "username": "Administrator",
+            "password": "Passw0rd!",
+            "port": 5986,
+            "ssl": True,
+            "scripts_path": "/opt/ps1",
+            "executables_path": "/opt/exe",
+            "user_agent": "Microsoft WinRM Client",
+            "no_colors": True,
+            "no_rpath_completion": True,
+            "log_session": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == "192.0.2.10"
+    assert preview["options"] == (
+        "-u Administrator -p 'Passw0rd!' -P 5986 -S -s /opt/ps1 "
+        "-e /opt/exe -a 'Microsoft WinRM Client' -n -N -l"
     )
     assert preview["confirm_authorized"] is True
 
@@ -7214,6 +7295,47 @@ async def test_pwncat_cs_source_reviewed_parameters_build_cli_options(registry, 
     assert request.options == (
         "-p 4444 -m windows -S --ssl-cert cert.pem "
         "--ssl-key key.pem -i id_rsa -V"
+    )
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_evil_winrm_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_evil_winrm",
+        {
+            "target": "192.0.2.10",
+            "username": "Administrator",
+            "password": "Passw0rd!",
+            "port": 5986,
+            "ssl": True,
+            "scripts_path": "/opt/ps1",
+            "executables_path": "/opt/exe",
+            "user_agent": "Microsoft WinRM Client",
+            "no_colors": True,
+            "no_rpath_completion": True,
+            "log_session": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "evil-winrm"
+    assert request.target == "192.0.2.10"
+    assert request.options == (
+        "-u Administrator -p 'Passw0rd!' -P 5986 -S -s /opt/ps1 "
+        "-e /opt/exe -a 'Microsoft WinRM Client' -n -N -l"
     )
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
