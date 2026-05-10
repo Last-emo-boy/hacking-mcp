@@ -126,6 +126,7 @@ def test_split_adapter_registry_includes_migrated_tools():
     )
 
     migrated = {
+        "androguard",
         "apk2gold",
         "binwalk",
         "frida",
@@ -310,6 +311,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["apk2gold"].source_status == "source-reviewed"
     assert records["apk2gold"].unverified_parameters == ()
     assert any("lxdvs/apk2gold" in item for item in records["apk2gold"].evidence)
+
+    assert records["androguard"].source_status == "source-reviewed"
+    assert records["androguard"].unverified_parameters == ()
+    assert any("androguard/androguard" in item for item in records["androguard"].evidence)
 
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
@@ -741,6 +746,17 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
 
     apk2gold_schema = tools["security_tool_apk2gold"].inputSchema["properties"]
     assert {"apk_file"}.issubset(apk2gold_schema)
+
+    androguard_schema = tools["security_tool_androguard"].inputSchema["properties"]
+    assert {
+        "command", "input_file", "apk_files", "output_file", "output_dir",
+        "resource", "package", "locale", "resource_type", "resource_id",
+        "list_packages", "list_locales", "list_types", "graph_format",
+        "jar", "limit", "decompiler", "hash_algo", "all_hashes", "show",
+        "session", "offset", "size", "modules", "enable_ui", "package_name",
+        "output_type", "classname", "methodname", "descriptor", "accessflag",
+        "no_isolated", "verbose",
+    }.issubset(androguard_schema)
 
     radare2_schema = tools["security_tool_radare2"].inputSchema["properties"]
     assert {
@@ -2629,6 +2645,65 @@ async def test_apk2gold_source_reviewed_parameters_build_target(registry, safety
     assert request.tool_name == "apk2gold"
     assert request.target == "sample.apk"
     assert request.options == ""
+
+
+@pytest.mark.asyncio
+async def test_androguard_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_androguard",
+        {
+            "command": "decompile",
+            "input_file": "sample.apk",
+            "output_dir": "out",
+            "graph_format": "png",
+            "jar": True,
+            "limit": "Lcom/example/.*",
+            "decompiler": "dex2fernflower",
+            "verbose": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "androguard"
+    assert request.target == "sample.apk"
+    assert request.options == (
+        "--verbose decompile --output out --format png --jar "
+        "--limit 'Lcom/example/.*' --decompiler dex2fernflower sample.apk"
+    )
+
+    await mcp.call_tool(
+        "security_tool_androguard",
+        {
+            "command": "cg",
+            "input_file": "classes.dex",
+            "output_file": "callgraph.gml",
+            "output_type": "gml",
+            "classname": "Lcom/example/.*",
+            "methodname": "onCreate",
+            "descriptor": ".*",
+            "accessflag": "public",
+            "no_isolated": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "androguard"
+    assert request.target == "classes.dex"
+    assert request.options == (
+        "cg --output callgraph.gml --output-type gml --classname 'Lcom/example/.*' "
+        "--methodname onCreate --descriptor '.*' --accessflag public "
+        "--no-isolated classes.dex"
+    )
 
 
 @pytest.mark.asyncio

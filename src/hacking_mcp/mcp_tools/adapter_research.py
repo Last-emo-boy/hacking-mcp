@@ -398,6 +398,57 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "apk_file",
         ),
     ),
+    "androguard": SourceReview(
+        note=(
+            "Reviewed against upstream Androguard Poetry script entry point "
+            "and Click CLI definitions for the top-level verbose flag and "
+            "axml, arsc, decompile, sign, apkid, analyze, disassemble, trace, "
+            "dtrace, dump, and cg subcommands, including positional input "
+            "files, APK lists, output controls, resource selectors, "
+            "decompiler/callgraph settings, certificate hash modes, sessions, "
+            "offset/size controls, tracing modules, and package names."
+        ),
+        references=(
+            "https://github.com/androguard/androguard",
+            "https://raw.githubusercontent.com/androguard/androguard/master/pyproject.toml",
+            "https://raw.githubusercontent.com/androguard/androguard/master/androguard/cli/cli.py",
+        ),
+        verified_parameters=(
+            "command",
+            "input_file",
+            "apk_files",
+            "output_file",
+            "output_dir",
+            "resource",
+            "package",
+            "locale",
+            "resource_type",
+            "resource_id",
+            "list_packages",
+            "list_locales",
+            "list_types",
+            "graph_format",
+            "jar",
+            "limit",
+            "decompiler",
+            "hash_algo",
+            "all_hashes",
+            "show",
+            "session",
+            "offset",
+            "size",
+            "modules",
+            "enable_ui",
+            "package_name",
+            "output_type",
+            "classname",
+            "methodname",
+            "descriptor",
+            "accessflag",
+            "no_isolated",
+            "verbose",
+        ),
+    ),
     "radare2": SourceReview(
         note=(
             "Reviewed against upstream radare2 r2 command-line usage and "

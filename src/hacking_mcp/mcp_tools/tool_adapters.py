@@ -1535,6 +1535,13 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     if target:
         return target
 
+    if tool.name == "androguard":
+        for key in ("input_file", "apk_files", "package_name", "session"):
+            value = str(kwargs.get(key) or "").strip()
+            if value:
+                return value
+        return str(kwargs.get("command") or "analyze").strip() or "analyze"
+
     if tool.name == "apk2gold":
         return str(kwargs.get("apk_file") or "")
 
