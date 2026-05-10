@@ -1,14 +1,18 @@
-"""Registry-derived adapter metadata for Xssfinder."""
+"""Dedicated adapter metadata for Extended XSS Searcher and Finder."""
 
-from hacking_mcp.mcp_tools.adapters.generic import build_options_for, parameters_for
-
-
-TOOL_NAME = 'xssfinder'
+from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 
 
-def parameters():
-    return parameters_for(TOOL_NAME)
+def parameters() -> list[AdapterParameterSpec]:
+    return [
+        AdapterParameterSpec(
+            "config_driven",
+            bool,
+            True,
+            "Uses upstream app-settings.conf and config/*.txt files; no CLI options are generated.",
+        ),
+    ]
 
 
 def build_options(kwargs: dict) -> list[str]:
-    return build_options_for(TOOL_NAME, kwargs)
+    return []

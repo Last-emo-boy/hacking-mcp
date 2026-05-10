@@ -2976,6 +2976,27 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "silence",
         ),
     ),
+    "xssfinder": SourceReview(
+        note=(
+            "Reviewed against upstream extended-xss-search README, main script, "
+            "and Config loader. The documented invocation is python3 "
+            "extended-xss-search.py; runtime inputs come from app-settings.conf "
+            "and config files such as urls-to-test.txt, parameters.txt, "
+            "http-headers.txt, and cookie-jar.txt. The adapter therefore "
+            "corrects the registry script name, suppresses target argv and "
+            "generic XSS flags, and exposes only a config-driven marker."
+        ),
+        references=(
+            "https://github.com/Damian89/extended-xss-search",
+            "https://raw.githubusercontent.com/Damian89/extended-xss-search/master/README.md",
+            "https://raw.githubusercontent.com/Damian89/extended-xss-search/master/extended-xss-search.py",
+            "https://raw.githubusercontent.com/Damian89/extended-xss-search/master/inc/Config.py",
+            "https://raw.githubusercontent.com/Damian89/extended-xss-search/master/example.app-settings.conf",
+        ),
+        verified_parameters=(
+            "config_driven",
+        ),
+    ),
     "xsstrike": SourceReview(
         note=(
             "Reviewed against upstream XSStrike argparse definitions for POST "

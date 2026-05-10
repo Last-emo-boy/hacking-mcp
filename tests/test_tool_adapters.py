@@ -3207,6 +3207,48 @@ def test_web2attack_source_reviewed_interactive_only(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_xssfinder_source_reviewed_config_driven(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("xssfinder")
+
+    assert tool.run_command == "cd extended-xss-search && python3 extended-xss-search.py"
+    assert records["xssfinder"].source_status == "source-reviewed"
+    assert records["xssfinder"].unverified_parameters == ()
+    assert records["xssfinder"].gap == ""
+    assert any("extended-xss-search" in item for item in records["xssfinder"].evidence)
+
+    params = adapter_parameter_names(tool, specs["xssfinder"])
+    for removed in (
+        "blind_callback",
+        "cookies",
+        "json_output",
+        "output_file",
+        "parameter",
+        "scan_depth",
+        "timeout",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "config_driven" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["xssfinder"],
+        {
+            "target": "https://ignored.example",
+            "config_driven": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is True
+
 def test_wireshark_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
@@ -6400,6 +6442,33 @@ async def test_xerosploit_source_reviewed_parameters_build_cli_options(registry,
     assert request.options == ""
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_xssfinder_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_xssfinder",
+        {
+            "target": "https://ignored.example",
+            "config_driven": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "xssfinder"
+    assert request.target == ""
+    assert request.options == ""
+    assert request.require_confirmation is True
 
 
 @pytest.mark.asyncio

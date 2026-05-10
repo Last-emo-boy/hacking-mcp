@@ -25,7 +25,7 @@ XSS_ATTACK_TOOLS: list[HackingToolDef] = [
         install_commands=[
             "git clone https://github.com/Damian89/extended-xss-search.git",
         ],
-        run_command="cd extended-xss-search && python3 app.py",
+        run_command="cd extended-xss-search && python3 extended-xss-search.py",
         project_url="https://github.com/Damian89/extended-xss-search",
         tags=["xss", "scanner", "finder", "extended"],
         safety_tier=SafetyTier.SAFE,
