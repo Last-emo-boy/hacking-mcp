@@ -95,7 +95,7 @@ OTHER_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/s0md3v/Hash-Buster.git",
             "cd Hash-Buster && make install",
         ],
-        run_command="buster -t {target}",
+        run_command="buster {target}",
         project_url="https://github.com/s0md3v/Hash-Buster",
         tags=["hash", "cracker", "md5", "sha", "password"],
         safety_tier=SafetyTier.SAFE,

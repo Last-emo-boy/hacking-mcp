@@ -1567,6 +1567,24 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "proxy",
         ),
     ),
+    "hashbuster": SourceReview(
+        note=(
+            "Reviewed against upstream Hash-Buster README and argparse "
+            "definitions. The registry command now uses buster {target}; "
+            "the adapter generates the source-backed input selector before "
+            "the target (-s single hash, -f file, or -d directory) and the "
+            "documented -t thread count option."
+        ),
+        references=(
+            "https://github.com/s0md3v/Hash-Buster",
+            "https://raw.githubusercontent.com/s0md3v/Hash-Buster/master/README.md",
+            "https://raw.githubusercontent.com/s0md3v/Hash-Buster/master/hash.py",
+        ),
+        verified_parameters=(
+            "input_type",
+            "threads",
+        ),
+    ),
     "allinone-socialmedia": SourceReview(
         note=(
             "Reviewed against upstream Brute_Force README and OptionParser "

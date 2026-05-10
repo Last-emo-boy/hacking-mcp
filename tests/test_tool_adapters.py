@@ -2562,6 +2562,41 @@ def test_faceshell_source_reviewed_and_previewable(registry, safety):
     assert password_preview["confirm_authorized"] is True
 
 
+def test_hashbuster_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("hashbuster")
+
+    assert tool.run_command == "buster {target}"
+    assert records["hashbuster"].source_status == "source-reviewed"
+    assert records["hashbuster"].unverified_parameters == ()
+    assert records["hashbuster"].gap == ""
+    assert any("Hash-Buster" in item for item in records["hashbuster"].evidence)
+
+    params = adapter_parameter_names(tool, specs["hashbuster"])
+    for removed in ("attack_mode", "hash_file", "hash_type", "max_length", "min_length", "output_file", "wordlist"):
+        assert removed not in params
+    for expected in ("input_type", "threads"):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["hashbuster"],
+        {
+            "target": "hashes.txt",
+            "input_type": "file",
+            "threads": 8,
+        },
+    )
+    assert preview["target"] == "hashes.txt"
+    assert preview["options"] == "-t 8 -f"
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -5227,6 +5262,35 @@ async def test_faceshell_source_reviewed_parameters_build_cli_options(registry, 
     assert request.options == "-l passwords.txt -X proxies.txt"
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_hashbuster_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_hashbuster",
+        {
+            "target": "hashes.txt",
+            "input_type": "file",
+            "threads": 8,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "hashbuster"
+    assert request.target == "hashes.txt"
+    assert request.options == "-t 8 -f"
+    assert request.options_before_target is True
+    assert request.require_confirmation is False
 
 
 @pytest.mark.asyncio
