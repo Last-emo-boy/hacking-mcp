@@ -1207,6 +1207,21 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "hostname",
         ),
     ),
+    "isitdown": SourceReview(
+        note=(
+            "Reviewed against the Python standard library urllib.request API. "
+            "The registry command normalizes a hostname to HTTPS when needed "
+            "and calls urllib.request.urlopen with a fixed timeout, so the "
+            "adapter exposes only a URL target alias and no generated CLI "
+            "options."
+        ),
+        references=(
+            "https://docs.python.org/3/library/urllib.request.html#urllib.request.urlopen",
+        ),
+        verified_parameters=(
+            "url",
+        ),
+    ),
     "nuclei": SourceReview(
         note=(
             "Reviewed against official ProjectDiscovery Nuclei docs for "

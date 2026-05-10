@@ -158,6 +158,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["host2ip"].unverified_parameters == ()
     assert any("socket.gethostbyname" in item for item in records["host2ip"].evidence)
 
+    assert records["isitdown"].source_status == "source-reviewed"
+    assert records["isitdown"].unverified_parameters == ()
+    assert any("urllib.request.urlopen" in item for item in records["isitdown"].evidence)
+
     assert records["ffuf"].source_status == "source-reviewed"
     assert records["ffuf"].unverified_parameters == ()
     assert records["ffuf"].gap == ""
@@ -1784,6 +1788,49 @@ def test_portscan_source_reviewed_and_previewable(registry, safety):
         },
     )
     assert preview["target"] == "192.0.2.10"
+    assert preview["options"] == ""
+
+
+def test_isitdown_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["isitdown"].source_status == "source-reviewed"
+    assert records["isitdown"].unverified_parameters == ()
+    assert records["isitdown"].gap == ""
+    assert any("urllib.request.urlopen" in item for item in records["isitdown"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("isitdown"), specs["isitdown"])
+    for removed in (
+        "extensions",
+        "follow_redirects",
+        "json_output",
+        "match_codes",
+        "output_file",
+        "proxy",
+        "recursive",
+        "scan_depth",
+        "threads",
+        "timeout",
+        "user_agent",
+        "wordlist",
+    ):
+        assert removed not in params
+    assert "url" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("isitdown"),
+        specs["isitdown"],
+        {
+            "url": "example.com",
+        },
+    )
+    assert preview["target"] == "example.com"
     assert preview["options"] == ""
 
 
@@ -4019,6 +4066,31 @@ async def test_portscan_source_reviewed_parameters_build_target(registry, safety
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "portscan"
     assert request.target == "192.0.2.10"
+    assert request.options == ""
+
+
+@pytest.mark.asyncio
+async def test_isitdown_source_reviewed_parameters_build_target(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_isitdown",
+        {
+            "url": "example.com",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "isitdown"
+    assert request.target == "example.com"
     assert request.options == ""
 
 
