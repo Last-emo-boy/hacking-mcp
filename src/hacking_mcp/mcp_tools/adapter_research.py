@@ -2172,6 +2172,46 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "output_dir",
         ),
     ),
+    "nosqlmap": SourceReview(
+        note=(
+            "Reviewed against upstream NoSQLMap argparse build_parser() and "
+            "module args() hooks. Verified database/web attack mode selection, "
+            "platform/victim/listener/web request settings, ON/OFF HTTPS and "
+            "verbose toggles, POST/header lists, and nsmweb injection payload, "
+            "timing, and save-path options. The adapter maps the base target to "
+            "--victim because the registry command has no positional target."
+        ),
+        references=(
+            "https://github.com/codingo/NoSQLMap",
+            "https://raw.githubusercontent.com/codingo/NoSQLMap/master/nosqlmap.py",
+            "https://raw.githubusercontent.com/codingo/NoSQLMap/master/nsmweb.py",
+            "https://raw.githubusercontent.com/codingo/NoSQLMap/master/nsmmongo.py",
+            "https://raw.githubusercontent.com/codingo/NoSQLMap/master/nsmcouch.py",
+            "https://raw.githubusercontent.com/codingo/NoSQLMap/master/nsmscan.py",
+            "https://raw.githubusercontent.com/codingo/NoSQLMap/master/README.md",
+        ),
+        verified_parameters=(
+            "attack",
+            "platform",
+            "victim",
+            "db_port",
+            "my_ip",
+            "my_port",
+            "web_port",
+            "uri",
+            "http_method",
+            "https",
+            "verbose",
+            "post_data",
+            "request_headers",
+            "injected_parameter",
+            "inject_size",
+            "inject_format",
+            "params",
+            "do_time_attack",
+            "save_path",
+        ),
+    ),
     "dsss": SourceReview(
         note=(
             "Reviewed against upstream DSSS option parsing for POST data, cookie, "

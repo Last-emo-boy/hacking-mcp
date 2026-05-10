@@ -1,52 +1,76 @@
-"""Dedicated adapter metadata for NoSqlMap."""
+"""Dedicated adapter metadata for NoSQLMap."""
 
 from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
-from hacking_mcp.mcp_tools.adapters.helpers import add_assignment, add_bool, add_value
+from hacking_mcp.mcp_tools.adapters.helpers import add_value
 
 
 def parameters() -> list[AdapterParameterSpec]:
     return [
-        AdapterParameterSpec("data", str, "", "Optional POST body or data string."),
-        AdapterParameterSpec("dbms", str, "", "Force DBMS fingerprint, for example MySQL or PostgreSQL."),
-        AdapterParameterSpec("risk", int, 0, "Risk level 1-3 when supported; 0 leaves default."),
-        AdapterParameterSpec("level", int, 0, "Test level 1-5 when supported; 0 leaves default."),
-        AdapterParameterSpec("enumerate_databases", bool, False, "Request database enumeration when supported."),
-        AdapterParameterSpec("module", str, "", "Exploit/module path when supported."),
-        AdapterParameterSpec("rhost", str, "", "Remote host when supported."),
-        AdapterParameterSpec("rport", int, 0, "Remote port when supported; 0 leaves default."),
-        AdapterParameterSpec("username", str, "", "Username for authorized lab use."),
         AdapterParameterSpec(
-            "password",
+            "attack",
+            int,
+            0,
+            "Attack mode: 1 database access, 2 web app attack, 3 anonymous access scan; 0 leaves interactive default.",
+        ),
+        AdapterParameterSpec("platform", str, "", "Target database platform, for example MongoDB or CouchDB."),
+        AdapterParameterSpec("victim", str, "", "Target host or IP; defaults to the adapter target when omitted."),
+        AdapterParameterSpec("db_port", int, 0, "Database port for --dbPort; 0 leaves default."),
+        AdapterParameterSpec("my_ip", str, "", "Local platform or shell IP for --myIP."),
+        AdapterParameterSpec("my_port", int, 0, "Local platform or shell port for --myPort; 0 leaves default."),
+        AdapterParameterSpec("web_port", int, 0, "Web application port for --webPort; 0 leaves default."),
+        AdapterParameterSpec("uri", str, "", "Web application path for --uri."),
+        AdapterParameterSpec("http_method", str, "", "HTTP method for --httpMethod, usually GET or POST."),
+        AdapterParameterSpec("https", bool, False, "Set --https ON."),
+        AdapterParameterSpec("verbose", bool, False, "Set --verb ON for verbose output."),
+        AdapterParameterSpec(
+            "post_data",
             str,
             "",
-            "Password for lab/authorized use; may be present in process/audit logs.",
+            "POST data comma list for --postData, for example param1,value1,param2,value2.",
         ),
-        AdapterParameterSpec("payload", str, "", "Payload/profile selector when supported."),
-        AdapterParameterSpec("parameter", str, "", "Parameter to test when supported."),
-        AdapterParameterSpec("method", str, "", "HTTP method when supported."),
-        AdapterParameterSpec("delay", int, 0, "Time delay for blind testing when supported; 0 leaves default."),
-        AdapterParameterSpec("os_shell", bool, False, "Request OS shell mode when supported."),
-        AdapterParameterSpec("batch", bool, True, "Non-interactive/batch mode when supported."),
+        AdapterParameterSpec(
+            "request_headers",
+            str,
+            "",
+            "Request headers comma list for --requestHeaders, for example Header,Value.",
+        ),
+        AdapterParameterSpec("injected_parameter", str, "", "Parameter to inject for --injectedParameter."),
+        AdapterParameterSpec("inject_size", int, 0, "Payload size for --injectSize; 0 leaves default."),
+        AdapterParameterSpec(
+            "inject_format",
+            int,
+            0,
+            "Payload format for --injectFormat: 1 alphanumeric, 2 letters, 3 numbers, 4 email; 0 leaves default.",
+        ),
+        AdapterParameterSpec("params", str, "", "Parameters to inject in a comma-separated list for --params."),
+        AdapterParameterSpec("do_time_attack", str, "", "Timing attack switch for --doTimeAttack, usually y or n."),
+        AdapterParameterSpec("save_path", str, "", "Output file path for --savePath."),
     ]
 
 
 def build_options(kwargs: dict) -> list[str]:
     tokens: list[str] = []
-    add_value(tokens, kwargs, "data", "--data")
-    add_value(tokens, kwargs, "dbms", "--dbms")
-    add_value(tokens, kwargs, "risk", "--risk")
-    add_value(tokens, kwargs, "level", "--level")
-    add_bool(tokens, kwargs, "enumerate_databases", "--dbs")
-    add_value(tokens, kwargs, "module", "--module")
-    add_assignment(tokens, kwargs, "rhost", "RHOST")
-    add_assignment(tokens, kwargs, "rport", "RPORT")
-    add_value(tokens, kwargs, "username", "-u")
-    add_value(tokens, kwargs, "password", "-p")
-    add_value(tokens, kwargs, "payload", "--payload")
-    add_value(tokens, kwargs, "parameter", "-p")
-    add_value(tokens, kwargs, "method", "--method")
-    add_value(tokens, kwargs, "delay", "--time-sec")
-    add_bool(tokens, kwargs, "os_shell", "--os-shell")
-    if kwargs.get("batch", True):
-        tokens.append("--batch")
+    add_value(tokens, kwargs, "attack", "--attack")
+    add_value(tokens, kwargs, "platform", "--platform")
+    victim = kwargs.get("victim") or kwargs.get("target")
+    if victim:
+        tokens.extend(["--victim", str(victim)])
+    add_value(tokens, kwargs, "db_port", "--dbPort")
+    add_value(tokens, kwargs, "my_ip", "--myIP")
+    add_value(tokens, kwargs, "my_port", "--myPort")
+    add_value(tokens, kwargs, "web_port", "--webPort")
+    add_value(tokens, kwargs, "uri", "--uri")
+    add_value(tokens, kwargs, "http_method", "--httpMethod")
+    if kwargs.get("https"):
+        tokens.extend(["--https", "ON"])
+    if kwargs.get("verbose"):
+        tokens.extend(["--verb", "ON"])
+    add_value(tokens, kwargs, "post_data", "--postData")
+    add_value(tokens, kwargs, "request_headers", "--requestHeaders")
+    add_value(tokens, kwargs, "injected_parameter", "--injectedParameter")
+    add_value(tokens, kwargs, "inject_size", "--injectSize")
+    add_value(tokens, kwargs, "inject_format", "--injectFormat")
+    add_value(tokens, kwargs, "params", "--params")
+    add_value(tokens, kwargs, "do_time_attack", "--doTimeAttack")
+    add_value(tokens, kwargs, "save_path", "--savePath")
     return tokens

@@ -1017,6 +1017,100 @@ def test_sqlmap_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_nosqlmap_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["nosqlmap"].source_status == "source-reviewed"
+    assert records["nosqlmap"].unverified_parameters == ()
+    assert records["nosqlmap"].gap == ""
+    assert any("codingo/NoSQLMap" in item for item in records["nosqlmap"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("nosqlmap"), specs["nosqlmap"])
+    for removed in (
+        "data",
+        "dbms",
+        "risk",
+        "level",
+        "enumerate_databases",
+        "module",
+        "rhost",
+        "rport",
+        "username",
+        "password",
+        "payload",
+        "parameter",
+        "method",
+        "delay",
+        "os_shell",
+        "batch",
+    ):
+        assert removed not in params
+
+    for verified in (
+        "attack",
+        "platform",
+        "victim",
+        "db_port",
+        "my_ip",
+        "my_port",
+        "web_port",
+        "uri",
+        "http_method",
+        "https",
+        "verbose",
+        "post_data",
+        "request_headers",
+        "injected_parameter",
+        "inject_size",
+        "inject_format",
+        "params",
+        "do_time_attack",
+        "save_path",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("nosqlmap"),
+        specs["nosqlmap"],
+        {
+            "target": "mongo.test",
+            "attack": 2,
+            "platform": "MongoDB",
+            "db_port": 27017,
+            "my_ip": "127.0.0.1",
+            "my_port": 4444,
+            "web_port": 8080,
+            "uri": "/acct",
+            "http_method": "GET",
+            "https": True,
+            "verbose": True,
+            "post_data": "acctid,test",
+            "request_headers": "X-Test,1",
+            "injected_parameter": "acctid",
+            "inject_size": 4,
+            "inject_format": 2,
+            "params": "1",
+            "do_time_attack": "n",
+            "save_path": "nosqlmap.out",
+        },
+    )
+    assert preview["target"] == "mongo.test"
+    assert preview["options"] == (
+        "--attack 2 --platform MongoDB --victim mongo.test --dbPort 27017 "
+        "--myIP 127.0.0.1 --myPort 4444 --webPort 8080 --uri /acct "
+        "--httpMethod GET --https ON --verb ON --postData acctid,test "
+        "--requestHeaders X-Test,1 --injectedParameter acctid "
+        "--injectSize 4 --injectFormat 2 --params 1 --doTimeAttack n "
+        "--savePath nosqlmap.out"
+    )
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
