@@ -1217,6 +1217,111 @@ def test_holehe_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_maigret_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["maigret"].source_status == "source-reviewed"
+    assert records["maigret"].unverified_parameters == ()
+    assert records["maigret"].gap == ""
+    assert any("soxoj/maigret" in item for item in records["maigret"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("maigret"), specs["maigret"])
+    for removed in ("api_key", "json_output", "output_file", "passive", "resolvers", "sources"):
+        assert removed not in params
+
+    for verified in (
+        "extra_usernames",
+        "timeout",
+        "retries",
+        "max_connections",
+        "no_recursion",
+        "no_extracting",
+        "id_type",
+        "permute",
+        "db_file",
+        "no_autoupdate",
+        "force_update",
+        "cookies_jar_file",
+        "ignore_ids",
+        "folder_output",
+        "proxy",
+        "tor_proxy",
+        "i2p_proxy",
+        "with_domains",
+        "all_sites",
+        "top_sites",
+        "tags",
+        "exclude_tags",
+        "sites",
+        "use_disabled_sites",
+        "parse_url",
+        "self_check",
+        "stats",
+        "print_not_found",
+        "print_errors",
+        "verbose",
+        "info",
+        "debug",
+        "no_color",
+        "no_progressbar",
+        "txt",
+        "csv",
+        "html",
+        "pdf",
+        "md",
+        "graph",
+        "json_report",
+        "reports_sorting",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("maigret"),
+        specs["maigret"],
+        {
+            "target": "alice",
+            "extra_usernames": "bob,charlie",
+            "timeout": 8,
+            "retries": 2,
+            "max_connections": 20,
+            "no_recursion": True,
+            "no_extracting": True,
+            "id_type": "username",
+            "permute": True,
+            "db_file": "sites.json",
+            "ignore_ids": "ignored1,ignored2",
+            "folder_output": "reports",
+            "proxy": "socks5://127.0.0.1:1080",
+            "all_sites": True,
+            "top_sites": 100,
+            "tags": "photo",
+            "sites": "github,twitter",
+            "print_errors": True,
+            "verbose": True,
+            "no_color": True,
+            "csv": True,
+            "json_report": "simple",
+            "reports_sorting": "data",
+        },
+    )
+    assert preview["target"] == "alice"
+    assert preview["options"] == (
+        "bob charlie --timeout 8 --retries 2 --max-connections 20 "
+        "--no-recursion --no-extracting --id-type username --permute "
+        "--db sites.json --ignore-ids ignored1 --ignore-ids ignored2 "
+        "--folderoutput reports --proxy socks5://127.0.0.1:1080 "
+        "--all-sites --top-sites 100 --tags photo --site github "
+        "--site twitter --print-errors --verbose --no-color --csv "
+        "--json simple --reports-sorting data"
+    )
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP

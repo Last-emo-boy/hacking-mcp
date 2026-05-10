@@ -1413,6 +1413,66 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "timeout",
         ),
     ),
+    "maigret": SourceReview(
+        note=(
+            "Reviewed against upstream Maigret ArgumentParser definitions for "
+            "username targets, request timeout/retry/concurrency controls, "
+            "recursion/extraction and identifier settings, database/update and "
+            "cookie controls, repeated ignore/site filters, proxy settings, "
+            "site filtering, parse/self-check/stats modes, console verbosity, "
+            "report formats, JSON output type, and report sorting."
+        ),
+        references=(
+            "https://github.com/soxoj/maigret",
+            "https://raw.githubusercontent.com/soxoj/maigret/main/maigret/maigret.py",
+            "https://raw.githubusercontent.com/soxoj/maigret/main/maigret/__main__.py",
+            "https://raw.githubusercontent.com/soxoj/maigret/main/README.md",
+        ),
+        verified_parameters=(
+            "extra_usernames",
+            "timeout",
+            "retries",
+            "max_connections",
+            "no_recursion",
+            "no_extracting",
+            "id_type",
+            "permute",
+            "db_file",
+            "no_autoupdate",
+            "force_update",
+            "cookies_jar_file",
+            "ignore_ids",
+            "folder_output",
+            "proxy",
+            "tor_proxy",
+            "i2p_proxy",
+            "with_domains",
+            "all_sites",
+            "top_sites",
+            "tags",
+            "exclude_tags",
+            "sites",
+            "use_disabled_sites",
+            "parse_url",
+            "self_check",
+            "stats",
+            "print_not_found",
+            "print_errors",
+            "verbose",
+            "info",
+            "debug",
+            "no_color",
+            "no_progressbar",
+            "txt",
+            "csv",
+            "html",
+            "pdf",
+            "md",
+            "graph",
+            "json_report",
+            "reports_sorting",
+        ),
+    ),
     "theHarvester": SourceReview(
         note=(
             "Reviewed against the upstream theHarvester argparse definitions "
