@@ -1371,6 +1371,49 @@ def test_sublist3r_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_breacher_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["breacher"].source_status == "source-reviewed"
+    assert records["breacher"].unverified_parameters == ()
+    assert records["breacher"].gap == ""
+    assert any("s0md3v/Breacher" in item for item in records["breacher"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("breacher"), specs["breacher"])
+    for removed in (
+        "extensions",
+        "follow_redirects",
+        "match_codes",
+        "proxy",
+        "recursive",
+        "threads",
+        "wordlist",
+    ):
+        assert removed not in params
+    assert "path" in params
+    assert "panel_type" in params
+    assert "fast" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("breacher"),
+        specs["breacher"],
+        {
+            "target": "https://example.com",
+            "path": "/admin",
+            "panel_type": "php",
+            "fast": True,
+        },
+    )
+    assert preview["target"] == "https://example.com"
+    assert preview["options"] == "--path /admin --type php --fast"
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP

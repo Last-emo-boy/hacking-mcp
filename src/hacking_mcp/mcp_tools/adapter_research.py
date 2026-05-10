@@ -1413,6 +1413,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "timeout",
         ),
     ),
+    "breacher": SourceReview(
+        note=(
+            "Reviewed against upstream Breacher argparse definitions for URL "
+            "target execution plus path prefix, panel type, and fast-mode "
+            "controls."
+        ),
+        references=(
+            "https://github.com/s0md3v/Breacher",
+            "https://raw.githubusercontent.com/s0md3v/Breacher/master/breacher.py",
+            "https://raw.githubusercontent.com/s0md3v/Breacher/master/README.md",
+        ),
+        verified_parameters=(
+            "path",
+            "panel_type",
+            "fast",
+        ),
+    ),
     "maigret": SourceReview(
         note=(
             "Reviewed against upstream Maigret ArgumentParser definitions for "
