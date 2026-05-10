@@ -709,6 +709,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "leviathan",
         "redhawk",
         "reconspider",
+        "rvuln",
         "showme",
         "web2attack",
         "wireshark",

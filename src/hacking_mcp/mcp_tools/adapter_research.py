@@ -3017,6 +3017,25 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "rvuln": SourceReview(
+        note=(
+            "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
+            "documented startup is ./RVuln and the source reads Target URL, "
+            "query parameters, wordlist path, and verbose mode from stdin "
+            "with read_line rather than parsing CLI arguments. The adapter "
+            "therefore points at the built release binary, suppresses target "
+            "argv and generated web-scanner flags, and exposes only an "
+            "interactive marker."
+        ),
+        references=(
+            "https://github.com/yangr0/RVuln",
+            "https://raw.githubusercontent.com/yangr0/RVuln/master/HOW-TO.md",
+            "https://raw.githubusercontent.com/yangr0/RVuln/master/src/main.rs",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "xsstrike": SourceReview(
         note=(
             "Reviewed against upstream XSStrike argparse definitions for POST "
