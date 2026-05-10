@@ -1584,6 +1584,26 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "faceshell": SourceReview(
+        note=(
+            "Reviewed against upstream Brute_Force README and OptionParser "
+            "definitions for Facebook mode. The registry command now keeps "
+            "the source-backed -f/--facebook target in run_command and lets "
+            "the adapter generate the documented password-list, single "
+            "password, and proxy-list options while preserving the previous "
+            "default wordlist.txt behavior."
+        ),
+        references=(
+            "https://github.com/Matrix07ksa/Brute_Force",
+            "https://raw.githubusercontent.com/Matrix07ksa/Brute_Force/master/README.md",
+            "https://raw.githubusercontent.com/Matrix07ksa/Brute_Force/master/Brute_Force.py",
+        ),
+        verified_parameters=(
+            "wordlist",
+            "password",
+            "proxy_file",
+        ),
+    ),
     "holehe": SourceReview(
         note=(
             "Reviewed against upstream Holehe argparse definitions for email "

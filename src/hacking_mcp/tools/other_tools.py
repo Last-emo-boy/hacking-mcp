@@ -149,7 +149,7 @@ OTHER_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/Matrix07ksa/Brute_Force.git",
             "cd Brute_Force && sudo pip3 install proxylist && pip3 install mechanize",
         ],
-        run_command="cd Brute_Force && python3 Brute_Force.py -f {target} -l wordlist.txt",
+        run_command="cd Brute_Force && python3 Brute_Force.py -f {target}",
         project_url="https://github.com/Matrix07ksa/Brute_Force",
         tags=["bruteforce", "facebook", "social-media"],
         safety_tier=SafetyTier.CAUTION,

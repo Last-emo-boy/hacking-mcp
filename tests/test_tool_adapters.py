@@ -2513,6 +2513,55 @@ def test_allinone_socialmedia_source_reviewed_and_previewable(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_faceshell_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("faceshell")
+
+    assert specs["faceshell"].exposed is True
+    assert specs["faceshell"].requires_confirmation is True
+    assert tool.run_command == "cd Brute_Force && python3 Brute_Force.py -f {target}"
+    assert records["faceshell"].source_status == "source-reviewed"
+    assert records["faceshell"].unverified_parameters == ()
+    assert records["faceshell"].gap == ""
+    assert any("Brute_Force" in item for item in records["faceshell"].evidence)
+
+    params = adapter_parameter_names(tool, specs["faceshell"])
+    assert "timeout" not in params
+    for expected in ("wordlist", "password", "proxy_file"):
+        assert expected in params
+
+    default_preview = adapter_request_preview(
+        tool,
+        specs["faceshell"],
+        {
+            "target": "alice",
+            "confirm_authorized": True,
+        },
+    )
+    assert default_preview["target"] == "alice"
+    assert default_preview["options"] == "-l wordlist.txt"
+
+    password_preview = adapter_request_preview(
+        tool,
+        specs["faceshell"],
+        {
+            "target": "alice",
+            "password": "secret",
+            "proxy_file": "proxies.txt",
+            "confirm_authorized": True,
+        },
+    )
+    assert password_preview["target"] == "alice"
+    assert password_preview["options"] == "-p secret -X proxies.txt"
+    assert password_preview["confirm_authorized"] is True
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -5146,6 +5195,36 @@ async def test_allinone_socialmedia_source_reviewed_parameters_build_cli_options
     assert request.tool_name == "allinone-socialmedia"
     assert request.target == ""
     assert request.options == ""
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_faceshell_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_faceshell",
+        {
+            "target": "alice",
+            "wordlist": "passwords.txt",
+            "proxy_file": "proxies.txt",
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "faceshell"
+    assert request.target == "alice"
+    assert request.options == "-l passwords.txt -X proxies.txt"
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
 
