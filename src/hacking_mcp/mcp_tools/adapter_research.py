@@ -2212,6 +2212,25 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "save_path",
         ),
     ),
+    "explo": SourceReview(
+        note=(
+            "Reviewed against upstream explo argparse parser and README usage. "
+            "The CLI accepts one or more testcase YAML filenames and the "
+            "-v/--verbose flag; proxy and timeout controls are environment "
+            "variables, not CLI parameters. The registry command now leaves "
+            "verbose opt-in to the adapter instead of forcing it."
+        ),
+        references=(
+            "https://github.com/telekom-security/explo",
+            "https://raw.githubusercontent.com/telekom-security/explo/master/README.md",
+            "https://raw.githubusercontent.com/telekom-security/explo/master/explo/core.py",
+            "https://raw.githubusercontent.com/telekom-security/explo/master/setup.py",
+        ),
+        verified_parameters=(
+            "extra_files",
+            "verbose",
+        ),
+    ),
     "dsss": SourceReview(
         note=(
             "Reviewed against upstream DSSS option parsing for POST data, cookie, "

@@ -1111,6 +1111,58 @@ def test_nosqlmap_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_explo_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert registry.get_tool("explo").run_command == "cd explo && explo {target}"
+    assert records["explo"].source_status == "source-reviewed"
+    assert records["explo"].unverified_parameters == ()
+    assert records["explo"].gap == ""
+    assert any("telekom-security/explo" in item for item in records["explo"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("explo"), specs["explo"])
+    for removed in (
+        "wordlist",
+        "threads",
+        "extensions",
+        "match_codes",
+        "recursive",
+        "follow_redirects",
+        "proxy",
+        "data",
+        "dbms",
+        "risk",
+        "level",
+        "enumerate_databases",
+        "parameter",
+        "method",
+        "delay",
+        "os_shell",
+        "batch",
+    ):
+        assert removed not in params
+    assert "extra_files" in params
+    assert "verbose" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("explo"),
+        specs["explo"],
+        {
+            "target": "cases/one.yaml",
+            "extra_files": "cases/two.yaml,cases/three.yaml",
+            "verbose": True,
+        },
+    )
+    assert preview["target"] == "cases/one.yaml"
+    assert preview["options"] == "cases/two.yaml cases/three.yaml --verbose"
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP

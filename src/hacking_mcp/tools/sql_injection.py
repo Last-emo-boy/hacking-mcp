@@ -48,7 +48,7 @@ SQL_INJECTION_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/dtag-dev-sec/explo.git",
             "cd explo && pip install --user .",
         ],
-        run_command="cd explo && explo --verbose {target}",
+        run_command="cd explo && explo {target}",
         project_url="https://github.com/dtag-dev-sec/explo",
         tags=["web", "testing", "sqli", "automation"],
         safety_tier=SafetyTier.CAUTION,
