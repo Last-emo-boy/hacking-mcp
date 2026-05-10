@@ -3387,6 +3387,37 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "pwncat-cs": SourceReview(
+        note=(
+            "Reviewed against upstream pwncat README usage examples and "
+            "pwncat/__main__.py argparse entrypoint. The pwncat-cs command "
+            "accepts optional connection-string target syntax plus listen, "
+            "port, platform, SSL certificate/key, SSH identity, implant "
+            "listing, version, plugin pre-download, config, and verbose "
+            "flags. The registry command now invokes the real pwncat-cs "
+            "entrypoint instead of forcing --help, and the adapter removes "
+            "unsupported post-exploit placeholder parameters."
+        ),
+        references=(
+            "https://github.com/calebstewart/pwncat",
+            "https://raw.githubusercontent.com/calebstewart/pwncat/master/README.md",
+            "https://raw.githubusercontent.com/calebstewart/pwncat/master/pwncat/__main__.py",
+        ),
+        verified_parameters=(
+            "listen",
+            "port",
+            "platform",
+            "ssl",
+            "ssl_cert",
+            "ssl_key",
+            "identity_file",
+            "list_implants",
+            "version",
+            "download_plugins",
+            "config_file",
+            "verbose",
+        ),
+    ),
     "explo": SourceReview(
         note=(
             "Reviewed against upstream explo argparse parser and README usage. "

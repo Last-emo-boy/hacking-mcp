@@ -1381,6 +1381,78 @@ def test_websploit_source_reviewed_interactive_only(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_pwncat_cs_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("pwncat-cs")
+
+    assert tool.run_command == "pwncat-cs"
+    assert specs["pwncat-cs"].requires_confirmation is True
+    assert records["pwncat-cs"].source_status == "source-reviewed"
+    assert records["pwncat-cs"].unverified_parameters == ()
+    assert records["pwncat-cs"].gap == ""
+    assert any("calebstewart/pwncat" in item for item in records["pwncat-cs"].evidence)
+
+    params = adapter_parameter_names(tool, specs["pwncat-cs"])
+    for removed in (
+        "apk_path",
+        "cert_file",
+        "download",
+        "key_file",
+        "lhost",
+        "listener",
+        "lport",
+        "output_file",
+        "package_name",
+        "protocol",
+        "session_id",
+        "upload",
+    ):
+        assert removed not in params
+    for expected in (
+        "listen",
+        "port",
+        "platform",
+        "ssl",
+        "ssl_cert",
+        "ssl_key",
+        "identity_file",
+        "list_implants",
+        "version",
+        "download_plugins",
+        "config_file",
+        "verbose",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["pwncat-cs"],
+        {
+            "target": "10.10.10.10",
+            "port": 4444,
+            "platform": "windows",
+            "ssl": True,
+            "ssl_cert": "cert.pem",
+            "ssl_key": "key.pem",
+            "identity_file": "id_rsa",
+            "verbose": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == "10.10.10.10"
+    assert preview["options"] == (
+        "-p 4444 -m windows -S --ssl-cert cert.pem "
+        "--ssl-key key.pem -i id_rsa -V"
+    )
+    assert preview["confirm_authorized"] is True
+
+
 def test_explo_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
@@ -7105,6 +7177,44 @@ async def test_websploit_source_reviewed_parameters_build_cli_options(registry, 
     assert request.tool_name == "websploit"
     assert request.target == ""
     assert request.options == ""
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_pwncat_cs_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_pwncat_cs",
+        {
+            "target": "10.10.10.10",
+            "port": 4444,
+            "platform": "windows",
+            "ssl": True,
+            "ssl_cert": "cert.pem",
+            "ssl_key": "key.pem",
+            "identity_file": "id_rsa",
+            "verbose": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "pwncat-cs"
+    assert request.target == "10.10.10.10"
+    assert request.options == (
+        "-p 4444 -m windows -S --ssl-cert cert.pem "
+        "--ssl-key key.pem -i id_rsa -V"
+    )
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
 
