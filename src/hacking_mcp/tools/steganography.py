@@ -34,7 +34,7 @@ STEGANOGRAPHY_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/W1LDN16H7/StegoCracker.git",
             "sudo chmod -R 755 StegoCracker",
         ],
-        run_command="cd StegoCracker && python3 -m pip install -r requirements.txt && ./install.sh",
+        run_command="stego",
         project_url="https://github.com/W1LDN16H7/StegoCracker",
         tags=["stegano", "hide", "extract", "image", "audio"],
         safety_tier=SafetyTier.SAFE,

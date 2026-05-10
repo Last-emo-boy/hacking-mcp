@@ -182,6 +182,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["stegcracker"].unverified_parameters == ()
     assert any("Paradoxis/StegCracker" in item for item in records["stegcracker"].evidence)
 
+    assert records["stegocracker"].source_status == "source-reviewed"
+    assert records["stegocracker"].unverified_parameters == ()
+    assert any("W1LDN16H7/StegoCracker" in item for item in records["stegocracker"].evidence)
+
     assert records["subfinder"].source_status == "source-reviewed"
     assert records["subfinder"].unverified_parameters == ()
     assert any("subfinder/usage" in item for item in records["subfinder"].evidence)
@@ -1637,6 +1641,52 @@ def test_commix_source_reviewed_and_previewable(registry, safety):
         "--delay 1 --time-sec 5.0 --os-cmd whoami --level 2 "
         "--skip-waf --disable-coloring"
     )
+
+
+def test_stegocracker_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["stegocracker"].source_status == "source-reviewed"
+    assert records["stegocracker"].unverified_parameters == ()
+    assert records["stegocracker"].gap == ""
+    assert any("W1LDN16H7/StegoCracker" in item for item in records["stegocracker"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("stegocracker"), specs["stegocracker"])
+    for removed in ("extract", "output_file", "passphrase", "wordlist"):
+        assert removed not in params
+    for verified in (
+        "input_image",
+        "output_image",
+        "message",
+        "read_from",
+        "encode",
+        "decode",
+        "music_file",
+        "output_music",
+        "convert",
+        "version",
+        "update",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("stegocracker"),
+        specs["stegocracker"],
+        {
+            "target": "cover.png",
+            "encode": True,
+            "message": "secret",
+            "output_image": "out.png",
+        },
+    )
+    assert preview["target"] == "cover.png"
+    assert preview["options"] == "--input cover.png --output out.png --message secret --encode"
 
 
 @pytest.mark.asyncio
@@ -3794,6 +3844,34 @@ async def test_stegcracker_source_reviewed_parameters_build_cli_options(registry
     assert request.options == (
         "words.txt --output secret.out --threads 8 --chunk-size 128 --quiet"
     )
+
+
+@pytest.mark.asyncio
+async def test_stegocracker_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_stegocracker",
+        {
+            "target": "cover.png",
+            "encode": True,
+            "message": "secret",
+            "output_image": "out.png",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "stegocracker"
+    assert request.target == "cover.png"
+    assert request.options == "--input cover.png --output out.png --message secret --encode"
 
 
 @pytest.mark.asyncio

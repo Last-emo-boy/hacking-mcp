@@ -1126,6 +1126,33 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "verbose",
         ),
     ),
+    "stegocracker": SourceReview(
+        note=(
+            "Reviewed against upstream StegoCracker installer and CLI argparse "
+            "entrypoint for the installed stego command, image input/output, "
+            "message encoding, image read/decode mode, audio file input/output, "
+            "MP3-to-WAV conversion, version display, and self-update."
+        ),
+        references=(
+            "https://github.com/W1LDN16H7/StegoCracker",
+            "https://raw.githubusercontent.com/W1LDN16H7/StegoCracker/master/README.md",
+            "https://raw.githubusercontent.com/W1LDN16H7/StegoCracker/master/install.sh",
+            "https://raw.githubusercontent.com/W1LDN16H7/StegoCracker/master/stego/StegoCracker",
+        ),
+        verified_parameters=(
+            "input_image",
+            "output_image",
+            "message",
+            "read_from",
+            "encode",
+            "decode",
+            "music_file",
+            "output_music",
+            "convert",
+            "version",
+            "update",
+        ),
+    ),
     "nmap": SourceReview(
         note=(
             "Reviewed against the official Nmap reference guide for target "
