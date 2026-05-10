@@ -382,6 +382,22 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "apk2gold": SourceReview(
+        note=(
+            "Reviewed against upstream Apk2Gold README usage and shell wrapper. "
+            "The wrapper accepts a single APK package argument, prints "
+            "'Usage: apk2gold apk_file' when it is missing, and derives the "
+            "output directory from the APK filename."
+        ),
+        references=(
+            "https://github.com/lxdvs/apk2gold",
+            "https://raw.githubusercontent.com/lxdvs/apk2gold/master/README.md",
+            "https://raw.githubusercontent.com/lxdvs/apk2gold/master/apk2gold",
+        ),
+        verified_parameters=(
+            "apk_file",
+        ),
+    ),
     "radare2": SourceReview(
         note=(
             "Reviewed against upstream radare2 r2 command-line usage and "

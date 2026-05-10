@@ -126,6 +126,7 @@ def test_split_adapter_registry_includes_migrated_tools():
     )
 
     migrated = {
+        "apk2gold",
         "binwalk",
         "frida",
         "ghidra",
@@ -305,6 +306,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["ghidra"].source_status == "source-reviewed"
     assert records["ghidra"].unverified_parameters == ()
     assert any("NationalSecurityAgency/ghidra" in item for item in records["ghidra"].evidence)
+
+    assert records["apk2gold"].source_status == "source-reviewed"
+    assert records["apk2gold"].unverified_parameters == ()
+    assert any("lxdvs/apk2gold" in item for item in records["apk2gold"].evidence)
 
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
@@ -733,6 +738,9 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "verbose", "quiet", "disable_plugins", "config", "save_config",
         "print_files", "plugin_options", "version", "help",
     }.issubset(jadx_schema)
+
+    apk2gold_schema = tools["security_tool_apk2gold"].inputSchema["properties"]
+    assert {"apk_file"}.issubset(apk2gold_schema)
 
     radare2_schema = tools["security_tool_radare2"].inputSchema["properties"]
     assert {
@@ -2596,6 +2604,31 @@ async def test_jadx_source_reviewed_parameters_build_cli_options(registry, safet
         "--disable-plugins plugin.one,plugin.two --config none "
         "-Pfoo=bar -Pbaz=qux"
     )
+
+
+@pytest.mark.asyncio
+async def test_apk2gold_source_reviewed_parameters_build_target(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_apk2gold",
+        {
+            "apk_file": "sample.apk",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "apk2gold"
+    assert request.target == "sample.apk"
+    assert request.options == ""
 
 
 @pytest.mark.asyncio

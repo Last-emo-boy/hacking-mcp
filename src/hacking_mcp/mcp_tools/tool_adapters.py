@@ -1532,7 +1532,13 @@ def _request_parts(
 
 def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     target = str(kwargs.get("target") or "")
-    if tool.name != "objection" or target:
+    if target:
+        return target
+
+    if tool.name == "apk2gold":
+        return str(kwargs.get("apk_file") or "")
+
+    if tool.name != "objection":
         return target
 
     for key in ("name", "source", "sources", "runtime_command"):

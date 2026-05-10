@@ -4,6 +4,7 @@ from collections.abc import Callable
 
 from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 from hacking_mcp.mcp_tools.adapters import (
+    apk2gold,
     binwalk,
     frida,
     ghidra,
@@ -30,6 +31,7 @@ OptionsBuilder = Callable[[dict], list[str]]
 
 
 PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
+    "apk2gold": apk2gold.parameters,
     "binwalk": binwalk.parameters,
     "frida": frida.parameters,
     "ghidra": ghidra.parameters,
@@ -51,6 +53,7 @@ PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
 }
 
 OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
+    "apk2gold": apk2gold.build_options,
     "binwalk": binwalk.build_options,
     "frida": frida.build_options,
     "ghidra": ghidra.build_options,
