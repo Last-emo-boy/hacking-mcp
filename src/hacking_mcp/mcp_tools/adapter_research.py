@@ -437,6 +437,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "output_dir",
         ),
     ),
+    "wireshark": SourceReview(
+        note=(
+            "Reviewed against the official Wireshark man page. Wireshark is "
+            "a GUI network protocol analyzer and the current registry command "
+            "starts sudo wireshark without -r, -i, capture, or output flags. "
+            "The adapter is therefore intentionally interactive-only for this "
+            "registered command shape and suppresses generated forensics and "
+            "network scan parameters."
+        ),
+        references=(
+            "https://www.wireshark.org/docs/man-pages/wireshark.html",
+            "https://www.wireshark.org/docs/man-pages/",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "volatility3": SourceReview(
         note=(
             "Reviewed against upstream Volatility 3 CLI source and generated "

@@ -709,6 +709,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "reconspider",
         "showme",
         "web2attack",
+        "wireshark",
         "xerosploit",
     }:
         return ""
