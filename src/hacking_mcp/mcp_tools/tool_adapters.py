@@ -24,22 +24,7 @@ from hacking_mcp.safety import SafetyPolicy
 
 MCP_TOOL_PREFIX = "security_tool_"
 
-NAMED_OVERRIDE_TOOL_NAMES = frozenset(
-    {
-        "binwalk",
-        "hashcat",
-        "jadx",
-        "john",
-        "mobsf",
-        "owasp-zap",
-        "sherlock",
-        "steghide",
-        "stegcracker",
-        "theHarvester",
-        "volatility3",
-        "whatweb",
-    }
-)
+NAMED_OVERRIDE_TOOL_NAMES = frozenset()
 
 LOCAL_TARGET_CATEGORIES = {
     "Forensics",
