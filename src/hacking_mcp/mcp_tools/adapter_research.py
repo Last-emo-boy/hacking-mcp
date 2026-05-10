@@ -1984,6 +1984,31 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "proxy",
         ),
     ),
+    "shodanfy": SourceReview(
+        note=(
+            "The original registry URL m4ll0k/Shodanfy.py currently returns "
+            "404, so this review uses the reachable Shodanfy.py source mirror "
+            "that preserves the m4ll0k source header and CLI. The script "
+            "accepts an IP positional target plus --getports, --getvuln, "
+            "--getinfo, --getmoreinfo, and --getbanner. It also documents "
+            "--stdin, but the registry command is target-placeholder based "
+            "and cannot pipe stdin, so stdin mode is intentionally not exposed. "
+            "The registry install/project URL now points at the reachable "
+            "source mirror."
+        ),
+        references=(
+            "https://github.com/owlonex/Shodanfy.py",
+            "https://raw.githubusercontent.com/owlonex/Shodanfy.py/master/README.md",
+            "https://raw.githubusercontent.com/owlonex/Shodanfy.py/master/shodanfy.py",
+        ),
+        verified_parameters=(
+            "get_ports",
+            "get_vuln",
+            "get_info",
+            "get_more_info",
+            "get_banner",
+        ),
+    ),
     "maigret": SourceReview(
         note=(
             "Reviewed against upstream Maigret ArgumentParser definitions for "

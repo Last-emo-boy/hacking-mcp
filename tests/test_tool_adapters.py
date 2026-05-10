@@ -2426,6 +2426,64 @@ def test_secretfinder_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_shodanfy_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("shodanfy")
+
+    assert tool.project_url == "https://github.com/owlonex/Shodanfy.py"
+    assert tool.install_commands == ["git clone https://github.com/owlonex/Shodanfy.py.git"]
+    assert tool.run_command == "cd Shodanfy.py && python3 shodanfy.py {target}"
+    assert records["shodanfy"].source_status == "source-reviewed"
+    assert records["shodanfy"].unverified_parameters == ()
+    assert records["shodanfy"].gap == ""
+    assert any("owlonex/Shodanfy.py" in item for item in records["shodanfy"].evidence)
+
+    params = adapter_parameter_names(tool, specs["shodanfy"])
+    for removed in (
+        "api_key",
+        "json_output",
+        "output_file",
+        "passive",
+        "resolvers",
+        "scan_depth",
+        "sources",
+        "timeout",
+        "user_agent",
+    ):
+        assert removed not in params
+    for expected in (
+        "get_ports",
+        "get_vuln",
+        "get_info",
+        "get_more_info",
+        "get_banner",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["shodanfy"],
+        {
+            "target": "203.0.113.10",
+            "get_ports": True,
+            "get_vuln": True,
+            "get_info": True,
+            "get_more_info": True,
+            "get_banner": True,
+        },
+    )
+    assert preview["target"] == "203.0.113.10"
+    assert preview["options"] == (
+        "--getports --getvuln --getinfo --getmoreinfo --getbanner"
+    )
+
+
 def test_spiderfoot_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
