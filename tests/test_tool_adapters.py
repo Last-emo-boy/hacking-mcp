@@ -3047,6 +3047,55 @@ def test_blazy_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_web2attack_source_reviewed_interactive_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("web2attack")
+
+    assert specs["web2attack"].requires_confirmation is True
+    assert records["web2attack"].source_status == "source-reviewed"
+    assert records["web2attack"].unverified_parameters == ()
+    assert records["web2attack"].gap == ""
+    assert any("santatic/web2attack" in item for item in records["web2attack"].evidence)
+
+    params = adapter_parameter_names(tool, specs["web2attack"])
+    for removed in (
+        "extensions",
+        "follow_redirects",
+        "match_codes",
+        "module",
+        "password",
+        "payload",
+        "proxy",
+        "recursive",
+        "rhost",
+        "rport",
+        "threads",
+        "username",
+        "wordlist",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["web2attack"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["confirm_authorized"] is True
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -6081,6 +6130,35 @@ async def test_blazy_source_reviewed_policy_only_endpoint_does_not_execute(regis
     assert "does not run the tool" in metadata["result"]
     assert content
     orchestrator.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_web2attack_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_web2attack",
+        {
+            "target": "ignored.example",
+            "interactive": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "web2attack"
+    assert request.target == ""
+    assert request.options == ""
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
 
 
 @pytest.mark.asyncio

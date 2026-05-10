@@ -708,6 +708,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "redhawk",
         "reconspider",
         "showme",
+        "web2attack",
         "xerosploit",
     }:
         return ""

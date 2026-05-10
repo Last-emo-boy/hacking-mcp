@@ -2462,6 +2462,24 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "delay_ms",
         ),
     ),
+    "web2attack": SourceReview(
+        note=(
+            "Reviewed against upstream web2attack console entrypoint and "
+            "Interface command-loop implementation. The executable starts "
+            "an interactive Cmd shell with use/set/show/run commands rather "
+            "than accepting module, target, credential, or web-discovery CLI "
+            "flags. The adapter is therefore intentionally interactive-only "
+            "and suppresses generated target/options."
+        ),
+        references=(
+            "https://github.com/santatic/web2attack",
+            "https://raw.githubusercontent.com/santatic/web2attack/master/w2aconsole",
+            "https://raw.githubusercontent.com/santatic/web2attack/master/w2a/core/interface.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "checkurl": SourceReview(
         note=(
             "Reviewed against upstream checkURL argparse definitions. The "
