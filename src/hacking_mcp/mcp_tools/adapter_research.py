@@ -2272,6 +2272,22 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "config_file",
         ),
     ),
+    "caido": SourceReview(
+        note=(
+            "Reviewed against Caido project/docs for the current registry "
+            "command shape. The MCP adapter is intentionally help-only and "
+            "runs caido --help; it does not expose generated scanning, "
+            "wordlist, recursion, or proxy parameters that are not part of "
+            "this registered command."
+        ),
+        references=(
+            "https://github.com/caido/caido",
+            "https://docs.caido.io/",
+        ),
+        verified_parameters=(
+            "help",
+        ),
+    ),
     "nikto": SourceReview(
         note=(
             "Reviewed against the upstream Nikto README help/options for CGI "
