@@ -9,7 +9,9 @@ from hacking_mcp.mcp_tools.adapters import (
     arjun,
     apk2gold,
     binwalk,
+    dalfox,
     dirsearch,
+    dsss,
     feroxbuster,
     ffuf,
     frida,
@@ -32,6 +34,7 @@ from hacking_mcp.mcp_tools.adapters import (
     radare2,
     rustscan,
     sherlock,
+    sqlscan,
     stegcracker,
     steghide,
     subfinder,
@@ -40,6 +43,10 @@ from hacking_mcp.mcp_tools.adapters import (
     volatility3,
     wafw00f,
     whatweb,
+    xanxss,
+    xspear,
+    xsstrike,
+    xsscon,
 )
 
 
@@ -53,7 +60,9 @@ PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
     "arjun": arjun.parameters,
     "apk2gold": apk2gold.parameters,
     "binwalk": binwalk.parameters,
+    "dalfox": dalfox.parameters,
     "dirsearch": dirsearch.parameters,
+    "dsss": dsss.parameters,
     "feroxbuster": feroxbuster.parameters,
     "ffuf": ffuf.parameters,
     "frida": frida.parameters,
@@ -76,6 +85,7 @@ PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
     "radare2": radare2.parameters,
     "rustscan": rustscan.parameters,
     "sherlock": sherlock.parameters,
+    "sqlscan": sqlscan.parameters,
     "stegcracker": stegcracker.parameters,
     "steghide": steghide.parameters,
     "subfinder": subfinder.parameters,
@@ -84,6 +94,10 @@ PARAMETER_PROVIDERS: dict[str, ParameterProvider] = {
     "volatility3": volatility3.parameters,
     "wafw00f": wafw00f.parameters,
     "whatweb": whatweb.parameters,
+    "xanxss": xanxss.parameters,
+    "xspear": xspear.parameters,
+    "xsstrike": xsstrike.parameters,
+    "xsscon": xsscon.parameters,
 }
 
 OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
@@ -92,7 +106,9 @@ OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
     "arjun": arjun.build_options,
     "apk2gold": apk2gold.build_options,
     "binwalk": binwalk.build_options,
+    "dalfox": dalfox.build_options,
     "dirsearch": dirsearch.build_options,
+    "dsss": dsss.build_options,
     "feroxbuster": feroxbuster.build_options,
     "ffuf": ffuf.build_options,
     "frida": frida.build_options,
@@ -115,6 +131,7 @@ OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
     "radare2": radare2.build_options,
     "rustscan": rustscan.build_options,
     "sherlock": sherlock.build_options,
+    "sqlscan": sqlscan.build_options,
     "stegcracker": stegcracker.build_options,
     "steghide": steghide.build_options,
     "subfinder": subfinder.build_options,
@@ -123,6 +140,10 @@ OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
     "volatility3": volatility3.build_options,
     "wafw00f": wafw00f.build_options,
     "whatweb": whatweb.build_options,
+    "xanxss": xanxss.build_options,
+    "xspear": xspear.build_options,
+    "xsstrike": xsstrike.build_options,
+    "xsscon": xsscon.build_options,
 }
 
 

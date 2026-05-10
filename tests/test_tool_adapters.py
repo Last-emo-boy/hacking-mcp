@@ -131,7 +131,9 @@ def test_split_adapter_registry_includes_migrated_tools():
         "arjun",
         "apk2gold",
         "binwalk",
+        "dalfox",
         "dirsearch",
+        "dsss",
         "feroxbuster",
         "ffuf",
         "frida",
@@ -154,6 +156,7 @@ def test_split_adapter_registry_includes_migrated_tools():
         "radare2",
         "rustscan",
         "sherlock",
+        "sqlscan",
         "stegcracker",
         "steghide",
         "subfinder",
@@ -162,6 +165,10 @@ def test_split_adapter_registry_includes_migrated_tools():
         "volatility3",
         "wafw00f",
         "whatweb",
+        "xanxss",
+        "xspear",
+        "xsstrike",
+        "xsscon",
     }
     assert migrated.issubset(PARAMETER_PROVIDERS)
     assert all(has_split_adapter(tool_name) for tool_name in migrated)

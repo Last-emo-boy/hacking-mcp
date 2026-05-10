@@ -38,8 +38,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "certipy",
         "chisel",
         "commix",
-        "dalfox",
-        "dsss",
         "evil-winrm",
         "evilginx3",
         "explo",
@@ -76,7 +74,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "shellphish",
         "sherlock",
         "sliver",
-        "sqlscan",
         "sqlmap",
         "steghide",
         "stegcracker",
@@ -90,10 +87,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "whatweb",
         "wifiphisher",
         "wifite",
-        "xanxss",
-        "xspear",
-        "xsstrike",
-        "xsscon",
     }
 )
 
@@ -481,144 +474,7 @@ def _adapter_parameters(
             AdapterParameterSpec("rate", int, 0, "Packet/request rate limit when supported; 0 leaves default."),
         ])
 
-    if tool.name == "dalfox":
-        params.extend([
-            AdapterParameterSpec("blind_callback", str, "", "Blind XSS callback URL."),
-            AdapterParameterSpec("config_file", str, "", "DalFox configuration file path."),
-            AdapterParameterSpec("cookies", str, "", "Cookie header value."),
-            AdapterParameterSpec("custom_alert_type", str, "", "Custom alert type, for example str or none."),
-            AdapterParameterSpec("custom_alert_value", str, "", "Custom alert value."),
-            AdapterParameterSpec("custom_payload", str, "", "Custom payload file path."),
-            AdapterParameterSpec("data", str, "", "HTTP request body data."),
-            AdapterParameterSpec("deep_domxss", bool, False, "Enable deep DOM XSS testing."),
-            AdapterParameterSpec("delay", int, 0, "Delay between requests in milliseconds; 0 leaves default."),
-            AdapterParameterSpec("follow_redirects", bool, False, "Follow HTTP redirects."),
-            AdapterParameterSpec("force_headless_verification", bool, False, "Force headless payload verification."),
-            AdapterParameterSpec("headers", str, "", "Additional HTTP header."),
-            AdapterParameterSpec("ignore_param", str, "", "Parameter name to ignore."),
-            AdapterParameterSpec("ignore_return", str, "", "HTTP status codes to ignore."),
-            AdapterParameterSpec("method", str, "", "HTTP method to use."),
-            AdapterParameterSpec("parameter", str, "", "Only test the named parameter."),
-            AdapterParameterSpec("proxy", str, "", "HTTP proxy URL."),
-            AdapterParameterSpec("remote_payloads", str, "", "Remote payload list selectors."),
-            AdapterParameterSpec("timeout", int, 0, "Request timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value."),
-            AdapterParameterSpec("waf_evasion", bool, False, "Enable WAF evasion mode."),
-            AdapterParameterSpec("max_cpu", int, 0, "Maximum CPU percentage; 0 leaves default."),
-            AdapterParameterSpec("workers", int, 0, "Number of workers; 0 leaves default."),
-            AdapterParameterSpec("mining_dict", bool, False, "Enable dictionary-based parameter mining."),
-            AdapterParameterSpec("mining_dict_word", str, "", "Extra dictionary word for parameter mining."),
-            AdapterParameterSpec("mining_dom", bool, False, "Enable DOM-based parameter mining."),
-            AdapterParameterSpec("remote_wordlists", str, "", "Remote wordlist selectors."),
-            AdapterParameterSpec("skip_mining_all", bool, False, "Skip all parameter mining."),
-            AdapterParameterSpec("skip_mining_dict", bool, False, "Skip dictionary parameter mining."),
-            AdapterParameterSpec("skip_mining_dom", bool, False, "Skip DOM parameter mining."),
-            AdapterParameterSpec("only_custom_payload", bool, False, "Use only custom payloads."),
-            AdapterParameterSpec("only_discovery", bool, False, "Only perform parameter analysis/discovery."),
-            AdapterParameterSpec("skip_bav", bool, False, "Skip basic another verification checks."),
-            AdapterParameterSpec("skip_discovery", bool, False, "Skip discovery phase."),
-            AdapterParameterSpec("skip_grepping", bool, False, "Skip grepping phase."),
-            AdapterParameterSpec("skip_headless", bool, False, "Skip headless browser verification."),
-            AdapterParameterSpec("skip_xss_scanning", bool, False, "Skip XSS scanning phase."),
-            AdapterParameterSpec("use_bav", bool, False, "Enable basic another verification."),
-            AdapterParameterSpec("debug", bool, False, "Enable debug output."),
-            AdapterParameterSpec("format", str, "", "Output format."),
-            AdapterParameterSpec("found_action", str, "", "Command to run when a vulnerability is found."),
-            AdapterParameterSpec("found_action_shell", str, "", "Shell to use for found_action."),
-            AdapterParameterSpec("grep_file", str, "", "Custom grepping file."),
-            AdapterParameterSpec("har_file_path", str, "", "HAR file output path."),
-            AdapterParameterSpec("no_color", bool, False, "Disable colored output."),
-            AdapterParameterSpec("no_spinner", bool, False, "Disable spinner output."),
-            AdapterParameterSpec("only_poc", str, "", "Only print selected PoC type."),
-            AdapterParameterSpec("output_file", str, "", "Output file path."),
-            AdapterParameterSpec("output_all", bool, False, "Write all logs to output."),
-            AdapterParameterSpec("output_request", bool, False, "Include raw HTTP request in output."),
-            AdapterParameterSpec("output_response", bool, False, "Include raw HTTP response in output."),
-            AdapterParameterSpec("poc_type", str, "", "PoC type, for example plain or curl."),
-            AdapterParameterSpec("report", bool, False, "Show detailed report output."),
-            AdapterParameterSpec("report_format", str, "", "Report format."),
-            AdapterParameterSpec("silence", bool, False, "Enable silent output."),
-        ])
-    elif tool.name == "xsstrike":
-        params.extend([
-            AdapterParameterSpec("data", str, "", "POST data to test."),
-            AdapterParameterSpec("encode", str, "", "Payload encoding mode."),
-            AdapterParameterSpec("fuzzer", bool, False, "Run the fuzzer."),
-            AdapterParameterSpec("update", bool, False, "Update XSStrike."),
-            AdapterParameterSpec("timeout", int, 0, "Request timeout; 0 leaves default."),
-            AdapterParameterSpec("use_proxy", bool, False, "Use configured proxy/proxies."),
-            AdapterParameterSpec("crawl", bool, False, "Enable crawling."),
-            AdapterParameterSpec("json_data", bool, False, "Treat POST data as JSON."),
-            AdapterParameterSpec("path_injection", bool, False, "Inject payloads into the URL path."),
-            AdapterParameterSpec("seeds_file", str, "", "File containing crawling seeds."),
-            AdapterParameterSpec("payload_file", str, "", "File containing payloads."),
-            AdapterParameterSpec("level", int, 0, "Crawling level; 0 leaves default."),
-            AdapterParameterSpec("headers", str, "", "Additional headers."),
-            AdapterParameterSpec("threads", int, 0, "Number of threads; 0 leaves default."),
-            AdapterParameterSpec("delay", int, 0, "Delay between requests; 0 leaves default."),
-            AdapterParameterSpec("skip", bool, False, "Do not prompt before continuing."),
-            AdapterParameterSpec("skip_dom", bool, False, "Skip DOM checks."),
-            AdapterParameterSpec("blind", bool, False, "Inject blind XSS payload while crawling."),
-            AdapterParameterSpec("console_log_level", str, "", "Console logging level."),
-            AdapterParameterSpec("file_log_level", str, "", "File logging level."),
-            AdapterParameterSpec("log_file", str, "", "Log file name."),
-        ])
-    elif tool.name == "xspear":
-        params.extend([
-            AdapterParameterSpec("data", str, "", "POST body data."),
-            AdapterParameterSpec("test_all_params", bool, False, "Test all parameters, including non-reflected ones."),
-            AdapterParameterSpec("no_xss", bool, False, "Only perform parameter analysis without XSS tests."),
-            AdapterParameterSpec("headers", str, "", "Additional HTTP headers."),
-            AdapterParameterSpec("cookie", str, "", "Cookie header value."),
-            AdapterParameterSpec("custom_payload", str, "", "Custom payload JSON file."),
-            AdapterParameterSpec("raw_file", str, "", "Raw request file."),
-            AdapterParameterSpec("parameter", str, "", "Specific parameter or parameters to test."),
-            AdapterParameterSpec("blind_callback", str, "", "Blind XSS callback URL."),
-            AdapterParameterSpec("threads", int, 0, "Thread count; 0 leaves default."),
-            AdapterParameterSpec("output_format", str, "", "Output format, for example cli or json."),
-            AdapterParameterSpec("config_file", str, "", "Config JSON file."),
-            AdapterParameterSpec("verbose", int, 0, "Verbose level 0-3; 0 leaves default."),
-        ])
-    elif tool.name == "xsscon":
-        params.extend([
-            AdapterParameterSpec("depth", int, 0, "Crawl depth; 0 leaves default."),
-            AdapterParameterSpec("payload_level", int, 0, "Generated payload level 1-7; 0 leaves default."),
-            AdapterParameterSpec("payload", str, "", "Custom payload value."),
-            AdapterParameterSpec("method", int, 0, "Method mode: 0 GET, 1 POST, 2 both; 0 leaves default."),
-            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value."),
-            AdapterParameterSpec("single_url", str, "", "Single URL to scan without crawling."),
-            AdapterParameterSpec("proxy", str, "", "Proxy mapping string."),
-            AdapterParameterSpec("about", bool, False, "Print XSSCon tool information."),
-            AdapterParameterSpec("cookie", str, "", "Cookie mapping string."),
-        ])
-    elif tool.name == "xanxss":
-        params.extend([
-            AdapterParameterSpec("verification_amount", int, 0, "Verification steps; 0 leaves default."),
-            AdapterParameterSpec("amount_to_find", int, 0, "Number of working payloads to try to find; 0 leaves default."),
-            AdapterParameterSpec("test_time", int, 0, "Verification test time in seconds; 0 leaves default."),
-            AdapterParameterSpec("payloads", str, "", "Comma-separated payloads or payload string list."),
-            AdapterParameterSpec("payload_file", str, "", "Text file containing payloads."),
-            AdapterParameterSpec("verbose", bool, False, "Enable verbose output."),
-            AdapterParameterSpec("proxy", str, "", "Proxy URL in type://ip:port format."),
-            AdapterParameterSpec("headers", str, "", "Custom headers in key=value,key:value format."),
-            AdapterParameterSpec("throttle", int, 0, "Sleep time between requests in seconds; 0 leaves default."),
-            AdapterParameterSpec("polyglot", bool, False, "Generate and test a polyglot payload."),
-            AdapterParameterSpec("prefix", str, "", "Payload prefix."),
-            AdapterParameterSpec("suffix", str, "", "Payload suffix."),
-        ])
-    elif tool.name == "dsss":
-        params.extend([
-            AdapterParameterSpec("data", str, "", "POST data, for example query=test."),
-            AdapterParameterSpec("cookie", str, "", "HTTP Cookie header value."),
-            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent header value."),
-            AdapterParameterSpec("referer", str, "", "HTTP Referer header value."),
-            AdapterParameterSpec("proxy", str, "", "HTTP proxy address."),
-        ])
-    elif tool.name == "sqlscan":
-        params.append(
-            AdapterParameterSpec("scan", bool, True, "Run sqlscan scanner mode.")
-        )
-    elif tags & {"web", "http", "url", "discovery", "fuzzing"}:
+    if tags & {"web", "http", "url", "discovery", "fuzzing"}:
         params.extend([
             AdapterParameterSpec("wordlist", str, "", "Wordlist path for discovery or fuzzing tools."),
             AdapterParameterSpec("threads", int, 0, "Worker/thread count when supported; 0 leaves default."),
@@ -1109,133 +965,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "top_ports", "--top-ports")
         _add_value(tokens, kwargs, "rate", "--rate")
 
-    if tool.name == "dalfox":
-        _add_value(tokens, kwargs, "blind_callback", "-b")
-        _add_value(tokens, kwargs, "config_file", "--config")
-        _add_value(tokens, kwargs, "cookies", "-C")
-        _add_value(tokens, kwargs, "custom_alert_type", "--custom-alert-type")
-        _add_value(tokens, kwargs, "custom_alert_value", "--custom-alert-value")
-        _add_value(tokens, kwargs, "custom_payload", "--custom-payload")
-        _add_value(tokens, kwargs, "data", "-d")
-        _add_bool(tokens, kwargs, "deep_domxss", "--deep-domxss")
-        _add_value(tokens, kwargs, "delay", "--delay")
-        _add_bool(tokens, kwargs, "follow_redirects", "--follow-redirects")
-        _add_bool(tokens, kwargs, "force_headless_verification", "--force-headless-verification")
-        _add_value(tokens, kwargs, "headers", "-H")
-        _add_value(tokens, kwargs, "ignore_param", "--ignore-param")
-        _add_value(tokens, kwargs, "ignore_return", "--ignore-return")
-        _add_value(tokens, kwargs, "method", "-X")
-        _add_value(tokens, kwargs, "parameter", "-p")
-        _add_value(tokens, kwargs, "proxy", "--proxy")
-        _add_value(tokens, kwargs, "remote_payloads", "--remote-payloads")
-        _add_value(tokens, kwargs, "timeout", "--timeout")
-        _add_value(tokens, kwargs, "user_agent", "--user-agent")
-        _add_bool(tokens, kwargs, "waf_evasion", "--waf-evasion")
-        _add_value(tokens, kwargs, "max_cpu", "--max-cpu")
-        _add_value(tokens, kwargs, "workers", "-w")
-        _add_bool(tokens, kwargs, "mining_dict", "--mining-dict")
-        _add_value(tokens, kwargs, "mining_dict_word", "--mining-dict-word")
-        _add_bool(tokens, kwargs, "mining_dom", "--mining-dom")
-        _add_value(tokens, kwargs, "remote_wordlists", "--remote-wordlists")
-        _add_bool(tokens, kwargs, "skip_mining_all", "--skip-mining-all")
-        _add_bool(tokens, kwargs, "skip_mining_dict", "--skip-mining-dict")
-        _add_bool(tokens, kwargs, "skip_mining_dom", "--skip-mining-dom")
-        _add_bool(tokens, kwargs, "only_custom_payload", "--only-custom-payload")
-        _add_bool(tokens, kwargs, "only_discovery", "--only-discovery")
-        _add_bool(tokens, kwargs, "skip_bav", "--skip-bav")
-        _add_bool(tokens, kwargs, "skip_discovery", "--skip-discovery")
-        _add_bool(tokens, kwargs, "skip_grepping", "--skip-grepping")
-        _add_bool(tokens, kwargs, "skip_headless", "--skip-headless")
-        _add_bool(tokens, kwargs, "skip_xss_scanning", "--skip-xss-scanning")
-        _add_bool(tokens, kwargs, "use_bav", "--use-bav")
-        _add_bool(tokens, kwargs, "debug", "--debug")
-        _add_value(tokens, kwargs, "format", "--format")
-        _add_value(tokens, kwargs, "found_action", "--found-action")
-        _add_value(tokens, kwargs, "found_action_shell", "--found-action-shell")
-        _add_value(tokens, kwargs, "grep_file", "--grep")
-        _add_value(tokens, kwargs, "har_file_path", "--har-file-path")
-        _add_bool(tokens, kwargs, "no_color", "--no-color")
-        _add_bool(tokens, kwargs, "no_spinner", "--no-spinner")
-        _add_value(tokens, kwargs, "only_poc", "--only-poc")
-        _add_value(tokens, kwargs, "output_file", "-o")
-        _add_bool(tokens, kwargs, "output_all", "--output-all")
-        _add_bool(tokens, kwargs, "output_request", "--output-request")
-        _add_bool(tokens, kwargs, "output_response", "--output-response")
-        _add_value(tokens, kwargs, "poc_type", "--poc-type")
-        _add_bool(tokens, kwargs, "report", "--report")
-        _add_value(tokens, kwargs, "report_format", "--report-format")
-        _add_bool(tokens, kwargs, "silence", "--silence")
-    elif tool.name == "xsstrike":
-        _add_value(tokens, kwargs, "data", "--data")
-        _add_value(tokens, kwargs, "encode", "-e")
-        _add_bool(tokens, kwargs, "fuzzer", "--fuzzer")
-        _add_bool(tokens, kwargs, "update", "--update")
-        _add_value(tokens, kwargs, "timeout", "--timeout")
-        _add_bool(tokens, kwargs, "use_proxy", "--proxy")
-        _add_bool(tokens, kwargs, "crawl", "--crawl")
-        _add_bool(tokens, kwargs, "json_data", "--json")
-        _add_bool(tokens, kwargs, "path_injection", "--path")
-        _add_value(tokens, kwargs, "seeds_file", "--seeds")
-        _add_value(tokens, kwargs, "payload_file", "-f")
-        _add_value(tokens, kwargs, "level", "-l")
-        _add_value(tokens, kwargs, "headers", "--headers")
-        _add_value(tokens, kwargs, "threads", "-t")
-        _add_value(tokens, kwargs, "delay", "-d")
-        _add_bool(tokens, kwargs, "skip", "--skip")
-        _add_bool(tokens, kwargs, "skip_dom", "--skip-dom")
-        _add_bool(tokens, kwargs, "blind", "--blind")
-        _add_value(tokens, kwargs, "console_log_level", "--console-log-level")
-        _add_value(tokens, kwargs, "file_log_level", "--file-log-level")
-        _add_value(tokens, kwargs, "log_file", "--log-file")
-    elif tool.name == "xspear":
-        _add_value(tokens, kwargs, "data", "-d")
-        _add_bool(tokens, kwargs, "test_all_params", "-a")
-        _add_bool(tokens, kwargs, "no_xss", "--no-xss")
-        _add_value(tokens, kwargs, "headers", "--headers")
-        _add_value(tokens, kwargs, "cookie", "--cookie")
-        _add_value(tokens, kwargs, "custom_payload", "--custom-payload")
-        _add_value(tokens, kwargs, "raw_file", "--raw")
-        _add_value(tokens, kwargs, "parameter", "-p")
-        _add_value(tokens, kwargs, "blind_callback", "-b")
-        _add_value(tokens, kwargs, "threads", "-t")
-        _add_value(tokens, kwargs, "output_format", "-o")
-        _add_value(tokens, kwargs, "config_file", "-c")
-        verbosity = _int_value(kwargs, "verbose")
-        if verbosity:
-            tokens.append("-" + ("v" * min(verbosity, 3)))
-    elif tool.name == "xsscon":
-        _add_value(tokens, kwargs, "depth", "--depth")
-        _add_value(tokens, kwargs, "payload_level", "--payload-level")
-        _add_value(tokens, kwargs, "payload", "--payload")
-        _add_value(tokens, kwargs, "method", "--method")
-        _add_value(tokens, kwargs, "user_agent", "--user-agent")
-        _add_value(tokens, kwargs, "single_url", "--single")
-        _add_value(tokens, kwargs, "proxy", "--proxy")
-        _add_bool(tokens, kwargs, "about", "--about")
-        _add_value(tokens, kwargs, "cookie", "--cookie")
-    elif tool.name == "xanxss":
-        _add_value(tokens, kwargs, "verification_amount", "-a")
-        _add_value(tokens, kwargs, "amount_to_find", "-f")
-        _add_value(tokens, kwargs, "test_time", "-t")
-        _add_value(tokens, kwargs, "payloads", "-p")
-        _add_value(tokens, kwargs, "payload_file", "-F")
-        _add_bool(tokens, kwargs, "verbose", "-v")
-        _add_value(tokens, kwargs, "proxy", "--proxy")
-        _add_value(tokens, kwargs, "headers", "--headers")
-        _add_value(tokens, kwargs, "throttle", "--throttle")
-        _add_bool(tokens, kwargs, "polyglot", "--polyglot")
-        _add_value(tokens, kwargs, "prefix", "--prefix")
-        _add_value(tokens, kwargs, "suffix", "--suffix")
-    elif tool.name == "dsss":
-        _add_value(tokens, kwargs, "data", "--data")
-        _add_value(tokens, kwargs, "cookie", "--cookie")
-        _add_value(tokens, kwargs, "user_agent", "--user-agent")
-        _add_value(tokens, kwargs, "referer", "--referer")
-        _add_value(tokens, kwargs, "proxy", "--proxy")
-    elif tool.name == "sqlscan":
-        if kwargs.get("scan", True):
-            tokens.append("--scan")
-    elif tags & {"web", "http", "url", "discovery", "fuzzing"}:
+    if tags & {"web", "http", "url", "discovery", "fuzzing"}:
         _add_value(tokens, kwargs, "wordlist", "-w")
         _add_value(tokens, kwargs, "threads", "-t")
         _add_extensions(tokens, tool, kwargs)
