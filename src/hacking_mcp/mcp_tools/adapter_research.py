@@ -407,6 +407,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "dn",
         ),
     ),
+    "autopsy": SourceReview(
+        note=(
+            "Reviewed against the Autopsy Forensic Browser man page. The "
+            "registry command starts the server as sudo autopsy; the adapter "
+            "replaces generated forensics parameters with the documented "
+            "cookie toggles, evidence locker, live-analysis triplet, port, "
+            "and optional investigator address."
+        ),
+        references=(
+            "https://www.sleuthkit.org/autopsy/man/autopsy.html",
+            "https://manpages.debian.org/bookworm/autopsy/autopsy.1.en.html",
+        ),
+        verified_parameters=(
+            "use_cookies",
+            "no_cookies",
+            "evidence_locker",
+            "live_device",
+            "live_filesystem",
+            "live_mount",
+            "port",
+            "remote_addr",
+        ),
+    ),
     "binwalk": SourceReview(
         note=(
             "Reviewed against upstream Binwalk v3 clap parser definitions for "

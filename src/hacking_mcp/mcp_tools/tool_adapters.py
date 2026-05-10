@@ -724,6 +724,9 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
                 return value
         return str(kwargs.get("command") or "analyze").strip() or "analyze"
 
+    if tool.name == "autopsy":
+        return str(kwargs.get("remote_addr") or "")
+
     if tool.name == "apk2gold":
         return str(kwargs.get("apk_file") or "")
 
