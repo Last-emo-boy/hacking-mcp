@@ -1163,6 +1163,60 @@ def test_explo_source_reviewed_and_previewable(registry, safety):
     assert preview["options"] == "cases/two.yaml cases/three.yaml --verbose"
 
 
+def test_holehe_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["holehe"].source_status == "source-reviewed"
+    assert records["holehe"].unverified_parameters == ()
+    assert records["holehe"].gap == ""
+    assert any("megadose/holehe" in item for item in records["holehe"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("holehe"), specs["holehe"])
+    for removed in (
+        "api_key",
+        "json_output",
+        "output_file",
+        "passive",
+        "resolvers",
+        "sources",
+    ):
+        assert removed not in params
+
+    for verified in (
+        "only_used",
+        "no_color",
+        "no_clear",
+        "no_password_recovery",
+        "csv",
+        "timeout",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("holehe"),
+        specs["holehe"],
+        {
+            "target": "user@example.com",
+            "only_used": True,
+            "no_color": True,
+            "no_clear": True,
+            "no_password_recovery": True,
+            "csv": True,
+            "timeout": 20,
+        },
+    )
+    assert preview["target"] == "user@example.com"
+    assert preview["options"] == (
+        "--only-used --no-color --no-clear --no-password-recovery --csv --timeout 20"
+    )
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP

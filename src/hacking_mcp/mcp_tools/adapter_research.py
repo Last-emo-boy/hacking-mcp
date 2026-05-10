@@ -1393,6 +1393,26 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "holehe": SourceReview(
+        note=(
+            "Reviewed against upstream Holehe argparse definitions for email "
+            "target execution, used-site filtering, terminal color/clear "
+            "toggles, password-recovery suppression, CSV output, and timeout."
+        ),
+        references=(
+            "https://github.com/megadose/holehe",
+            "https://raw.githubusercontent.com/megadose/holehe/master/holehe/core.py",
+            "https://raw.githubusercontent.com/megadose/holehe/master/README.md",
+        ),
+        verified_parameters=(
+            "only_used",
+            "no_color",
+            "no_clear",
+            "no_password_recovery",
+            "csv",
+            "timeout",
+        ),
+    ),
     "theHarvester": SourceReview(
         note=(
             "Reviewed against the upstream theHarvester argparse definitions "
