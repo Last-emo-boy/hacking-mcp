@@ -725,6 +725,9 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     if tool.name == "hatcloud":
         return str(kwargs.get("domain") or "")
 
+    if tool.name == "rang3r":
+        return str(kwargs.get("ip") or "")
+
     if tool.name != "objection":
         return target
 

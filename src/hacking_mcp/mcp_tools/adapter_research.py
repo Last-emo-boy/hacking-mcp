@@ -1818,6 +1818,21 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "nmap_args",
         ),
     ),
+    "rang3r": SourceReview(
+        note=(
+            "Reviewed against upstream rang3r optparse definitions. The script "
+            "accepts only --ip for the IP address or range to scan, matching "
+            "the registry command, so the adapter exposes only an ip target "
+            "alias and no generated CLI options."
+        ),
+        references=(
+            "https://github.com/floriankunushevci/rang3r",
+            "https://raw.githubusercontent.com/floriankunushevci/rang3r/master/rang3r.py",
+        ),
+        verified_parameters=(
+            "ip",
+        ),
+    ),
     "katana": SourceReview(
         note=(
             "Reviewed against official ProjectDiscovery Katana usage docs for "

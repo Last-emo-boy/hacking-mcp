@@ -222,6 +222,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["rustscan"].unverified_parameters == ()
     assert any("RustScan/RustScan" in item for item in records["rustscan"].evidence)
 
+    assert records["rang3r"].source_status == "source-reviewed"
+    assert records["rang3r"].unverified_parameters == ()
+    assert any("floriankunushevci/rang3r" in item for item in records["rang3r"].evidence)
+
     assert records["katana"].source_status == "source-reviewed"
     assert records["katana"].unverified_parameters == ()
     assert any("katana/usage" in item for item in records["katana"].evidence)
@@ -1792,6 +1796,50 @@ def test_portscan_source_reviewed_and_previewable(registry, safety):
         },
     )
     assert preview["target"] == "192.0.2.10"
+    assert preview["options"] == ""
+
+
+def test_rang3r_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["rang3r"].source_status == "source-reviewed"
+    assert records["rang3r"].unverified_parameters == ()
+    assert records["rang3r"].gap == ""
+    assert any("floriankunushevci/rang3r" in item for item in records["rang3r"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("rang3r"), specs["rang3r"])
+    for removed in (
+        "default_scripts",
+        "json_output",
+        "os_detection",
+        "output_file",
+        "ports",
+        "rate",
+        "scan_depth",
+        "scan_type",
+        "service_version",
+        "timeout",
+        "timing",
+        "top_ports",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "ip" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("rang3r"),
+        specs["rang3r"],
+        {
+            "ip": "192.0.2.0/24",
+        },
+    )
+    assert preview["target"] == "192.0.2.0/24"
     assert preview["options"] == ""
 
 
@@ -4113,6 +4161,31 @@ async def test_portscan_source_reviewed_parameters_build_target(registry, safety
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "portscan"
     assert request.target == "192.0.2.10"
+    assert request.options == ""
+
+
+@pytest.mark.asyncio
+async def test_rang3r_source_reviewed_parameters_build_target(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_rang3r",
+        {
+            "ip": "192.0.2.0/24",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "rang3r"
+    assert request.target == "192.0.2.0/24"
     assert request.options == ""
 
 
