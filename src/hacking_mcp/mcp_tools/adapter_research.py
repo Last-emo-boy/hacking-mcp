@@ -1585,6 +1585,25 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "threads",
         ),
     ),
+    "evilurl": SourceReview(
+        note=(
+            "Reviewed against upstream EvilURL argparse definitions. The "
+            "registry command now supplies the target domain through the "
+            "documented -d option, and the adapter exposes only the "
+            "source-backed generation, connection check, output file, and "
+            "availability-check flags."
+        ),
+        references=(
+            "https://github.com/UndeadSec/EvilURL",
+            "https://raw.githubusercontent.com/UndeadSec/EvilURL/master/evilurl.py",
+        ),
+        verified_parameters=(
+            "generate",
+            "check_connection",
+            "output_file",
+            "check_availability",
+        ),
+    ),
     "allinone-socialmedia": SourceReview(
         note=(
             "Reviewed against upstream Brute_Force README and OptionParser "

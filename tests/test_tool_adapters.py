@@ -2597,6 +2597,46 @@ def test_hashbuster_source_reviewed_and_previewable(registry, safety):
     assert preview["options"] == "-t 8 -f"
 
 
+def test_evilurl_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("evilurl")
+
+    assert tool.run_command == "cd EvilURL && python3 evilurl.py -d {target}"
+    assert specs["evilurl"].requires_confirmation is True
+    assert records["evilurl"].source_status == "source-reviewed"
+    assert records["evilurl"].unverified_parameters == ()
+    assert records["evilurl"].gap == ""
+    assert any("EvilURL" in item for item in records["evilurl"].evidence)
+
+    params = adapter_parameter_names(tool, specs["evilurl"])
+    for removed in ("domain", "extensions", "match_codes", "output_dir", "proxy", "recursive", "template", "threads", "tunnel", "wordlist"):
+        assert removed not in params
+    for expected in ("generate", "check_connection", "output_file", "check_availability"):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["evilurl"],
+        {
+            "target": "example.com",
+            "generate": True,
+            "check_connection": True,
+            "output_file": "evil.txt",
+            "check_availability": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == "example.com"
+    assert preview["options"] == "-g -c -o evil.txt -a"
+    assert preview["confirm_authorized"] is True
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -5291,6 +5331,38 @@ async def test_hashbuster_source_reviewed_parameters_build_cli_options(registry,
     assert request.options == "-t 8 -f"
     assert request.options_before_target is True
     assert request.require_confirmation is False
+
+
+@pytest.mark.asyncio
+async def test_evilurl_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_evilurl",
+        {
+            "target": "example.com",
+            "generate": True,
+            "check_connection": True,
+            "output_file": "evil.txt",
+            "check_availability": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "evilurl"
+    assert request.target == "example.com"
+    assert request.options == "-g -c -o evil.txt -a"
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
 
 
 @pytest.mark.asyncio
