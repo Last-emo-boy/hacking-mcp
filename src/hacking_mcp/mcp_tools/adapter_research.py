@@ -2997,6 +2997,26 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "config_driven",
         ),
     ),
+    "xss-payload-generator": SourceReview(
+        note=(
+            "Reviewed against upstream XSS-LOADER README, payloader.py, and "
+            "xssScan.py. The documented invocation is python3 payloader.py; "
+            "the source uses input() prompts for payload selection, scanner "
+            "target URL, payload-list choice, and dork-finder workflow rather "
+            "than argparse/click options. The adapter therefore suppresses "
+            "generated payload/XSS flags and target argv, exposing only an "
+            "interactive marker while preserving CAUTION confirmation."
+        ),
+        references=(
+            "https://github.com/capture0x/XSS-LOADER",
+            "https://raw.githubusercontent.com/capture0x/XSS-LOADER/master/README.md",
+            "https://raw.githubusercontent.com/capture0x/XSS-LOADER/master/payloader.py",
+            "https://raw.githubusercontent.com/capture0x/XSS-LOADER/master/xssScan.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "xsstrike": SourceReview(
         note=(
             "Reviewed against upstream XSStrike argparse definitions for POST "
