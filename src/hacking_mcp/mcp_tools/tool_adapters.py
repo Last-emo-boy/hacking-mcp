@@ -30,26 +30,18 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "anonsurf",
         "bettercap",
         "binwalk",
-        "blackeye",
-        "blackphish",
         "brutal",
-        "evilginx3",
         "fluxion",
         "hashcat",
         "hcxdumptool",
         "hcxtools",
-        "hiddeneye",
         "jadx",
         "john",
-        "maskphish",
         "mobdroid",
         "mobsf",
         "msfvenom",
         "multitor",
         "owasp-zap",
-        "pyphisher",
-        "setoolkit",
-        "shellphish",
         "sherlock",
         "steghide",
         "stegcracker",
@@ -676,18 +668,6 @@ def _adapter_parameters(
             AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
         ])
 
-    if tool.name in {
-        "setoolkit", "pyphisher", "hiddeneye", "blackeye", "shellphish",
-        "evilginx3", "maskphish", "blackphish",
-    }:
-        params.extend([
-            AdapterParameterSpec("site", str, "", "Template/site selector when supported."),
-            AdapterParameterSpec("redirect_url", str, "", "Redirect URL for authorized training when supported."),
-            AdapterParameterSpec("custom_domain", str, "", "Authorized custom domain when supported."),
-            AdapterParameterSpec("phishlet", str, "", "Phishlet/profile selector when supported."),
-            AdapterParameterSpec("capture_path", str, "", "Capture/output path when supported."),
-        ])
-
     if tool.name in {"msfvenom", "thefatrat", "venom", "mobdroid", "brutal"}:
         params.extend([
             AdapterParameterSpec("stager", str, "", "Stager/profile selector when supported."),
@@ -989,16 +969,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "user_agent", "--user-agent")
         _add_value(tokens, kwargs, "output_file", "-o")
         _add_bool(tokens, kwargs, "json_output", "--json")
-
-    if tool.name in {
-        "setoolkit", "pyphisher", "hiddeneye", "blackeye", "shellphish",
-        "evilginx3", "maskphish", "blackphish",
-    }:
-        _add_value(tokens, kwargs, "site", "--site")
-        _add_value(tokens, kwargs, "redirect_url", "--redirect")
-        _add_value(tokens, kwargs, "custom_domain", "--domain")
-        _add_value(tokens, kwargs, "phishlet", "--phishlet")
-        _add_value(tokens, kwargs, "capture_path", "--capture-path")
 
     if tool.name in {"msfvenom", "thefatrat", "venom", "mobdroid", "brutal"}:
         _add_value(tokens, kwargs, "stager", "--stager")
