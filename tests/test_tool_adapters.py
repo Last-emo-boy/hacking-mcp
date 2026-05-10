@@ -3002,6 +3002,51 @@ def test_checkurl_source_reviewed_and_previewable(registry, safety):
     assert preview["options"] == "--check-url"
 
 
+def test_blazy_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("blazy")
+
+    assert specs["blazy"].exposed is False
+    assert tool.run_command == "cd Blazy && python3 main.py -i {target}"
+    assert records["blazy"].source_status == "source-reviewed"
+    assert records["blazy"].unverified_parameters == ()
+    assert records["blazy"].gap == ""
+    assert any("s0md3v/Blazy" in item for item in records["blazy"].evidence)
+
+    params = adapter_parameter_names(tool, specs["blazy"])
+    for removed in (
+        "extensions",
+        "follow_redirects",
+        "match_codes",
+        "proxy",
+        "recursive",
+        "threads",
+        "wordlist",
+    ):
+        assert removed not in params
+    for expected in ("json_output", "timeout"):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["blazy"],
+        {
+            "target": "https://example.test/login",
+            "json_output": "blazy.json",
+            "timeout": 15,
+        },
+    )
+    assert preview["target"] == "https://example.test/login"
+    assert preview["options"] == "-oJ blazy.json -t 15"
+    assert preview["executable"] is False
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -6012,6 +6057,30 @@ async def test_checkurl_source_reviewed_parameters_build_cli_options(registry, s
     assert request.target == "example.com"
     assert request.options == "--check-url"
     assert request.require_confirmation is False
+
+
+@pytest.mark.asyncio
+async def test_blazy_source_reviewed_policy_only_endpoint_does_not_execute(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock()
+
+    register(mcp, orchestrator, registry, safety)
+    content, metadata = await mcp.call_tool(
+        "security_tool_blazy",
+        {
+            "target": "https://example.test/login",
+            "json_output": "blazy.json",
+            "timeout": 15,
+        },
+    )
+
+    assert "does not run the tool" in metadata["result"]
+    assert content
+    orchestrator.execute.assert_not_awaited()
 
 
 @pytest.mark.asyncio

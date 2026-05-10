@@ -2479,6 +2479,25 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "check_url",
         ),
     ),
+    "blazy": SourceReview(
+        note=(
+            "Reviewed against upstream Blazy README and argparse definitions. "
+            "The registry command now reflects the documented main.py -i "
+            "target input form, while the adapter exposes only the source-"
+            "backed JSON output path and HTTP timeout options. The tool "
+            "remains archived and policy/info-only, so the endpoint does not "
+            "execute from MCP."
+        ),
+        references=(
+            "https://github.com/s0md3v/Blazy",
+            "https://raw.githubusercontent.com/s0md3v/Blazy/master/README.md",
+            "https://raw.githubusercontent.com/s0md3v/Blazy/master/main.py",
+        ),
+        verified_parameters=(
+            "json_output",
+            "timeout",
+        ),
+    ),
     "takeover": SourceReview(
         note=(
             "Reviewed against upstream takeover help text and getopt parser "
