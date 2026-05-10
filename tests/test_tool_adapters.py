@@ -2855,6 +2855,41 @@ def test_redhawk_source_reviewed_interactive_only(registry, safety):
     assert preview["options"] == ""
 
 
+def test_xerosploit_source_reviewed_interactive_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("xerosploit")
+
+    assert specs["xerosploit"].requires_confirmation is True
+    assert records["xerosploit"].source_status == "source-reviewed"
+    assert records["xerosploit"].unverified_parameters == ()
+    assert records["xerosploit"].gap == ""
+    assert any("xerosploit" in item.lower() for item in records["xerosploit"].evidence)
+
+    params = adapter_parameter_names(tool, specs["xerosploit"])
+    for removed in ("default_scripts", "os_detection", "ports", "rate", "scan_type", "service_version", "timing", "top_ports"):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["xerosploit"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["confirm_authorized"] is True
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -5755,6 +5790,35 @@ async def test_redhawk_source_reviewed_parameters_build_cli_options(registry, sa
     assert request.target == ""
     assert request.options == ""
     assert request.require_confirmation is False
+
+
+@pytest.mark.asyncio
+async def test_xerosploit_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_xerosploit",
+        {
+            "target": "ignored.example",
+            "interactive": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "xerosploit"
+    assert request.target == ""
+    assert request.options == ""
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
 
 
 @pytest.mark.asyncio

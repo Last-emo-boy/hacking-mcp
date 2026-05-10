@@ -1239,6 +1239,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "xerosploit": SourceReview(
+        note=(
+            "Reviewed against upstream Xerosploit xerosploit.py. The tool has "
+            "no CLI parser or positional arguments; network scan/start, "
+            "gateway/interface configuration, target selection, and module "
+            "execution are all read from stdin. The adapter is therefore "
+            "intentionally interactive-only and removes generated network scan "
+            "parameters."
+        ),
+        references=(
+            "https://github.com/LionSec/xerosploit",
+            "https://raw.githubusercontent.com/LionSec/xerosploit/master/xerosploit.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "nuclei": SourceReview(
         note=(
             "Reviewed against official ProjectDiscovery Nuclei docs for "
