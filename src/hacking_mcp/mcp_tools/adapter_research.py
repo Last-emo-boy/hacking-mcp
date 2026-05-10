@@ -3418,6 +3418,39 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "verbose",
         ),
     ),
+    "sliver": SourceReview(
+        note=(
+            "Reviewed against the official installer, GitHub release assets, "
+            "Kali command help, and upstream client/server Cobra definitions. "
+            "The installer downloads separate sliver-server and sliver-client "
+            "binaries, creates /usr/local/bin/sliver as a symlink to the client, "
+            "and runs the server daemon separately. The registry now invokes "
+            "the client symlink instead of forcing --help. The adapter exposes "
+            "client-side root/console/import/mcp/version parameters, rc script, "
+            "WireGuard connect mode, import config file positionals, MCP config, "
+            "and help. Server-side operator/daemon/builder flags are not exposed "
+            "because they belong to sliver-server, not the sliver client symlink."
+        ),
+        references=(
+            "https://sliver.sh/install",
+            "https://www.kali.org/tools/sliver/",
+            "https://github.com/BishopFox/sliver/releases",
+            "https://raw.githubusercontent.com/BishopFox/sliver/master/client/cli/cli.go",
+            "https://raw.githubusercontent.com/BishopFox/sliver/master/client/cli/console.go",
+            "https://raw.githubusercontent.com/BishopFox/sliver/master/client/cli/import.go",
+            "https://raw.githubusercontent.com/BishopFox/sliver/master/client/cli/mcp.go",
+            "https://raw.githubusercontent.com/BishopFox/sliver/master/server/cli/cli.go",
+        ),
+        verified_parameters=(
+            "command",
+            "rc_script",
+            "enable_wg",
+            "config_files",
+            "mcp_config",
+            "version",
+            "help",
+        ),
+    ),
     "evil-winrm": SourceReview(
         note=(
             "Reviewed against upstream Evil-WinRM README help text and "

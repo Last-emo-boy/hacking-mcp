@@ -1,34 +1,56 @@
 """Dedicated adapter metadata for Sliver."""
 
+import shlex
+from typing import Any
+
 from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
-from hacking_mcp.mcp_tools.adapters.helpers import add_value
+from hacking_mcp.mcp_tools.adapters.helpers import add_bool, add_value
 
 
 def parameters() -> list[AdapterParameterSpec]:
     return [
-        AdapterParameterSpec("lhost", str, "", "Listener host for authorized lab use."),
-        AdapterParameterSpec("lport", int, 0, "Listener port when supported; 0 leaves default."),
-        AdapterParameterSpec("session_id", str, "", "Session identifier when supported."),
-        AdapterParameterSpec("listener", str, "", "Listener/profile name when supported."),
-        AdapterParameterSpec("protocol", str, "", "Protocol selector when supported."),
-        AdapterParameterSpec("mode", str, "", "Mode such as server/client/proxy/agent when supported."),
-        AdapterParameterSpec("listen_addr", str, "", "Listen address when supported."),
-        AdapterParameterSpec("connect_addr", str, "", "Connect address when supported."),
-        AdapterParameterSpec("auth_token", str, "", "Auth token/profile when supported."),
-        AdapterParameterSpec("tun_name", str, "", "Tunnel interface name when supported."),
+        AdapterParameterSpec("command", str, "console", "Sliver client command such as console, import, mcp, or version."),
+        AdapterParameterSpec("rc_script", str, "", "Path to an rc script for the client console."),
+        AdapterParameterSpec("enable_wg", bool, False, "Use WireGuard wrapper settings from the operator config."),
+        AdapterParameterSpec("config_files", str, "", "Semicolon-separated client config files for the import command."),
+        AdapterParameterSpec("mcp_config", str, "", "Client config file path or name for the mcp command."),
+        AdapterParameterSpec("version", bool, False, "Run the Sliver client version command."),
+        AdapterParameterSpec("help", bool, False, "Show help for the selected client command."),
     ]
 
 
 def build_options(kwargs: dict) -> list[str]:
+    if kwargs.get("version"):
+        return ["version"]
+
     tokens: list[str] = []
-    add_value(tokens, kwargs, "lhost", "--lhost")
-    add_value(tokens, kwargs, "lport", "--lport")
-    add_value(tokens, kwargs, "session_id", "--session")
-    add_value(tokens, kwargs, "listener", "--listener")
-    add_value(tokens, kwargs, "protocol", "--protocol")
-    add_value(tokens, kwargs, "mode", "--mode")
-    add_value(tokens, kwargs, "listen_addr", "--listen")
-    add_value(tokens, kwargs, "connect_addr", "--connect")
-    add_value(tokens, kwargs, "auth_token", "--auth")
-    add_value(tokens, kwargs, "tun_name", "--tun")
+    add_bool(tokens, kwargs, "enable_wg", "--enable-wg")
+
+    command = str(kwargs.get("command") or "console").strip() or "console"
+    tokens.append(command)
+
+    if command == "console":
+        add_value(tokens, kwargs, "rc_script", "--rc")
+    elif command == "import":
+        tokens.extend(_split_values(kwargs.get("config_files")))
+    elif command == "mcp":
+        add_value(tokens, kwargs, "mcp_config", "--config")
+
+    if kwargs.get("help"):
+        tokens.append("--help")
     return tokens
+
+
+def _split_values(value: Any) -> list[str]:
+    if value in (None, "", 0, False):
+        return []
+    if isinstance(value, (list, tuple, set)):
+        return [str(item) for item in value if item not in (None, "", 0, False)]
+    raw = str(value).replace("\n", ";")
+    parts = [item.strip() for item in raw.split(";") if item.strip()]
+    if len(parts) > 1:
+        return parts
+    try:
+        return shlex.split(raw)
+    except ValueError:
+        return raw.split()
