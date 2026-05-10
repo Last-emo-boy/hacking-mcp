@@ -1,14 +1,16 @@
-"""Registry-derived adapter metadata for Wlcreator."""
+"""Dedicated adapter metadata for Wlcreator."""
 
-from hacking_mcp.mcp_tools.adapters.generic import build_options_for, parameters_for
-
-
-TOOL_NAME = 'wlcreator'
+from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
+from hacking_mcp.mcp_tools.adapters.helpers import add_value
 
 
-def parameters():
-    return parameters_for(TOOL_NAME)
+def parameters() -> list[AdapterParameterSpec]:
+    return [
+        AdapterParameterSpec("length", int, 5, "Password length positional argument."),
+    ]
 
 
 def build_options(kwargs: dict) -> list[str]:
-    return build_options_for(TOOL_NAME, kwargs)
+    tokens: list[str] = []
+    add_value(tokens, kwargs, "length", "")
+    return [token for token in tokens if token]

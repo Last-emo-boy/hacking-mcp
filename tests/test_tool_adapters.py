@@ -4,6 +4,7 @@ import pytest
 
 from hacking_mcp.mcp_tools.tool_adapters import (
     MCP_TOOL_PREFIX,
+    adapter_request_preview,
     build_adapter_specs,
     register,
 )
@@ -304,6 +305,22 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["androguard"].source_status == "source-reviewed"
     assert records["androguard"].unverified_parameters == ()
     assert any("androguard/androguard" in item for item in records["androguard"].evidence)
+
+    assert records["anonsurf"].source_status == "source-reviewed"
+    assert records["anonsurf"].unverified_parameters == ()
+    assert any("kali-anonsurf" in item for item in records["anonsurf"].evidence)
+
+    assert records["multitor"].source_status == "source-reviewed"
+    assert records["multitor"].unverified_parameters == ()
+    assert any("trimstray/multitor" in item for item in records["multitor"].evidence)
+
+    assert records["cupp"].source_status == "source-reviewed"
+    assert records["cupp"].unverified_parameters == ()
+    assert any("Mebus/cupp" in item for item in records["cupp"].evidence)
+
+    assert records["wlcreator"].source_status == "source-reviewed"
+    assert records["wlcreator"].unverified_parameters == ()
+    assert any("Z4nzu/wlcreator" in item for item in records["wlcreator"].evidence)
 
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
@@ -703,7 +720,22 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     )
 
     anonsurf_schema = tools["security_tool_anonsurf"].inputSchema["properties"]
-    assert {"action", "new_identity", "dns_only"}.issubset(anonsurf_schema)
+    assert {"action"}.issubset(anonsurf_schema)
+
+    multitor_schema = tools["security_tool_multitor"].inputSchema["properties"]
+    assert {
+        "init_instances", "user", "socks_port", "control_port", "proxy",
+        "haproxy", "kill", "show_id", "new_id", "debug", "verbose", "help",
+    }.issubset(multitor_schema)
+
+    cupp_schema = tools["security_tool_cupp"].inputSchema["properties"]
+    assert {
+        "interactive", "improve_file", "download_wordlist", "alecto",
+        "version", "quiet",
+    }.issubset(cupp_schema)
+
+    wlcreator_schema = tools["security_tool_wlcreator"].inputSchema["properties"]
+    assert {"length"}.issubset(wlcreator_schema)
 
     bloodhound_schema = tools["security_tool_bloodhound"].inputSchema["properties"]
     assert {"domain", "username", "dc_ip", "collection_method"}.issubset(
@@ -3092,6 +3124,49 @@ async def test_policy_only_named_parameters_preview_without_execution(registry, 
     assert "does not run the tool" in metadata["result"]
     assert content
     orchestrator.execute.assert_not_awaited()
+
+
+def test_anonymity_and_wordlist_source_reviewed_previews(registry, safety):
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+
+    anonsurf = adapter_request_preview(
+        registry.get_tool("anonsurf"),
+        specs["anonsurf"],
+        {"action": "change"},
+    )
+    assert anonsurf["target"] == ""
+    assert anonsurf["options"] == "change"
+
+    multitor = adapter_request_preview(
+        registry.get_tool("multitor"),
+        specs["multitor"],
+        {
+            "init_instances": 2,
+            "user": "debian-tor",
+            "socks_port": "9000",
+            "control_port": 9900,
+            "proxy": "privoxy",
+            "haproxy": True,
+        },
+    )
+    assert multitor["options"] == (
+        "--init 2 --user debian-tor --socks-port 9000 "
+        "--control-port 9900 --proxy privoxy --haproxy"
+    )
+
+    cupp = adapter_request_preview(
+        registry.get_tool("cupp"),
+        specs["cupp"],
+        {"quiet": True, "improve_file": "base.txt"},
+    )
+    assert cupp["options"] == "-q -w base.txt"
+
+    wlcreator = adapter_request_preview(
+        registry.get_tool("wlcreator"),
+        specs["wlcreator"],
+        {"length": 8},
+    )
+    assert wlcreator["options"] == "8"
 
 
 @pytest.mark.asyncio

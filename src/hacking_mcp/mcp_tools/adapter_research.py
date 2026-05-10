@@ -1804,6 +1804,82 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "no_color",
         ),
     ),
+    "anonsurf": SourceReview(
+        note=(
+            "Reviewed against upstream kali-anonsurf README usage. The CLI "
+            "accepts one positional action from start, stop, restart, change, "
+            "status, starti2p, and stopi2p; unsupported generic Tor port and "
+            "country parameters were removed from the adapter."
+        ),
+        references=(
+            "https://github.com/Und3rf10w/kali-anonsurf",
+            "https://raw.githubusercontent.com/Und3rf10w/kali-anonsurf/master/README.md",
+        ),
+        verified_parameters=(
+            "action",
+        ),
+    ),
+    "multitor": SourceReview(
+        note=(
+            "Reviewed against upstream multitor README parameter table for help, "
+            "debug, verbose, init count, kill/show/new identity operations, "
+            "user, socks/control ports, proxy type, and HAProxy frontend flags."
+        ),
+        references=(
+            "https://github.com/trimstray/multitor",
+            "https://raw.githubusercontent.com/trimstray/multitor/master/README.md",
+        ),
+        verified_parameters=(
+            "init_instances",
+            "user",
+            "socks_port",
+            "control_port",
+            "proxy",
+            "haproxy",
+            "kill",
+            "show_id",
+            "new_id",
+            "debug",
+            "verbose",
+            "help",
+        ),
+    ),
+    "cupp": SourceReview(
+        note=(
+            "Reviewed against upstream CUPP README and argparse source for "
+            "interactive profiling, dictionary improvement, wordlist download, "
+            "Alecto DB parsing, version display, and quiet mode."
+        ),
+        references=(
+            "https://github.com/Mebus/cupp",
+            "https://raw.githubusercontent.com/Mebus/cupp/master/README.md",
+            "https://raw.githubusercontent.com/Mebus/cupp/master/cupp.py",
+        ),
+        verified_parameters=(
+            "interactive",
+            "improve_file",
+            "download_wordlist",
+            "alecto",
+            "version",
+            "quiet",
+        ),
+    ),
+    "wlcreator": SourceReview(
+        note=(
+            "Reviewed against upstream wlcreator README usage and C source. "
+            "The executable accepts one positional password length argument; "
+            "character-set and pattern choices are interactive stdin prompts "
+            "and are intentionally left to raw/manual use."
+        ),
+        references=(
+            "https://github.com/Z4nzu/wlcreator",
+            "https://raw.githubusercontent.com/Z4nzu/wlcreator/master/README.md",
+            "https://raw.githubusercontent.com/Z4nzu/wlcreator/master/wlcreator.c",
+        ),
+        verified_parameters=(
+            "length",
+        ),
+    ),
 }
 
 BASE_ADAPTER_PARAMETERS = {"target", "options", "confirm_authorized"}
