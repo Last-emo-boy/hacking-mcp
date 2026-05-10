@@ -6,37 +6,52 @@ from hacking_mcp.mcp_tools.adapters.helpers import add_bool, add_value
 
 def parameters() -> list[AdapterParameterSpec]:
     return [
-        AdapterParameterSpec("lhost", str, "", "Listener host for authorized lab use."),
-        AdapterParameterSpec("lport", int, 0, "Listener port when supported; 0 leaves default."),
-        AdapterParameterSpec("session_id", str, "", "Session identifier when supported."),
-        AdapterParameterSpec("listener", str, "", "Listener/profile name when supported."),
-        AdapterParameterSpec("protocol", str, "", "Protocol selector when supported."),
-        AdapterParameterSpec("sources", str, "", "Comma-separated OSINT sources when supported."),
-        AdapterParameterSpec("passive", bool, False, "Use passive enumeration when supported."),
-        AdapterParameterSpec("resolvers", str, "", "Resolver file path when supported."),
-        AdapterParameterSpec("api_key", str, "", "API key/profile name when supported."),
-        AdapterParameterSpec("output_file", str, "", "Output file path when supported."),
-        AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
-        AdapterParameterSpec("peas_variant", str, "", "PEASS variant such as linpeas or winpeas."),
-        AdapterParameterSpec("checks", str, "", "Checks/profile selector when supported."),
-        AdapterParameterSpec("quiet", bool, False, "Reduce output when supported."),
+        AdapterParameterSpec("all_checks", bool, False, "Run all checks except regex checks."),
+        AdapterParameterSpec("extra_enum", bool, False, "Run extra enumeration checks."),
+        AdapterParameterSpec("regex_checks", bool, False, "Enable regex/API-key filesystem checks."),
+        AdapterParameterSpec("stealth", bool, False, "Use superfast/stealth mode."),
+        AdapterParameterSpec(
+            "password",
+            str,
+            "",
+            "Password for sudo/user bruteforce checks; may be present in process/audit logs.",
+        ),
+        AdapterParameterSpec("debug", bool, False, "Print debug/timing information."),
+        AdapterParameterSpec("auto_network_scan", bool, False, "Run automatic network scan and connectivity checks."),
+        AdapterParameterSpec("discover_net", str, "", "Network CIDR for host discovery with -d."),
+        AdapterParameterSpec("ports", str, "", "Ports used with -p for network scan/discovery."),
+        AdapterParameterSpec("scan_ip", str, "", "Single IP to scan with -i."),
+        AdapterParameterSpec("port_forward", str, "", "Port-forward mapping LOCAL_IP:LOCAL_PORT:REMOTE_IP:REMOTE_PORT."),
+        AdapterParameterSpec("firmware_path", str, "", "Folder path for firmware/filesystem analysis."),
+        AdapterParameterSpec("selected_checks", str, "", "Comma-separated LinPEAS checks for -o."),
+        AdapterParameterSpec("wait", bool, False, "Wait between big blocks of checks."),
+        AdapterParameterSpec("force_linpeas", bool, False, "Force LinPEAS execution."),
+        AdapterParameterSpec("force_macpeas", bool, False, "Force MacPEAS execution."),
+        AdapterParameterSpec("quiet", bool, False, "Do not show banner."),
+        AdapterParameterSpec("no_color", bool, False, "Disable colors."),
+        AdapterParameterSpec("help", bool, False, "Show LinPEAS help."),
     ]
 
 
 def build_options(kwargs: dict) -> list[str]:
     tokens: list[str] = []
-    add_value(tokens, kwargs, "lhost", "--lhost")
-    add_value(tokens, kwargs, "lport", "--lport")
-    add_value(tokens, kwargs, "session_id", "--session")
-    add_value(tokens, kwargs, "listener", "--listener")
-    add_value(tokens, kwargs, "protocol", "--protocol")
-    add_value(tokens, kwargs, "sources", "-sources")
-    add_bool(tokens, kwargs, "passive", "-passive")
-    add_value(tokens, kwargs, "resolvers", "-r")
-    add_value(tokens, kwargs, "api_key", "--api-key")
-    add_value(tokens, kwargs, "output_file", "-o")
-    add_bool(tokens, kwargs, "json_output", "-json")
-    add_value(tokens, kwargs, "peas_variant", "--variant")
-    add_value(tokens, kwargs, "checks", "--checks")
+    add_bool(tokens, kwargs, "all_checks", "-a")
+    add_bool(tokens, kwargs, "extra_enum", "-e")
+    add_bool(tokens, kwargs, "regex_checks", "-r")
+    add_bool(tokens, kwargs, "stealth", "-s")
+    add_value(tokens, kwargs, "password", "-P")
+    add_bool(tokens, kwargs, "debug", "-D")
+    add_bool(tokens, kwargs, "auto_network_scan", "-t")
+    add_value(tokens, kwargs, "discover_net", "-d")
+    add_value(tokens, kwargs, "ports", "-p")
+    add_value(tokens, kwargs, "scan_ip", "-i")
+    add_value(tokens, kwargs, "port_forward", "-F")
+    add_value(tokens, kwargs, "firmware_path", "-f")
+    add_value(tokens, kwargs, "selected_checks", "-o")
+    add_bool(tokens, kwargs, "wait", "-w")
+    add_bool(tokens, kwargs, "force_linpeas", "-L")
+    add_bool(tokens, kwargs, "force_macpeas", "-M")
     add_bool(tokens, kwargs, "quiet", "-q")
+    add_bool(tokens, kwargs, "no_color", "-N")
+    add_bool(tokens, kwargs, "help", "-h")
     return tokens

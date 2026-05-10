@@ -1626,6 +1626,84 @@ def test_chisel_source_reviewed_and_previewable(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_peass_ng_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("peass-ng")
+
+    assert tool.run_command == "./linpeas.sh"
+    assert records["peass-ng"].source_status == "source-reviewed"
+    assert records["peass-ng"].unverified_parameters == ()
+    assert records["peass-ng"].gap == ""
+    assert any("peass-ng/PEASS-ng" in item for item in records["peass-ng"].evidence)
+
+    params = adapter_parameter_names(tool, specs["peass-ng"])
+    for removed in (
+        "api_key",
+        "checks",
+        "json_output",
+        "listener",
+        "lhost",
+        "lport",
+        "output_file",
+        "passive",
+        "peas_variant",
+        "protocol",
+        "resolvers",
+        "session_id",
+        "sources",
+    ):
+        assert removed not in params
+    for expected in (
+        "all_checks",
+        "extra_enum",
+        "regex_checks",
+        "stealth",
+        "password",
+        "debug",
+        "auto_network_scan",
+        "discover_net",
+        "ports",
+        "scan_ip",
+        "port_forward",
+        "firmware_path",
+        "selected_checks",
+        "wait",
+        "force_linpeas",
+        "force_macpeas",
+        "quiet",
+        "no_color",
+        "help",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["peass-ng"],
+        {
+            "target": "ignored-local-host",
+            "all_checks": True,
+            "regex_checks": True,
+            "password": "Passw0rd!",
+            "discover_net": "192.168.1.0/24",
+            "ports": "22,80,443",
+            "selected_checks": "system_information,interesting_files",
+            "quiet": True,
+            "no_color": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-a -r -P 'Passw0rd!' -d 192.168.1.0/24 -p 22,80,443 "
+        "-o system_information,interesting_files -q -N"
+    )
+
+
 def test_explo_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
@@ -7474,6 +7552,43 @@ async def test_chisel_source_reviewed_parameters_build_cli_options(registry, saf
     )
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_peass_ng_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_peass_ng",
+        {
+            "target": "ignored-local-host",
+            "all_checks": True,
+            "regex_checks": True,
+            "password": "Passw0rd!",
+            "discover_net": "192.168.1.0/24",
+            "ports": "22,80,443",
+            "selected_checks": "system_information,interesting_files",
+            "quiet": True,
+            "no_color": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "peass-ng"
+    assert request.target == ""
+    assert request.options == (
+        "-a -r -P 'Passw0rd!' -d 192.168.1.0/24 -p 22,80,443 "
+        "-o system_information,interesting_files -q -N"
+    )
+    assert request.require_confirmation is True
 
 
 @pytest.mark.asyncio

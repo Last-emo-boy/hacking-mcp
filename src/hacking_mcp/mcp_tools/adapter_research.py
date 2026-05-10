@@ -3503,6 +3503,43 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "peass-ng": SourceReview(
+        note=(
+            "Reviewed against upstream PEASS-ng linPEAS README usage and "
+            "documented help block. The registry installs and runs the release "
+            "linpeas.sh script, so the adapter suppresses target argv and "
+            "exposes LinPEAS flags for all/extra/regex/stealth checks, sudo "
+            "password, debug, network discovery/scan, port forwarding, firmware "
+            "folder analysis, selected check groups, wait/force mode, quiet, "
+            "no-color, and help. Output redirection and remote transfer examples "
+            "are shell usage patterns, not linpeas CLI parameters."
+        ),
+        references=(
+            "https://github.com/peass-ng/PEASS-ng",
+            "https://raw.githubusercontent.com/peass-ng/PEASS-ng/master/linPEAS/README.md",
+        ),
+        verified_parameters=(
+            "all_checks",
+            "extra_enum",
+            "regex_checks",
+            "stealth",
+            "password",
+            "debug",
+            "auto_network_scan",
+            "discover_net",
+            "ports",
+            "scan_ip",
+            "port_forward",
+            "firmware_path",
+            "selected_checks",
+            "wait",
+            "force_linpeas",
+            "force_macpeas",
+            "quiet",
+            "no_color",
+            "help",
+        ),
+    ),
     "explo": SourceReview(
         note=(
             "Reviewed against upstream explo argparse parser and README usage. "

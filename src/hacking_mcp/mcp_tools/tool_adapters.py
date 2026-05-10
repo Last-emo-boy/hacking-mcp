@@ -708,6 +708,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "guymager",
         "knockmail",
         "leviathan",
+        "peass-ng",
         "redhawk",
         "reconspider",
         "rvuln",
