@@ -1278,6 +1278,55 @@ def test_leviathan_source_reviewed_interactive_only(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_routersploit_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("routersploit")
+
+    assert tool.run_command == "cd routersploit && sudo python3 rsf.py"
+    assert specs["routersploit"].requires_confirmation is True
+    assert records["routersploit"].source_status == "source-reviewed"
+    assert records["routersploit"].unverified_parameters == ()
+    assert records["routersploit"].gap == ""
+    assert any("threat9/routersploit" in item for item in records["routersploit"].evidence)
+
+    params = adapter_parameter_names(tool, specs["routersploit"])
+    for removed in (
+        "check_only",
+        "password",
+        "payload",
+        "resource_file",
+        "rhost",
+        "rport",
+        "username",
+    ):
+        assert removed not in params
+    for expected in ("module", "set_options", "interactive"):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["routersploit"],
+        {
+            "target": "192.0.2.10",
+            "module": "exploits/routers/example",
+            "set_options": "port 80;ssl true",
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-m exploits/routers/example -s 'target 192.0.2.10' "
+        "-s 'port 80' -s 'ssl true'"
+    )
+    assert preview["confirm_authorized"] is True
+
+
 def test_explo_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
@@ -6940,6 +6989,39 @@ async def test_leviathan_source_reviewed_parameters_build_cli_options(registry, 
     assert request.tool_name == "leviathan"
     assert request.target == ""
     assert request.options == ""
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_routersploit_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_routersploit",
+        {
+            "target": "192.0.2.10",
+            "module": "exploits/routers/example",
+            "set_options": "port 80;ssl true",
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "routersploit"
+    assert request.target == ""
+    assert request.options == (
+        "-m exploits/routers/example -s 'target 192.0.2.10' "
+        "-s 'port 80' -s 'ssl true'"
+    )
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
 

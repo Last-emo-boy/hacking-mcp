@@ -3342,6 +3342,28 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "routersploit": SourceReview(
+        note=(
+            "Reviewed against upstream RouterSploit README, rsf.py, and "
+            "interpreter nonInteractive implementation. With no args rsf.py "
+            "starts the interactive console; with args it accepts -m/--module "
+            "and repeated -s/--set assignments before executing the selected "
+            "module. The adapter suppresses generated exploit placeholders, "
+            "maps the base target to a target set-option, and exposes only "
+            "module, set_options, and interactive controls."
+        ),
+        references=(
+            "https://github.com/threat9/routersploit",
+            "https://raw.githubusercontent.com/threat9/routersploit/master/README.md",
+            "https://raw.githubusercontent.com/threat9/routersploit/master/rsf.py",
+            "https://raw.githubusercontent.com/threat9/routersploit/master/routersploit/interpreter.py",
+        ),
+        verified_parameters=(
+            "module",
+            "set_options",
+            "interactive",
+        ),
+    ),
     "explo": SourceReview(
         note=(
             "Reviewed against upstream explo argparse parser and README usage. "
