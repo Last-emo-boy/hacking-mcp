@@ -2186,6 +2186,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "delay_ms",
         ),
     ),
+    "takeover": SourceReview(
+        note=(
+            "Reviewed against upstream takeover help text and getopt parser "
+            "for domain target, domain list input, proxy, output, threads, "
+            "timeout, User-Agent, HTTP 200 processing, and verbose mode. The "
+            "registry command no longer forces -v; verbose is exposed as an "
+            "explicit adapter flag."
+        ),
+        references=(
+            "https://github.com/edoardottt/takeover",
+            "https://raw.githubusercontent.com/edoardottt/takeover/master/README.md",
+            "https://raw.githubusercontent.com/edoardottt/takeover/master/takeover.py",
+        ),
+        verified_parameters=(
+            "list_file",
+            "proxy",
+            "output_file",
+            "threads",
+            "timeout",
+            "user_agent",
+            "process_200",
+            "verbose",
+        ),
+    ),
     "nikto": SourceReview(
         note=(
             "Reviewed against the upstream Nikto README help/options for CGI "

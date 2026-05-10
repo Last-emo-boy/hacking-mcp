@@ -71,7 +71,7 @@ WEB_ATTACK_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/edoardottt/takeover.git",
             "cd takeover && pip install --user .",
         ],
-        run_command="cd takeover && python3 takeover.py -d {target} -v",
+        run_command="cd takeover && python3 takeover.py -d {target}",
         project_url="https://github.com/edoardottt/takeover",
         tags=["subdomain", "takeover", "vuln", "dns"],
         safety_tier=SafetyTier.SAFE,

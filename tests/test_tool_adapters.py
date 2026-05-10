@@ -258,6 +258,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["dirb"].unverified_parameters == ()
     assert any("manpages.debian.org" in item for item in records["dirb"].evidence)
 
+    assert records["takeover"].source_status == "source-reviewed"
+    assert records["takeover"].unverified_parameters == ()
+    assert any("edoardottt/takeover" in item for item in records["takeover"].evidence)
+
     assert records["nikto"].source_status == "source-reviewed"
     assert records["nikto"].unverified_parameters == ()
     assert any("sullo/nikto" in item for item in records["nikto"].evidence)
@@ -2166,6 +2170,63 @@ def test_dirb_source_reviewed_and_previewable(registry, safety):
     assert preview["options"] == (
         "words.txt -a Agent/1.0 -c a=b -H 'X-Test: 1' -N 404 "
         "-o dirb.txt -p 127.0.0.1:8080 -r -S -X php,txt -z 100"
+    )
+
+
+def test_takeover_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["takeover"].source_status == "source-reviewed"
+    assert records["takeover"].unverified_parameters == ()
+    assert records["takeover"].gap == ""
+    assert any("edoardottt/takeover" in item for item in records["takeover"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("takeover"), specs["takeover"])
+    for removed in (
+        "api_key",
+        "json_output",
+        "passive",
+        "resolvers",
+        "scan_depth",
+        "sources",
+    ):
+        assert removed not in params
+    for verified in (
+        "list_file",
+        "proxy",
+        "output_file",
+        "threads",
+        "timeout",
+        "user_agent",
+        "process_200",
+        "verbose",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("takeover"),
+        specs["takeover"],
+        {
+            "target": "example.com",
+            "proxy": "http://127.0.0.1:8080",
+            "output_file": "takeover.json",
+            "threads": 8,
+            "timeout": 20,
+            "user_agent": "takeover-bot",
+            "process_200": True,
+            "verbose": True,
+        },
+    )
+    assert preview["target"] == "example.com"
+    assert preview["options"] == (
+        "-p http://127.0.0.1:8080 -o takeover.json -t 8 -T 20 "
+        "-u takeover-bot -k -v"
     )
 
 
@@ -4604,6 +4665,41 @@ async def test_dirb_source_reviewed_parameters_build_cli_options(registry, safet
     assert request.options == (
         "words.txt -a Agent/1.0 -c a=b -H 'X-Test: 1' -N 404 "
         "-o dirb.txt -p 127.0.0.1:8080 -r -S -X php,txt -z 100"
+    )
+
+
+@pytest.mark.asyncio
+async def test_takeover_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_takeover",
+        {
+            "target": "example.com",
+            "proxy": "http://127.0.0.1:8080",
+            "output_file": "takeover.json",
+            "threads": 8,
+            "timeout": 20,
+            "user_agent": "takeover-bot",
+            "process_200": True,
+            "verbose": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "takeover"
+    assert request.target == "example.com"
+    assert request.options == (
+        "-p http://127.0.0.1:8080 -o takeover.json -t 8 -T 20 "
+        "-u takeover-bot -k -v"
     )
 
 
