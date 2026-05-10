@@ -1604,6 +1604,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "check_availability",
         ),
     ),
+    "knockmail": SourceReview(
+        note=(
+            "Reviewed against upstream KnockMail argparse definitions. The "
+            "registry command stays non-targeted, while the adapter generates "
+            "the documented --email option from target/email input or the "
+            "-f file option for batch verification; generic OSINT resolver, "
+            "API key, timeout, and JSON/output parameters were removed."
+        ),
+        references=(
+            "https://github.com/heywoodlh/KnockMail",
+            "https://raw.githubusercontent.com/heywoodlh/KnockMail/master/knockmail.py",
+        ),
+        verified_parameters=(
+            "email",
+            "input_file",
+        ),
+    ),
     "allinone-socialmedia": SourceReview(
         note=(
             "Reviewed against upstream Brute_Force README and OptionParser "

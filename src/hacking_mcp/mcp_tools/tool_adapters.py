@@ -700,6 +700,9 @@ def _request_parts(
 
 def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     target = str(kwargs.get("target") or "")
+    if tool.name == "knockmail":
+        return ""
+
     if target:
         return target
 
