@@ -3387,6 +3387,26 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "vegil": SourceReview(
+        note=(
+            "Reviewed against upstream Vegile README and bash entrypoint. "
+            "The documented usage exposes inject, unlimited, and help modes; "
+            "the script dispatches --i/--inject and --u/--unlimited with the "
+            "second argument as a backdoor/rootkit file path, plus "
+            "--h/--help. The adapter removes unsupported listener/session "
+            "placeholders and keeps Vegile DANGEROUS policy/info-only."
+        ),
+        references=(
+            "https://github.com/Screetsec/Vegile",
+            "https://raw.githubusercontent.com/Screetsec/Vegile/master/README.md",
+            "https://raw.githubusercontent.com/Screetsec/Vegile/master/Vegile",
+        ),
+        verified_parameters=(
+            "action",
+            "backdoor_path",
+            "help",
+        ),
+    ),
     "pwncat-cs": SourceReview(
         note=(
             "Reviewed against upstream pwncat README usage examples and "

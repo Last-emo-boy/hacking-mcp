@@ -932,7 +932,7 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     )
 
     vegil_schema = tools["security_tool_vegil"].inputSchema["properties"]
-    assert {"lhost", "lport", "listener", "protocol"}.issubset(vegil_schema)
+    assert {"action", "backdoor_path", "help"}.issubset(vegil_schema)
 
 
 @pytest.mark.asyncio
@@ -1635,6 +1635,54 @@ def test_mythic_source_reviewed_policy_only_previewable(registry, safety):
         {"command": "status", "verbose": True},
     )
     assert status_preview["options"] == "status --verbose"
+
+
+def test_vegil_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("vegil")
+
+    assert tool.run_command == "cd Vegile && sudo bash Vegile"
+    assert specs["vegil"].exposed is False
+    assert "classified DANGEROUS" in specs["vegil"].blocked_reason
+    assert records["vegil"].source_status == "source-reviewed"
+    assert records["vegil"].unverified_parameters == ()
+    assert records["vegil"].gap == ""
+    assert any("Screetsec/Vegile" in item for item in records["vegil"].evidence)
+
+    params = adapter_parameter_names(tool, specs["vegil"])
+    for removed in (
+        "listener",
+        "lhost",
+        "lport",
+        "protocol",
+        "session_id",
+    ):
+        assert removed not in params
+    for expected in ("action", "backdoor_path", "help"):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["vegil"],
+        {
+            "target": "ignored-local-host",
+            "action": "inject",
+            "backdoor_path": "rootkit.bin",
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == "--inject rootkit.bin"
+    assert preview["executable"] is False
+
+    help_preview = adapter_request_preview(tool, specs["vegil"], {"help": True})
+    assert help_preview["options"] == "--help"
 
 
 def test_evil_winrm_source_reviewed_and_previewable(registry, safety):
@@ -8702,7 +8750,7 @@ async def test_blocked_adapter_does_not_execute_orchestrator(registry, safety):
     register(mcp, orchestrator, registry, safety)
     content, metadata = await mcp.call_tool(
         "security_tool_vegil",
-        {"target": "example.com", "lhost": "127.0.0.1", "lport": 4444},
+        {"target": "example.com", "action": "inject", "backdoor_path": "rootkit.bin"},
     )
 
     assert "classified DANGEROUS" in metadata["result"]
