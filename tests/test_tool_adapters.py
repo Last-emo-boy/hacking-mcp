@@ -254,6 +254,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["dirsearch"].unverified_parameters == ()
     assert any("maurosoria/dirsearch" in item for item in records["dirsearch"].evidence)
 
+    assert records["dirb"].source_status == "source-reviewed"
+    assert records["dirb"].unverified_parameters == ()
+    assert any("manpages.debian.org" in item for item in records["dirb"].evidence)
+
     assert records["nikto"].source_status == "source-reviewed"
     assert records["nikto"].unverified_parameters == ()
     assert any("sullo/nikto" in item for item in records["nikto"].evidence)
@@ -2093,6 +2097,75 @@ def test_gospider_source_reviewed_and_previewable(registry, safety):
     assert preview["options"] == (
         "-o out --cookie a=b -H 'Accept: */*' --blacklist '.(jpg|png)' "
         "-c 10 -d 2 -a -w --json -q"
+    )
+
+
+def test_dirb_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["dirb"].source_status == "source-reviewed"
+    assert records["dirb"].unverified_parameters == ()
+    assert records["dirb"].gap == ""
+    assert any("manpages.debian.org" in item for item in records["dirb"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("dirb"), specs["dirb"])
+    for removed in ("follow_redirects", "match_codes", "recursive", "threads"):
+        assert removed not in params
+    for verified in (
+        "wordlist",
+        "user_agent",
+        "preserve_url_path",
+        "cookie",
+        "client_cert",
+        "fine_tune_404",
+        "header",
+        "case_insensitive",
+        "show_location",
+        "ignore_code",
+        "output_file",
+        "proxy",
+        "proxy_auth",
+        "no_recursive",
+        "interactive_recursion",
+        "silent",
+        "no_force_slash",
+        "auth",
+        "show_not_found",
+        "ignore_warnings",
+        "extensions_file",
+        "extensions",
+        "delay_ms",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("dirb"),
+        specs["dirb"],
+        {
+            "target": "https://example.test",
+            "wordlist": "words.txt",
+            "user_agent": "Agent/1.0",
+            "cookie": "a=b",
+            "header": "X-Test: 1",
+            "ignore_code": 404,
+            "output_file": "dirb.txt",
+            "proxy": "127.0.0.1:8080",
+            "no_recursive": True,
+            "silent": True,
+            "extensions": "php,txt",
+            "delay_ms": 100,
+        },
+    )
+    assert preview["target"] == "https://example.test"
+    assert preview["options"] == (
+        "words.txt -a Agent/1.0 -c a=b -H 'X-Test: 1' -N 404 "
+        "-o dirb.txt -p 127.0.0.1:8080 -r -S -X php,txt -z 100"
     )
 
 
@@ -4492,6 +4565,45 @@ async def test_gospider_source_reviewed_parameters_build_cli_options(registry, s
     assert request.options == (
         "-o out --cookie a=b -H 'Accept: */*' --blacklist '.(jpg|png)' "
         "-c 10 -d 2 -a -w --json -q"
+    )
+
+
+@pytest.mark.asyncio
+async def test_dirb_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_dirb",
+        {
+            "target": "https://example.test",
+            "wordlist": "words.txt",
+            "user_agent": "Agent/1.0",
+            "cookie": "a=b",
+            "header": "X-Test: 1",
+            "ignore_code": 404,
+            "output_file": "dirb.txt",
+            "proxy": "127.0.0.1:8080",
+            "no_recursive": True,
+            "silent": True,
+            "extensions": "php,txt",
+            "delay_ms": 100,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "dirb"
+    assert request.target == "https://example.test"
+    assert request.options == (
+        "words.txt -a Agent/1.0 -c a=b -H 'X-Test: 1' -N 404 "
+        "-o dirb.txt -p 127.0.0.1:8080 -r -S -X php,txt -z 100"
     )
 
 

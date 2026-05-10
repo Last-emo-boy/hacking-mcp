@@ -2148,6 +2148,44 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "no_color",
         ),
     ),
+    "dirb": SourceReview(
+        note=(
+            "Reviewed against the Debian-packaged DIRB man page for URL "
+            "target plus optional wordlist, user-agent/cookie/header/client "
+            "certificate, 404 tuning, case/location/output/proxy/auth "
+            "controls, recursion toggles, warning/not-found behavior, "
+            "extension amplification, and request delay."
+        ),
+        references=(
+            "https://manpages.debian.org/bookworm/dirb/dirb.1.en.html",
+            "https://manpages.debian.org/bookworm/dirb/dirb.1",
+        ),
+        verified_parameters=(
+            "wordlist",
+            "user_agent",
+            "preserve_url_path",
+            "cookie",
+            "client_cert",
+            "fine_tune_404",
+            "header",
+            "case_insensitive",
+            "show_location",
+            "ignore_code",
+            "output_file",
+            "proxy",
+            "proxy_auth",
+            "no_recursive",
+            "interactive_recursion",
+            "silent",
+            "no_force_slash",
+            "auth",
+            "show_not_found",
+            "ignore_warnings",
+            "extensions_file",
+            "extensions",
+            "delay_ms",
+        ),
+    ),
     "nikto": SourceReview(
         note=(
             "Reviewed against the upstream Nikto README help/options for CGI "
