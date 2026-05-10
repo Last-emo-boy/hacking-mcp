@@ -1812,6 +1812,28 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "limit_bars",
         ),
     ),
+    "sublist3r": SourceReview(
+        note=(
+            "Reviewed against upstream Sublist3r argparse definitions for "
+            "domain target execution, subbrute brute-force enablement, port "
+            "scan list, verbosity, thread count, engine selection, output file, "
+            "and no-color output."
+        ),
+        references=(
+            "https://github.com/aboul3la/Sublist3r",
+            "https://raw.githubusercontent.com/aboul3la/Sublist3r/master/sublist3r.py",
+            "https://raw.githubusercontent.com/aboul3la/Sublist3r/master/README.md",
+        ),
+        verified_parameters=(
+            "bruteforce",
+            "ports",
+            "verbose",
+            "threads",
+            "engines",
+            "output_file",
+            "no_color",
+        ),
+    ),
     "dirsearch": SourceReview(
         note=(
             "Reviewed against the upstream dirsearch README Options section for "

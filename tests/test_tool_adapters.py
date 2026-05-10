@@ -1322,6 +1322,55 @@ def test_maigret_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_sublist3r_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["sublist3r"].source_status == "source-reviewed"
+    assert records["sublist3r"].unverified_parameters == ()
+    assert records["sublist3r"].gap == ""
+    assert any("aboul3la/Sublist3r" in item for item in records["sublist3r"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("sublist3r"), specs["sublist3r"])
+    for removed in ("api_key", "json_output", "passive", "resolvers", "sources"):
+        assert removed not in params
+    for verified in (
+        "bruteforce",
+        "ports",
+        "verbose",
+        "threads",
+        "engines",
+        "output_file",
+        "no_color",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("sublist3r"),
+        specs["sublist3r"],
+        {
+            "target": "example.com",
+            "bruteforce": True,
+            "ports": "80,443",
+            "verbose": True,
+            "threads": 20,
+            "engines": "google,bing",
+            "output_file": "subs.txt",
+            "no_color": True,
+        },
+    )
+    assert preview["target"] == "example.com"
+    assert preview["options"] == (
+        "--bruteforce --ports 80,443 --verbose --threads 20 "
+        "--engines google,bing --output subs.txt --no-color"
+    )
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
