@@ -477,6 +477,49 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "bulk-extractor": SourceReview(
+        note=(
+            "Reviewed against the upstream bulk_extractor man page and "
+            "current cxxopts CLI source. The registry target is the positional "
+            "image/directory input; generated options are placed before that "
+            "target so required output directory and scanner controls match "
+            "the documented bulk_extractor -o outdir [options] image shape."
+        ),
+        references=(
+            "https://github.com/simsong/bulk_extractor",
+            "https://raw.githubusercontent.com/simsong/bulk_extractor/main/man/bulk_extractor.1",
+            "https://raw.githubusercontent.com/simsong/bulk_extractor/main/src/bulk_extractor.cpp",
+        ),
+        verified_parameters=(
+            "output_dir",
+            "banner_file",
+            "alert_list",
+            "stop_list",
+            "sampling",
+            "print_path",
+            "find_patterns",
+            "find_files",
+            "context_window",
+            "page_size",
+            "margin_size",
+            "threads",
+            "no_threads",
+            "max_depth",
+            "scanner_dirs",
+            "recursive",
+            "settings",
+            "scan_range",
+            "page_start",
+            "exclusive_scanner",
+            "enabled_scanners",
+            "disabled_scanners",
+            "quiet",
+            "info_scanners",
+            "version",
+            "no_notify",
+            "legacy_notification",
+        ),
+    ),
     "guymager": SourceReview(
         note=(
             "Reviewed against the Debian Guymager man page and project "

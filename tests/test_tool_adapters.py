@@ -3142,6 +3142,91 @@ def test_wireshark_source_reviewed_interactive_only(registry, safety):
     assert preview["options"] == ""
 
 
+def test_bulk_extractor_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("bulk-extractor")
+
+    assert tool.run_command == "bulk_extractor {target}"
+    assert records["bulk-extractor"].source_status == "source-reviewed"
+    assert records["bulk-extractor"].unverified_parameters == ()
+    assert records["bulk-extractor"].gap == ""
+    assert any("bulk_extractor.cpp" in item for item in records["bulk-extractor"].evidence)
+
+    params = adapter_parameter_names(tool, specs["bulk-extractor"])
+    for removed in ("extract", "plugin", "profile"):
+        assert removed not in params
+    for expected in (
+        "output_dir",
+        "banner_file",
+        "alert_list",
+        "stop_list",
+        "sampling",
+        "find_patterns",
+        "find_files",
+        "context_window",
+        "page_size",
+        "margin_size",
+        "threads",
+        "max_depth",
+        "scanner_dirs",
+        "recursive",
+        "settings",
+        "scan_range",
+        "page_start",
+        "exclusive_scanner",
+        "enabled_scanners",
+        "disabled_scanners",
+        "quiet",
+        "no_notify",
+        "legacy_notification",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["bulk-extractor"],
+        {
+            "target": "evidence.E01",
+            "output_dir": "case-out",
+            "banner_file": "banner.txt",
+            "alert_list": "alerts.txt",
+            "stop_list": "stops.txt",
+            "sampling": "0.1:2",
+            "find_patterns": "secret api-key",
+            "find_files": "regex.txt",
+            "context_window": 64,
+            "page_size": "16M",
+            "margin_size": "4096",
+            "threads": 4,
+            "max_depth": 3,
+            "scanner_dirs": "plugins extra",
+            "recursive": True,
+            "settings": "hash_alg=sha1",
+            "scan_range": "1024-4096",
+            "page_start": 2,
+            "exclusive_scanner": "email",
+            "enabled_scanners": "email url",
+            "disabled_scanners": "gps",
+            "quiet": True,
+            "no_notify": True,
+            "legacy_notification": True,
+        },
+    )
+    assert preview["target"] == "evidence.E01"
+    assert preview["options"] == (
+        "-o case-out -b banner.txt -r alerts.txt -w stops.txt -s 0.1:2 "
+        "-f secret -f api-key -F regex.txt -C 64 -G 16M -g 4096 -j 4 "
+        "-M 3 -P plugins -P extra -R -S hash_alg=sha1 -Y 1024-4096 "
+        "-z 2 -E email -e email -e url -x gps -q -0 -1"
+    )
+
+
 def test_autopsy_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
@@ -6374,6 +6459,42 @@ async def test_guymager_source_reviewed_parameters_build_cli_options(registry, s
     assert request.tool_name == "guymager"
     assert request.target == ""
     assert request.options == "log=guymager.log cfg=guymager.cfg"
+    assert request.require_confirmation is False
+
+
+@pytest.mark.asyncio
+async def test_bulk_extractor_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_bulk_extractor",
+        {
+            "target": "evidence.E01",
+            "output_dir": "case-out",
+            "enabled_scanners": "email url",
+            "disabled_scanners": "gps",
+            "threads": 4,
+            "recursive": True,
+            "settings": "hash_alg=sha1",
+            "quiet": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "bulk-extractor"
+    assert request.target == "evidence.E01"
+    assert request.options == (
+        "-o case-out -j 4 -R -S hash_alg=sha1 -e email -e url -x gps -q"
+    )
+    assert request.options_before_target is True
     assert request.require_confirmation is False
 
 

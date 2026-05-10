@@ -1038,4 +1038,13 @@ def _should_validate_scope(tool: HackingToolDef) -> bool:
 
 
 def _options_before_target(tool: HackingToolDef) -> bool:
-    return tool.name in {"frida", "hashbuster", "jadx", "radare2", "skipfish", "testssl", "trivy"}
+    return tool.name in {
+        "bulk-extractor",
+        "frida",
+        "hashbuster",
+        "jadx",
+        "radare2",
+        "skipfish",
+        "testssl",
+        "trivy",
+    }
