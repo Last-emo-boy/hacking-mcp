@@ -1546,6 +1546,27 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "instabrute": SourceReview(
+        note=(
+            "Reviewed against the archived instaBrute README and optparse "
+            "definitions. The registry intentionally has no run_command and "
+            "the MCP endpoint remains policy/info-only; adapter parameters "
+            "mirror the documented legacy username-file, dictionary, single "
+            "username, delay, and proxy options for inventory parity only."
+        ),
+        references=(
+            "https://github.com/chinoogawa/instaBrute",
+            "https://raw.githubusercontent.com/chinoogawa/instaBrute/master/README.md",
+            "https://raw.githubusercontent.com/chinoogawa/instaBrute/master/instaBrute.py",
+        ),
+        verified_parameters=(
+            "user_file",
+            "dictionary",
+            "username",
+            "delay",
+            "proxy",
+        ),
+    ),
     "holehe": SourceReview(
         note=(
             "Reviewed against upstream Holehe argparse definitions for email "

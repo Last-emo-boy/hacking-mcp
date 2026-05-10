@@ -2442,6 +2442,41 @@ def test_terminal_multiplexer_source_reviewed_and_previewable(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_instabrute_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert specs["instabrute"].exposed is False
+    assert records["instabrute"].source_status == "source-reviewed"
+    assert records["instabrute"].unverified_parameters == ()
+    assert records["instabrute"].gap == ""
+    assert any("instabrute" in item.lower() for item in records["instabrute"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("instabrute"), specs["instabrute"])
+    assert "timeout" not in params
+    for expected in ("user_file", "dictionary", "username", "delay", "proxy"):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("instabrute"),
+        specs["instabrute"],
+        {
+            "username": "alice",
+            "dictionary": "passwords.txt",
+            "delay": 2,
+            "proxy": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == "-d passwords.txt -u alice -t 2 -p"
+    assert preview["executable"] is False
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
