@@ -30,24 +30,19 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "anonsurf",
         "bettercap",
         "binwalk",
-        "brutal",
         "fluxion",
         "hashcat",
         "hcxdumptool",
         "hcxtools",
         "jadx",
         "john",
-        "mobdroid",
         "mobsf",
-        "msfvenom",
         "multitor",
         "owasp-zap",
         "sherlock",
         "steghide",
         "stegcracker",
         "theHarvester",
-        "thefatrat",
-        "venom",
         "volatility3",
         "whatweb",
         "wifiphisher",
@@ -668,15 +663,6 @@ def _adapter_parameters(
             AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
         ])
 
-    if tool.name in {"msfvenom", "thefatrat", "venom", "mobdroid", "brutal"}:
-        params.extend([
-            AdapterParameterSpec("stager", str, "", "Stager/profile selector when supported."),
-            AdapterParameterSpec("listener_name", str, "", "Listener/profile name when supported."),
-            AdapterParameterSpec("apk_name", str, "", "APK/app output name when supported."),
-            AdapterParameterSpec("bundle_id", str, "", "Mobile bundle/package id when supported."),
-            AdapterParameterSpec("sign_apk", bool, False, "Sign APK output when supported."),
-        ])
-
     if tool.name in {
         "wifite", "airgeddon", "hcxdumptool", "hcxtools", "bettercap",
         "wifiphisher", "fluxion",
@@ -969,13 +955,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "user_agent", "--user-agent")
         _add_value(tokens, kwargs, "output_file", "-o")
         _add_bool(tokens, kwargs, "json_output", "--json")
-
-    if tool.name in {"msfvenom", "thefatrat", "venom", "mobdroid", "brutal"}:
-        _add_value(tokens, kwargs, "stager", "--stager")
-        _add_value(tokens, kwargs, "listener_name", "--listener")
-        _add_value(tokens, kwargs, "apk_name", "--apk-name")
-        _add_value(tokens, kwargs, "bundle_id", "--bundle-id")
-        _add_bool(tokens, kwargs, "sign_apk", "--sign")
 
     if tool.name in {
         "wifite", "airgeddon", "hcxdumptool", "hcxtools", "bettercap",
