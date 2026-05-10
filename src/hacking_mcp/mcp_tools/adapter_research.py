@@ -477,6 +477,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "guymager": SourceReview(
+        note=(
+            "Reviewed against the Debian Guymager man page and project "
+            "documentation. The current registry command starts the Qt "
+            "forensic imager as sudo guymager; the adapter removes generated "
+            "forensics extraction/plugin/profile parameters and exposes only "
+            "the documented log= and cfg= command-line settings."
+        ),
+        references=(
+            "https://manpages.debian.org/bookworm/guymager/guymager.1.en.html",
+            "https://guymager.sourceforge.io/",
+        ),
+        verified_parameters=(
+            "log_file",
+            "config_file",
+        ),
+    ),
     "volatility3": SourceReview(
         note=(
             "Reviewed against upstream Volatility 3 CLI source and generated "

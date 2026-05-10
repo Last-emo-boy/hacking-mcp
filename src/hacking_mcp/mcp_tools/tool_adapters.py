@@ -704,6 +704,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "appcheck",
         "dracnmap",
         "goblin-wordgenerator",
+        "guymager",
         "knockmail",
         "redhawk",
         "reconspider",

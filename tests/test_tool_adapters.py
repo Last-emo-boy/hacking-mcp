@@ -3190,6 +3190,41 @@ def test_autopsy_source_reviewed_and_previewable(registry, safety):
     assert preview["options"] == "-c -d /cases -i /dev/sda1 ext4 /mnt/root -p 8888"
 
 
+def test_guymager_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("guymager")
+
+    assert tool.run_command == "sudo guymager"
+    assert records["guymager"].source_status == "source-reviewed"
+    assert records["guymager"].unverified_parameters == ()
+    assert records["guymager"].gap == ""
+    assert any("guymager" in item.lower() for item in records["guymager"].evidence)
+
+    params = adapter_parameter_names(tool, specs["guymager"])
+    for removed in ("extract", "output_dir", "plugin", "profile"):
+        assert removed not in params
+    for expected in ("log_file", "config_file"):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["guymager"],
+        {
+            "target": "ignored.raw",
+            "log_file": "guymager.log",
+            "config_file": "guymager.cfg",
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == "log=guymager.log cfg=guymager.cfg"
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -6311,6 +6346,34 @@ async def test_autopsy_source_reviewed_parameters_build_cli_options(registry, sa
     assert request.tool_name == "autopsy"
     assert request.target == "10.1.34.19"
     assert request.options == "-c -d /cases -i /dev/sda1 ext4 /mnt/root -p 8888"
+    assert request.require_confirmation is False
+
+
+@pytest.mark.asyncio
+async def test_guymager_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_guymager",
+        {
+            "target": "ignored.raw",
+            "log_file": "guymager.log",
+            "config_file": "guymager.cfg",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "guymager"
+    assert request.target == ""
+    assert request.options == "log=guymager.log cfg=guymager.cfg"
     assert request.require_confirmation is False
 
 
