@@ -1515,6 +1515,41 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "reports_sorting",
         ),
     ),
+    "spiderfoot": SourceReview(
+        note=(
+            "Reviewed against upstream SpiderFoot sf.py argparse definitions "
+            "for debug/listen/module/correlation/target scan controls, event "
+            "type and use-case selection, output formatting, field/header "
+            "controls, strict/quiet/version modes, and module concurrency."
+        ),
+        references=(
+            "https://github.com/smicallef/spiderfoot",
+            "https://raw.githubusercontent.com/smicallef/spiderfoot/master/sf.py",
+            "https://raw.githubusercontent.com/smicallef/spiderfoot/master/README.md",
+        ),
+        verified_parameters=(
+            "debug",
+            "listen",
+            "modules",
+            "list_modules",
+            "correlate",
+            "event_types",
+            "use_case",
+            "list_types",
+            "output_format",
+            "no_headers",
+            "strip_newlines",
+            "include_source",
+            "max_data_length",
+            "delimiter",
+            "filter",
+            "show_event_types",
+            "strict_mode",
+            "quiet",
+            "version",
+            "max_threads",
+        ),
+    ),
     "theHarvester": SourceReview(
         note=(
             "Reviewed against the upstream theHarvester argparse definitions "

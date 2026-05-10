@@ -1484,6 +1484,77 @@ def test_secretfinder_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_spiderfoot_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["spiderfoot"].source_status == "source-reviewed"
+    assert records["spiderfoot"].unverified_parameters == ()
+    assert records["spiderfoot"].gap == ""
+    assert any("smicallef/spiderfoot" in item for item in records["spiderfoot"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("spiderfoot"), specs["spiderfoot"])
+    for removed in ("api_key", "json_output", "output_file", "passive", "resolvers", "sources", "timeout", "user_agent"):
+        assert removed not in params
+    for verified in (
+        "debug",
+        "listen",
+        "modules",
+        "list_modules",
+        "correlate",
+        "event_types",
+        "use_case",
+        "list_types",
+        "output_format",
+        "no_headers",
+        "strip_newlines",
+        "include_source",
+        "max_data_length",
+        "delimiter",
+        "filter",
+        "show_event_types",
+        "strict_mode",
+        "quiet",
+        "version",
+        "max_threads",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("spiderfoot"),
+        specs["spiderfoot"],
+        {
+            "target": "example.com",
+            "debug": True,
+            "modules": "sfp_dnsresolve,sfp_whois",
+            "event_types": "DOMAIN_NAME,IP_ADDRESS",
+            "use_case": "passive",
+            "output_format": "json",
+            "no_headers": True,
+            "strip_newlines": True,
+            "include_source": True,
+            "max_data_length": 120,
+            "delimiter": ";",
+            "filter": True,
+            "show_event_types": "DOMAIN_NAME",
+            "strict_mode": True,
+            "quiet": True,
+            "max_threads": 4,
+        },
+    )
+    assert preview["target"] == "example.com"
+    assert preview["options"] == (
+        "--debug -m sfp_dnsresolve,sfp_whois -t DOMAIN_NAME,IP_ADDRESS "
+        "-u passive -o json -H -n -r -S 120 -D ';' -f -F DOMAIN_NAME "
+        "-x -q -max-threads 4"
+    )
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
