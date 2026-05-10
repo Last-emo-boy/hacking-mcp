@@ -26,18 +26,11 @@ MCP_TOOL_PREFIX = "security_tool_"
 
 NAMED_OVERRIDE_TOOL_NAMES = frozenset(
     {
-        "airgeddon",
-        "anonsurf",
-        "bettercap",
         "binwalk",
-        "fluxion",
         "hashcat",
-        "hcxdumptool",
-        "hcxtools",
         "jadx",
         "john",
         "mobsf",
-        "multitor",
         "owasp-zap",
         "sherlock",
         "steghide",
@@ -45,8 +38,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "theHarvester",
         "volatility3",
         "whatweb",
-        "wifiphisher",
-        "wifite",
     }
 )
 
@@ -663,25 +654,6 @@ def _adapter_parameters(
             AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
         ])
 
-    if tool.name in {
-        "wifite", "airgeddon", "hcxdumptool", "hcxtools", "bettercap",
-        "wifiphisher", "fluxion",
-    }:
-        params.extend([
-            AdapterParameterSpec("pmkid", bool, False, "Enable PMKID workflow when supported."),
-            AdapterParameterSpec("deauth_count", int, 0, "Deauth packet count when supported; 0 leaves default."),
-            AdapterParameterSpec("capture_file", str, "", "Capture/handshake file path when supported."),
-            AdapterParameterSpec("target_essid", str, "", "Target ESSID override when supported."),
-            AdapterParameterSpec("ble", bool, False, "Enable BLE mode when supported."),
-        ])
-
-    if tool.name in {"anonsurf", "multitor"}:
-        params.extend([
-            AdapterParameterSpec("action", str, "", "Action such as start, stop, restart, or status."),
-            AdapterParameterSpec("new_identity", bool, False, "Request a new Tor identity when supported."),
-            AdapterParameterSpec("dns_only", bool, False, "Only route DNS when supported."),
-        ])
-
     params.extend([
         AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
         AdapterParameterSpec(
@@ -955,21 +927,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "user_agent", "--user-agent")
         _add_value(tokens, kwargs, "output_file", "-o")
         _add_bool(tokens, kwargs, "json_output", "--json")
-
-    if tool.name in {
-        "wifite", "airgeddon", "hcxdumptool", "hcxtools", "bettercap",
-        "wifiphisher", "fluxion",
-    }:
-        _add_bool(tokens, kwargs, "pmkid", "--pmkid")
-        _add_value(tokens, kwargs, "deauth_count", "--deauth")
-        _add_value(tokens, kwargs, "capture_file", "--capture")
-        _add_value(tokens, kwargs, "target_essid", "--essid")
-        _add_bool(tokens, kwargs, "ble", "--ble")
-
-    if tool.name in {"anonsurf", "multitor"}:
-        _add_value(tokens, kwargs, "action", "--action")
-        _add_bool(tokens, kwargs, "new_identity", "--new-identity")
-        _add_bool(tokens, kwargs, "dns_only", "--dns-only")
 
     return tokens
 
