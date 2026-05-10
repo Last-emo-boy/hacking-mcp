@@ -1222,6 +1222,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "url",
         ),
     ),
+    "redhawk": SourceReview(
+        note=(
+            "Reviewed against upstream RED_HAWK rhawk.php. The script has no "
+            "CLI parser or positional arguments; target website, HTTP/HTTPS "
+            "selection, scan type, fix/update actions, and follow-up prompts "
+            "are all read from stdin. The adapter is therefore intentionally "
+            "interactive-only and removes generated scanner/depth/output "
+            "parameters."
+        ),
+        references=(
+            "https://github.com/Tuhinshubhra/RED_HAWK",
+            "https://raw.githubusercontent.com/Tuhinshubhra/RED_HAWK/master/rhawk.php",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "nuclei": SourceReview(
         note=(
             "Reviewed against official ProjectDiscovery Nuclei docs for "
