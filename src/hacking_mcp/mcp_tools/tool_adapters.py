@@ -27,7 +27,6 @@ MCP_TOOL_PREFIX = "security_tool_"
 NAMED_OVERRIDE_TOOL_NAMES = frozenset(
     {
         "airgeddon",
-        "amass",
         "anonsurf",
         "arjun",
         "bettercap",
@@ -56,7 +55,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "hcxdumptool",
         "hcxtools",
         "hiddeneye",
-        "httpx",
         "impacket",
         "jadx",
         "john",
@@ -71,7 +69,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "multitor",
         "netexec",
         "nikto",
-        "nmap",
         "nosqlmap",
         "nuclei",
         "owasp-zap",
@@ -91,7 +88,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "sqlmap",
         "steghide",
         "stegcracker",
-        "subfinder",
         "testssl",
         "theHarvester",
         "thefatrat",
@@ -699,28 +695,6 @@ def _adapter_parameters(
             AdapterParameterSpec("full_url", bool, False, "Show full URLs in output."),
             AdapterParameterSpec("no_color", bool, False, "Disable colored output."),
         ])
-    elif tool.name == "httpx":
-        params.extend([
-            AdapterParameterSpec("input_file", str, "", "Input file containing hosts to probe."),
-            AdapterParameterSpec("status_code", bool, False, "Show HTTP status code."),
-            AdapterParameterSpec("title", bool, False, "Show page title."),
-            AdapterParameterSpec("tech_detect", bool, False, "Show technology detection."),
-            AdapterParameterSpec("content_length", bool, False, "Show response content length."),
-            AdapterParameterSpec("match_codes", str, "", "HTTP status codes to match."),
-            AdapterParameterSpec("filter_codes", str, "", "HTTP status codes to filter."),
-            AdapterParameterSpec("threads", int, 0, "Worker/thread count; 0 leaves default."),
-            AdapterParameterSpec("rate_limit", int, 0, "Maximum requests per second; 0 leaves default."),
-            AdapterParameterSpec("ports", str, "", "Ports to probe, for example http:80,https:8443."),
-            AdapterParameterSpec("path", str, "", "Path or comma-separated paths to probe."),
-            AdapterParameterSpec("follow_redirects", bool, False, "Follow HTTP redirects."),
-            AdapterParameterSpec("proxy", str, "", "Optional HTTP proxy URL."),
-            AdapterParameterSpec("headers", str, "", "Custom HTTP header to send."),
-            AdapterParameterSpec("method", str, "", "HTTP method to probe, or all."),
-            AdapterParameterSpec("timeout", int, 0, "Timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("output_file", str, "", "Output file path."),
-            AdapterParameterSpec("json_output", bool, False, "Store output in JSONL format."),
-            AdapterParameterSpec("silent", bool, False, "Enable silent output mode."),
-        ])
     elif tool.name == "dalfox":
         params.extend([
             AdapterParameterSpec("blind_callback", str, "", "Blind XSS callback URL."),
@@ -1148,81 +1122,7 @@ def _adapter_parameters(
             AdapterParameterSpec("protocol", str, "", "Protocol selector when supported."),
         ])
 
-    if tool.name == "subfinder":
-        params.extend([
-            AdapterParameterSpec("input_file", str, "", "File containing domains to enumerate."),
-            AdapterParameterSpec("sources", str, "", "Comma-separated sources to use."),
-            AdapterParameterSpec("exclude_sources", str, "", "Comma-separated sources to exclude."),
-            AdapterParameterSpec("all_sources", bool, False, "Use all sources for enumeration."),
-            AdapterParameterSpec("recursive", bool, False, "Use only sources that can handle subdomains recursively."),
-            AdapterParameterSpec("active", bool, False, "Display active sources in the result."),
-            AdapterParameterSpec("match", str, "", "Subdomain or list to match."),
-            AdapterParameterSpec("filter", str, "", "Subdomain or list to filter."),
-            AdapterParameterSpec("resolvers", str, "", "Comma-separated resolver addresses."),
-            AdapterParameterSpec("resolver_file", str, "", "File containing resolver addresses."),
-            AdapterParameterSpec("rate_limit", int, 0, "Maximum HTTP requests per second; 0 leaves default."),
-            AdapterParameterSpec("rate_limits", str, "", "Per-provider rate limits, for example shodan=10/s."),
-            AdapterParameterSpec("threads", int, 0, "Number of concurrent goroutines; 0 leaves default."),
-            AdapterParameterSpec("timeout", int, 0, "Seconds before subfinder timeout; 0 leaves default."),
-            AdapterParameterSpec("max_time", int, 0, "Minutes to wait for enumeration; 0 leaves default."),
-            AdapterParameterSpec("output_file", str, "", "Output file path."),
-            AdapterParameterSpec("json_output", bool, False, "Write JSONL output."),
-            AdapterParameterSpec("output_dir", str, "", "Directory for per-host JSON output."),
-            AdapterParameterSpec("collect_sources", bool, False, "Include all sources in JSON output."),
-            AdapterParameterSpec("include_ip", bool, False, "Include host IPs in output."),
-            AdapterParameterSpec("exclude_ip", bool, False, "Exclude IPs from JSON output."),
-            AdapterParameterSpec("config_file", str, "", "Subfinder config file path."),
-            AdapterParameterSpec("provider_config", str, "", "Provider config file path."),
-            AdapterParameterSpec("proxy", str, "", "HTTP proxy URL."),
-            AdapterParameterSpec("silent", bool, False, "Show only subdomains in output."),
-            AdapterParameterSpec("verbose", bool, False, "Enable verbose output."),
-        ])
-    elif tool.name == "amass":
-        params.extend([
-            AdapterParameterSpec("config_file", str, "", "Path to Amass YAML configuration file."),
-            AdapterParameterSpec("output_dir", str, "", "Directory containing the graph database and output files."),
-            AdapterParameterSpec("no_color", bool, False, "Disable colorized output."),
-            AdapterParameterSpec("silent", bool, False, "Disable all output during execution."),
-            AdapterParameterSpec("active", bool, False, "Enable active reconnaissance methods."),
-            AdapterParameterSpec("passive", bool, False, "Run purely passive enumeration."),
-            AdapterParameterSpec("alts", bool, False, "Enable altered-name generation."),
-            AdapterParameterSpec("alteration_wordlist", str, "", "Wordlist file for alterations."),
-            AdapterParameterSpec("alteration_masks", str, "", "Hashcat-style masks for name alterations."),
-            AdapterParameterSpec("blacklist", str, "", "Blacklisted subdomain names."),
-            AdapterParameterSpec("blacklist_file", str, "", "File containing blacklisted subdomains."),
-            AdapterParameterSpec("brute", bool, False, "Perform brute-force subdomain enumeration."),
-            AdapterParameterSpec("domain_file", str, "", "File providing root domain names."),
-            AdapterParameterSpec("exclude_sources", str, "", "Data sources to exclude."),
-            AdapterParameterSpec("exclude_file", str, "", "File containing data sources to exclude."),
-            AdapterParameterSpec("include_sources", str, "", "Data sources to include."),
-            AdapterParameterSpec("include_file", str, "", "File containing data sources to include."),
-            AdapterParameterSpec("interface", str, "", "Network interface to send traffic through."),
-            AdapterParameterSpec("include_ip", bool, False, "Show IP addresses for discovered names."),
-            AdapterParameterSpec("ipv4", bool, False, "Show IPv4 addresses for discovered names."),
-            AdapterParameterSpec("ipv6", bool, False, "Show IPv6 addresses for discovered names."),
-            AdapterParameterSpec("list_sources", bool, False, "Print available data sources."),
-            AdapterParameterSpec("log_file", str, "", "Path to log file for errors."),
-            AdapterParameterSpec("max_depth", int, 0, "Maximum subdomain labels for brute forcing; 0 leaves default."),
-            AdapterParameterSpec("min_for_recursive", int, 0, "Discoveries before recursive brute forcing; 0 leaves default."),
-            AdapterParameterSpec("known_names_file", str, "", "File providing already known subdomain names."),
-            AdapterParameterSpec("no_recursive", bool, False, "Turn off recursive brute forcing."),
-            AdapterParameterSpec("output_file", str, "", "Text output file path."),
-            AdapterParameterSpec("output_prefix", str, "", "Path prefix for all output files."),
-            AdapterParameterSpec("ports", str, "", "Ports for active certificate/crawl checks."),
-            AdapterParameterSpec("resolvers", str, "", "Untrusted DNS resolver IPs."),
-            AdapterParameterSpec("resolver_file", str, "", "File containing untrusted DNS resolvers."),
-            AdapterParameterSpec("dns_qps", int, 0, "Maximum DNS queries per second; 0 leaves default."),
-            AdapterParameterSpec("resolver_qps", int, 0, "Maximum queries per untrusted resolver; 0 leaves default."),
-            AdapterParameterSpec("scripts_dir", str, "", "Directory containing ADS scripts."),
-            AdapterParameterSpec("timeout", int, 0, "Minutes to execute enumeration; 0 leaves default."),
-            AdapterParameterSpec("trusted_resolvers", str, "", "Trusted DNS resolver IPs."),
-            AdapterParameterSpec("trusted_resolver_file", str, "", "File containing trusted DNS resolvers."),
-            AdapterParameterSpec("trusted_qps", int, 0, "Maximum queries per trusted resolver; 0 leaves default."),
-            AdapterParameterSpec("verbose", bool, False, "Output status, debug, and troubleshooting info."),
-            AdapterParameterSpec("wordlist", str, "", "Wordlist file for brute forcing."),
-            AdapterParameterSpec("wordlist_masks", str, "", "Hashcat-style masks for DNS brute forcing."),
-        ])
-    elif (
+    if (
         tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}
         and tool.name not in {"gobuster", "theHarvester"}
     ):
@@ -1276,13 +1176,6 @@ def _adapter_parameters(
             AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value when supported."),
             AdapterParameterSpec("output_file", str, "", "Output file path when supported."),
             AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
-        ])
-
-    if tool.name == "nmap":
-        params.extend([
-            AdapterParameterSpec("scripts", str, "", "Nmap NSE script selector, for example default,vuln."),
-            AdapterParameterSpec("script_args", str, "", "Nmap NSE script arguments."),
-            AdapterParameterSpec("exclude_hosts", str, "", "Comma-separated hosts to exclude."),
         ])
 
     if tool.name == "sqlmap":
@@ -1724,26 +1617,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "quiet", "--quiet")
         _add_bool(tokens, kwargs, "full_url", "--full-url")
         _add_bool(tokens, kwargs, "no_color", "--no-color")
-    elif tool.name == "httpx":
-        _add_value(tokens, kwargs, "input_file", "-l")
-        _add_bool(tokens, kwargs, "status_code", "-sc")
-        _add_bool(tokens, kwargs, "title", "-title")
-        _add_bool(tokens, kwargs, "tech_detect", "-td")
-        _add_bool(tokens, kwargs, "content_length", "-cl")
-        _add_value(tokens, kwargs, "match_codes", "-mc")
-        _add_value(tokens, kwargs, "filter_codes", "-fc")
-        _add_value(tokens, kwargs, "threads", "-t")
-        _add_value(tokens, kwargs, "rate_limit", "-rl")
-        _add_value(tokens, kwargs, "ports", "-p")
-        _add_value(tokens, kwargs, "path", "-path")
-        _add_bool(tokens, kwargs, "follow_redirects", "-fr")
-        _add_value(tokens, kwargs, "proxy", "-proxy")
-        _add_value(tokens, kwargs, "headers", "-H")
-        _add_value(tokens, kwargs, "method", "-x")
-        _add_value(tokens, kwargs, "timeout", "-timeout")
-        _add_value(tokens, kwargs, "output_file", "-o")
-        _add_bool(tokens, kwargs, "json_output", "-json")
-        _add_bool(tokens, kwargs, "silent", "-silent")
     elif tool.name == "dalfox":
         _add_value(tokens, kwargs, "blind_callback", "-b")
         _add_value(tokens, kwargs, "config_file", "--config")
@@ -2117,77 +1990,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "listener", "--listener")
         _add_value(tokens, kwargs, "protocol", "--protocol")
 
-    if tool.name == "subfinder":
-        _add_value(tokens, kwargs, "input_file", "-dL")
-        _add_value(tokens, kwargs, "sources", "-s")
-        _add_value(tokens, kwargs, "exclude_sources", "-es")
-        _add_bool(tokens, kwargs, "all_sources", "-all")
-        _add_bool(tokens, kwargs, "recursive", "-recursive")
-        _add_bool(tokens, kwargs, "active", "-active")
-        _add_value(tokens, kwargs, "match", "-m")
-        _add_value(tokens, kwargs, "filter", "-f")
-        _add_value(tokens, kwargs, "resolvers", "-r")
-        _add_value(tokens, kwargs, "resolver_file", "-rL")
-        _add_value(tokens, kwargs, "rate_limit", "-rl")
-        _add_value(tokens, kwargs, "rate_limits", "-rls")
-        _add_value(tokens, kwargs, "threads", "-t")
-        _add_value(tokens, kwargs, "timeout", "-timeout")
-        _add_value(tokens, kwargs, "max_time", "-max-time")
-        _add_value(tokens, kwargs, "output_file", "-o")
-        _add_bool(tokens, kwargs, "json_output", "-oJ")
-        _add_value(tokens, kwargs, "output_dir", "-oD")
-        _add_bool(tokens, kwargs, "collect_sources", "-cs")
-        _add_bool(tokens, kwargs, "include_ip", "-oI")
-        _add_bool(tokens, kwargs, "exclude_ip", "-ei")
-        _add_value(tokens, kwargs, "config_file", "-config")
-        _add_value(tokens, kwargs, "provider_config", "-pc")
-        _add_value(tokens, kwargs, "proxy", "-proxy")
-        _add_bool(tokens, kwargs, "silent", "-silent")
-        _add_bool(tokens, kwargs, "verbose", "-v")
-    elif tool.name == "amass":
-        _add_value(tokens, kwargs, "config_file", "-config")
-        _add_value(tokens, kwargs, "output_dir", "-dir")
-        _add_bool(tokens, kwargs, "no_color", "-nocolor")
-        _add_bool(tokens, kwargs, "silent", "-silent")
-        _add_bool(tokens, kwargs, "active", "-active")
-        _add_bool(tokens, kwargs, "passive", "-passive")
-        _add_bool(tokens, kwargs, "alts", "-alts")
-        _add_value(tokens, kwargs, "alteration_wordlist", "-aw")
-        _add_value(tokens, kwargs, "alteration_masks", "-awm")
-        _add_value(tokens, kwargs, "blacklist", "-bl")
-        _add_value(tokens, kwargs, "blacklist_file", "-blf")
-        _add_bool(tokens, kwargs, "brute", "-brute")
-        _add_value(tokens, kwargs, "domain_file", "-df")
-        _add_value(tokens, kwargs, "exclude_sources", "-exclude")
-        _add_value(tokens, kwargs, "exclude_file", "-ef")
-        _add_value(tokens, kwargs, "include_sources", "-include")
-        _add_value(tokens, kwargs, "include_file", "-if")
-        _add_value(tokens, kwargs, "interface", "-iface")
-        _add_bool(tokens, kwargs, "include_ip", "-ip")
-        _add_bool(tokens, kwargs, "ipv4", "-ipv4")
-        _add_bool(tokens, kwargs, "ipv6", "-ipv6")
-        _add_bool(tokens, kwargs, "list_sources", "-list")
-        _add_value(tokens, kwargs, "log_file", "-log")
-        _add_value(tokens, kwargs, "max_depth", "-max-depth")
-        _add_value(tokens, kwargs, "min_for_recursive", "-min-for-recursive")
-        _add_value(tokens, kwargs, "known_names_file", "-nf")
-        _add_bool(tokens, kwargs, "no_recursive", "-norecursive")
-        _add_value(tokens, kwargs, "output_file", "-o")
-        _add_value(tokens, kwargs, "output_prefix", "-oA")
-        _add_value(tokens, kwargs, "ports", "-p")
-        _add_value(tokens, kwargs, "resolvers", "-r")
-        _add_value(tokens, kwargs, "resolver_file", "-rf")
-        _add_value(tokens, kwargs, "dns_qps", "-dns-qps")
-        _add_value(tokens, kwargs, "resolver_qps", "-rqps")
-        _add_value(tokens, kwargs, "scripts_dir", "-scripts")
-        _add_value(tokens, kwargs, "timeout", "-timeout")
-        _add_value(tokens, kwargs, "trusted_resolvers", "-tr")
-        _add_value(tokens, kwargs, "trusted_resolver_file", "-trf")
-        _add_value(tokens, kwargs, "trusted_qps", "-trqps")
-        _add_bool(tokens, kwargs, "verbose", "-v")
-        _add_value(tokens, kwargs, "wordlist", "-w")
-        _add_value(tokens, kwargs, "wordlist_masks", "-wm")
-    elif (
+    if (
         tags & {"osint", "subdomain", "dns", "enum", "threat-intel", "shodan"}
         and tool.name not in {"gobuster", "theHarvester"}
     ):
@@ -2228,11 +2031,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "user_agent", "--user-agent")
         _add_value(tokens, kwargs, "output_file", "-o")
         _add_bool(tokens, kwargs, "json_output", "--json")
-
-    if tool.name == "nmap":
-        _add_value(tokens, kwargs, "scripts", "--script")
-        _add_value(tokens, kwargs, "script_args", "--script-args")
-        _add_value(tokens, kwargs, "exclude_hosts", "--exclude")
 
     if tool.name == "sqlmap":
         _add_value(tokens, kwargs, "cookie", "--cookie")

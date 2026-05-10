@@ -127,16 +127,19 @@ def test_split_adapter_registry_includes_migrated_tools():
 
     migrated = {
         "androguard",
+        "amass",
         "apk2gold",
         "binwalk",
         "frida",
         "ghidra",
         "haiti",
         "hashcat",
+        "httpx",
         "jadx",
         "john",
         "masscan",
         "mobsf",
+        "nmap",
         "objection",
         "owasp-zap",
         "pspy",
@@ -145,6 +148,7 @@ def test_split_adapter_registry_includes_migrated_tools():
         "sherlock",
         "stegcracker",
         "steghide",
+        "subfinder",
         "theHarvester",
         "volatility3",
         "whatweb",
@@ -160,10 +164,11 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     }
 
     assert records["nmap"].source_status == "source-reviewed"
-    assert records["nmap"].named_override is True
+    assert records["nmap"].named_override is False
     assert records["nmap"].source_reviewed is True
     assert records["nmap"].unverified_parameters == ()
     assert records["nmap"].gap == ""
+    assert "dedicated split adapter module is registered" in records["nmap"].evidence
     assert any("nmap.org" in item for item in records["nmap"].evidence)
 
     assert records["ffuf"].source_status == "source-reviewed"

@@ -197,7 +197,7 @@ class TestServerCreation:
         nmap = nmap_metadata["result"]
         assert "**Tool:** `nmap`" in nmap
         assert "**Source status:** `source-reviewed`" in nmap
-        assert "tool-specific named override exists" in nmap
+        assert "dedicated split adapter module is registered" in nmap
         assert "**Unverified params:** 0" in nmap
         assert "## Unverified Parameters" not in nmap
         assert "source reference: https://nmap.org/book/man.html" in nmap
