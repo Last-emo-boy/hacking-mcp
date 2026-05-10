@@ -2462,6 +2462,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "delay_ms",
         ),
     ),
+    "checkurl": SourceReview(
+        note=(
+            "Reviewed against upstream checkURL argparse definitions. The "
+            "registry command uses the documented --url target mode, so the "
+            "adapter exposes only the compatible --check-url connectivity "
+            "toggle and removes generated discovery/phishing parameters. The "
+            "upstream --url-list mode is intentionally not exposed because it "
+            "is mutually exclusive with the registered --url target command."
+        ),
+        references=(
+            "https://github.com/UndeadSec/checkURL",
+            "https://raw.githubusercontent.com/UndeadSec/checkURL/master/checkURL.py",
+        ),
+        verified_parameters=(
+            "check_url",
+        ),
+    ),
     "takeover": SourceReview(
         note=(
             "Reviewed against upstream takeover help text and getopt parser "
