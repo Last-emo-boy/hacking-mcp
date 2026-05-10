@@ -64,7 +64,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "kerbrute",
         "leviathan",
         "ligolo-ng",
-        "masscan",
         "maskphish",
         "mobdroid",
         "mobsf",
@@ -83,7 +82,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "pyphisher",
         "responder",
         "routersploit",
-        "rustscan",
         "scoutsuite",
         "setoolkit",
         "shellphish",
@@ -480,48 +478,7 @@ def _adapter_parameters(
         ])
         return _dedupe_parameters(params)
 
-    if tool.name == "masscan":
-        params.extend([
-            AdapterParameterSpec("ports", str, "", "Ports or ranges to scan, for example 80,8000-8100."),
-            AdapterParameterSpec("rate", int, 0, "Transmit rate in packets per second; 0 leaves default."),
-            AdapterParameterSpec("config_file", str, "", "Masscan configuration file."),
-            AdapterParameterSpec("echo", bool, False, "Dump current configuration and exit."),
-            AdapterParameterSpec("banners", bool, False, "Grab simple banner information where supported."),
-            AdapterParameterSpec("source_ip", str, "", "Source IP address for banner checks."),
-            AdapterParameterSpec("source_port", int, 0, "Source port for banner checks; 0 leaves default."),
-            AdapterParameterSpec("exclude_file", str, "", "File containing excluded IP ranges."),
-            AdapterParameterSpec("include_file", str, "", "File containing included IP ranges."),
-            AdapterParameterSpec("output_xml", str, "", "XML output file path."),
-            AdapterParameterSpec("output_json", str, "", "JSON output file path."),
-            AdapterParameterSpec("output_list", str, "", "List output file path."),
-            AdapterParameterSpec("output_grepable", str, "", "Grepable output file path."),
-            AdapterParameterSpec("output_format", str, "", "Output format, for example xml, json, list, grepable."),
-            AdapterParameterSpec("output_filename", str, "", "Output filename when using output_format."),
-            AdapterParameterSpec("readscan", str, "", "Read binary scan results from file."),
-        ])
-    elif tool.name == "rustscan":
-        params.extend([
-            AdapterParameterSpec("ports", str, "", "Comma-separated ports to scan."),
-            AdapterParameterSpec("port_range", str, "", "Port range in start-end format."),
-            AdapterParameterSpec("no_config", bool, False, "Ignore RustScan configuration file."),
-            AdapterParameterSpec("no_banner", bool, False, "Hide the RustScan banner."),
-            AdapterParameterSpec("config_path", str, "", "Custom config file path."),
-            AdapterParameterSpec("greppable", bool, False, "Only output ports in greppable mode."),
-            AdapterParameterSpec("accessible", bool, False, "Enable screen-reader friendly mode."),
-            AdapterParameterSpec("resolver", str, "", "Comma-delimited list or file of DNS resolvers."),
-            AdapterParameterSpec("batch_size", int, 0, "Batch size for port scanning; 0 leaves default."),
-            AdapterParameterSpec("timeout", int, 0, "Timeout in milliseconds; 0 leaves default."),
-            AdapterParameterSpec("tries", int, 0, "Number of tries before a port is assumed closed; 0 leaves default."),
-            AdapterParameterSpec("ulimit", int, 0, "Automatically raise ULIMIT; 0 leaves default."),
-            AdapterParameterSpec("scan_order", str, "", "Scan order: serial or random."),
-            AdapterParameterSpec("scripts", str, "", "Script mode: none, default, or custom."),
-            AdapterParameterSpec("top", bool, False, "Use the top 1000 ports."),
-            AdapterParameterSpec("exclude_ports", str, "", "Comma-separated ports to exclude."),
-            AdapterParameterSpec("exclude_addresses", str, "", "Comma-separated CIDRs, IPs, or hosts to exclude."),
-            AdapterParameterSpec("udp", bool, False, "Enable UDP scanning mode."),
-            AdapterParameterSpec("nmap_args", str, "", "Trailing nmap arguments appended after --."),
-        ])
-    elif "port-scan" in tags or "network" in tags:
+    if "port-scan" in tags or "network" in tags:
         params.extend([
             AdapterParameterSpec("ports", str, "", "Ports or ranges, for example 80,443 or 1-1000."),
             AdapterParameterSpec(
@@ -1563,47 +1520,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
     if split_options is not None:
         return split_options
 
-    if tool.name == "masscan":
-        _add_value(tokens, kwargs, "ports", "-p")
-        _add_value(tokens, kwargs, "rate", "--rate")
-        _add_value(tokens, kwargs, "config_file", "-c")
-        _add_bool(tokens, kwargs, "echo", "--echo")
-        _add_bool(tokens, kwargs, "banners", "--banners")
-        _add_value(tokens, kwargs, "source_ip", "--source-ip")
-        _add_value(tokens, kwargs, "source_port", "--source-port")
-        _add_value(tokens, kwargs, "exclude_file", "--excludefile")
-        _add_value(tokens, kwargs, "include_file", "--includefile")
-        _add_value(tokens, kwargs, "output_xml", "-oX")
-        _add_value(tokens, kwargs, "output_json", "-oJ")
-        _add_value(tokens, kwargs, "output_list", "-oL")
-        _add_value(tokens, kwargs, "output_grepable", "-oG")
-        _add_value(tokens, kwargs, "output_format", "--output-format")
-        _add_value(tokens, kwargs, "output_filename", "--output-filename")
-        _add_value(tokens, kwargs, "readscan", "--readscan")
-    elif tool.name == "rustscan":
-        _add_value(tokens, kwargs, "ports", "-p")
-        _add_value(tokens, kwargs, "port_range", "-r")
-        _add_bool(tokens, kwargs, "no_config", "--no-config")
-        _add_bool(tokens, kwargs, "no_banner", "--no-banner")
-        _add_value(tokens, kwargs, "config_path", "--config-path")
-        _add_bool(tokens, kwargs, "greppable", "-g")
-        _add_bool(tokens, kwargs, "accessible", "--accessible")
-        _add_value(tokens, kwargs, "resolver", "--resolver")
-        _add_value(tokens, kwargs, "batch_size", "-b")
-        _add_value(tokens, kwargs, "timeout", "-t")
-        _add_value(tokens, kwargs, "tries", "--tries")
-        _add_value(tokens, kwargs, "ulimit", "-u")
-        _add_value(tokens, kwargs, "scan_order", "--scan-order")
-        _add_value(tokens, kwargs, "scripts", "--scripts")
-        _add_bool(tokens, kwargs, "top", "--top")
-        _add_value(tokens, kwargs, "exclude_ports", "--exclude-ports")
-        _add_value(tokens, kwargs, "exclude_addresses", "--exclude-addresses")
-        _add_bool(tokens, kwargs, "udp", "--udp")
-        nmap_args = str(kwargs.get("nmap_args") or "").strip()
-        if nmap_args:
-            tokens.append("--")
-            tokens.extend(shlex.split(nmap_args))
-    elif "port-scan" in tags or "network" in tags:
+    if "port-scan" in tags or "network" in tags:
         _add_value(tokens, kwargs, "ports", "-p")
         _add_scan_type(tokens, kwargs)
         _add_bool(tokens, kwargs, "service_version", "-sV")
