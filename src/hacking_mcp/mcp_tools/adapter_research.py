@@ -2123,6 +2123,55 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "suffix",
         ),
     ),
+    "sqlmap": SourceReview(
+        note=(
+            "Reviewed against upstream sqlmap cmdline parser for URL target "
+            "execution via registry command, request configuration, injection "
+            "parameter selection, DBMS/detection settings, tamper/technique "
+            "controls, enumeration actions, OS takeover options, threading, "
+            "form/crawl/session controls, and output directory."
+        ),
+        references=(
+            "https://github.com/sqlmapproject/sqlmap",
+            "https://raw.githubusercontent.com/sqlmapproject/sqlmap/master/lib/parse/cmdline.py",
+            "https://raw.githubusercontent.com/sqlmapproject/sqlmap/master/README.md",
+        ),
+        verified_parameters=(
+            "data",
+            "method",
+            "cookie",
+            "headers",
+            "user_agent",
+            "referer",
+            "auth_type",
+            "auth_cred",
+            "proxy",
+            "delay",
+            "timeout",
+            "retries",
+            "csrf_token",
+            "random_agent",
+            "parameter",
+            "skip",
+            "dbms",
+            "dbms_cred",
+            "risk",
+            "level",
+            "tamper",
+            "technique",
+            "enumerate_databases",
+            "tables",
+            "columns",
+            "dump",
+            "os_cmd",
+            "os_shell",
+            "threads",
+            "forms",
+            "crawl",
+            "flush_session",
+            "output_dir",
+        ),
+    ),
     "dsss": SourceReview(
         note=(
             "Reviewed against upstream DSSS option parsing for POST data, cookie, "

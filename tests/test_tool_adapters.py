@@ -938,6 +938,85 @@ async def test_tool_specific_parameters_build_cli_options(registry, safety):
     )
 
 
+def test_sqlmap_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["sqlmap"].source_status == "source-reviewed"
+    assert records["sqlmap"].unverified_parameters == ()
+    assert records["sqlmap"].gap == ""
+    assert any("sqlmapproject/sqlmap" in item for item in records["sqlmap"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("sqlmap"), specs["sqlmap"])
+    assert "module" not in params
+    assert "rhost" not in params
+    assert "rport" not in params
+    assert "username" not in params
+    assert "password" not in params
+    assert "payload" not in params
+    assert "parameter" in params
+    assert "dbms_cred" in params
+    assert "os_shell" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("sqlmap"),
+        specs["sqlmap"],
+        {
+            "target": "https://example.test/item?id=1",
+            "data": "id=1",
+            "method": "POST",
+            "cookie": "SID=abc",
+            "headers": "X-Test: 1",
+            "user_agent": "hacking-mcp",
+            "referer": "https://ref.test",
+            "auth_type": "Basic",
+            "auth_cred": "alice:secret",
+            "proxy": "http://127.0.0.1:8080",
+            "delay": "0.5",
+            "timeout": "15",
+            "retries": 2,
+            "csrf_token": "csrf",
+            "parameter": "id",
+            "skip": "token",
+            "dbms": "MySQL",
+            "dbms_cred": "dbu:dbp",
+            "risk": 2,
+            "level": 3,
+            "tamper": "space2comment",
+            "technique": "BEUSTQ",
+            "random_agent": True,
+            "enumerate_databases": True,
+            "tables": True,
+            "columns": True,
+            "dump": True,
+            "os_cmd": "whoami",
+            "os_shell": True,
+            "threads": 4,
+            "forms": True,
+            "crawl": 2,
+            "flush_session": True,
+            "output_dir": "out",
+        },
+    )
+    assert preview["target"] == "https://example.test/item?id=1"
+    assert preview["options"] == (
+        "--data id=1 --method POST --cookie SID=abc --headers 'X-Test: 1' "
+        "--user-agent hacking-mcp --referer https://ref.test "
+        "--auth-type Basic --auth-cred alice:secret "
+        "--proxy http://127.0.0.1:8080 --delay 0.5 --timeout 15 "
+        "--retries 2 --csrf-token csrf -p id --skip token --dbms MySQL "
+        "--dbms-cred dbu:dbp --risk 2 --level 3 --tamper space2comment "
+        "--technique BEUSTQ --random-agent --dbs --tables --columns --dump "
+        "--os-cmd whoami --os-shell --threads 4 --forms --crawl 2 "
+        "--flush-session --output-dir out"
+    )
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
