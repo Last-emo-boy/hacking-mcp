@@ -703,6 +703,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     if tool.name in {
         "appcheck",
         "chisel",
+        "chrome-keylogger",
         "dracnmap",
         "goblin-wordgenerator",
         "guymager",

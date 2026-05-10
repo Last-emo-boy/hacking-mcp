@@ -1685,6 +1685,48 @@ def test_vegil_source_reviewed_policy_only_previewable(registry, safety):
     assert help_preview["options"] == "--help"
 
 
+def test_chrome_keylogger_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("chrome-keylogger")
+
+    assert tool.run_command == "cd HeraKeylogger && sudo python3 hera.py"
+    assert specs["chrome-keylogger"].exposed is False
+    assert "classified DANGEROUS" in specs["chrome-keylogger"].blocked_reason
+    assert records["chrome-keylogger"].source_status == "source-reviewed"
+    assert records["chrome-keylogger"].unverified_parameters == ()
+    assert records["chrome-keylogger"].gap == ""
+    assert any("UndeadSec/HeraKeylogger" in item for item in records["chrome-keylogger"].evidence)
+
+    params = adapter_parameter_names(tool, specs["chrome-keylogger"])
+    for removed in (
+        "apk_path",
+        "listener",
+        "lhost",
+        "lport",
+        "output_file",
+        "package_name",
+        "protocol",
+        "session_id",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["chrome-keylogger"],
+        {"target": "ignored-local-host", "interactive": True},
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_evil_winrm_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

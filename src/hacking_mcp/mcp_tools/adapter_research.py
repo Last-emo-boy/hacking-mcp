@@ -3407,6 +3407,27 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "chrome-keylogger": SourceReview(
+        note=(
+            "Reviewed against upstream Hera README, hera.py, and core builder "
+            "helpers. The documented command is python3 hera.py; hera.py uses "
+            "interactive input prompts for server domain, manifest edits, and "
+            "whether to start the local PHP server. No argparse, getopt, or "
+            "sys.argv CLI options were found, so the adapter removes generated "
+            "post-exploitation and mobile placeholders and exposes only an "
+            "interactive marker. The tool remains DANGEROUS and policy-only."
+        ),
+        references=(
+            "https://github.com/UndeadSec/HeraKeylogger",
+            "https://raw.githubusercontent.com/UndeadSec/HeraKeylogger/master/README.md",
+            "https://raw.githubusercontent.com/UndeadSec/HeraKeylogger/master/hera.py",
+            "https://raw.githubusercontent.com/UndeadSec/HeraKeylogger/master/core/builder.py",
+            "https://raw.githubusercontent.com/UndeadSec/HeraKeylogger/master/core/pre.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "pwncat-cs": SourceReview(
         note=(
             "Reviewed against upstream pwncat README usage examples and "
