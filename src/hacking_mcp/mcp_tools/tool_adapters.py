@@ -42,7 +42,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "evilginx3",
         "explo",
         "fluxion",
-        "gitleaks",
         "hashcat",
         "havoc",
         "hcxdumptool",
@@ -80,7 +79,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "theHarvester",
         "thefatrat",
         "trivy",
-        "trufflehog",
         "venom",
         "volatility3",
         "websploit",
@@ -507,45 +505,7 @@ def _adapter_parameters(
     if tags & {"username", "social", "social-media"}:
         params.append(AdapterParameterSpec("timeout", int, 0, "Per-site timeout in seconds when supported."))
 
-    if tool.name == "trufflehog":
-        params.extend([
-            AdapterParameterSpec("json_output", bool, False, "Output in JSON format."),
-            AdapterParameterSpec("github_actions", bool, False, "Output in GitHub Actions format."),
-            AdapterParameterSpec("concurrency", int, 0, "Number of concurrent workers; 0 leaves default."),
-            AdapterParameterSpec("no_verification", bool, False, "Do not verify discovered results."),
-            AdapterParameterSpec("results", str, "", "Result statuses to output, for example verified,unknown."),
-            AdapterParameterSpec("no_color", bool, False, "Disable colorized output."),
-            AdapterParameterSpec("allow_verification_overlap", bool, False, "Allow verification overlap across detectors."),
-            AdapterParameterSpec("filter_unverified", bool, False, "Only output first unverified result per chunk/detector."),
-            AdapterParameterSpec("filter_entropy", float, 0.0, "Filter unverified results by Shannon entropy; 0 leaves default."),
-            AdapterParameterSpec("config_path", str, "", "Path to TruffleHog configuration file."),
-            AdapterParameterSpec("print_avg_detector_time", bool, False, "Print average time spent on each detector."),
-            AdapterParameterSpec("fail", bool, False, "Return TruffleHog leak-detected exit code when results are found."),
-            AdapterParameterSpec("log_level", str, "", "Logging verbosity level; empty leaves default."),
-        ])
-    elif tool.name == "gitleaks":
-        params.extend([
-            AdapterParameterSpec("redact", bool, True, "Redact secrets in output."),
-            AdapterParameterSpec("log_opts", str, "", "Git log options for detect scans."),
-            AdapterParameterSpec("config_path", str, "", "Path to gitleaks config file."),
-            AdapterParameterSpec("baseline_path", str, "", "Path to baseline report."),
-            AdapterParameterSpec("ignore_path", str, "", "Path to .gitleaksignore file."),
-            AdapterParameterSpec("enable_rule", str, "", "Only enable specific rule IDs."),
-            AdapterParameterSpec("exit_code", int, 0, "Exit code when leaks are found; 0 leaves default."),
-            AdapterParameterSpec("follow_symlinks", bool, False, "Scan files that are symlinks to other files."),
-            AdapterParameterSpec("ignore_allow", bool, False, "Ignore gitleaks:allow comments."),
-            AdapterParameterSpec("max_decode_depth", int, 0, "Recursive decode depth; 0 leaves default."),
-            AdapterParameterSpec("max_archive_depth", int, 0, "Nested archive depth; 0 leaves default."),
-            AdapterParameterSpec("max_target_mb", int, 0, "Maximum target file size in MB; 0 leaves default."),
-            AdapterParameterSpec("report_format", str, "", "Report format, for example json, csv, junit, sarif."),
-            AdapterParameterSpec("report_path", str, "", "Report output path."),
-            AdapterParameterSpec("report_template", str, "", "Template file for report generation."),
-            AdapterParameterSpec("log_level", str, "", "Log level: trace, debug, info, warn, error, fatal."),
-            AdapterParameterSpec("no_banner", bool, False, "Suppress banner output."),
-            AdapterParameterSpec("no_color", bool, False, "Disable color output."),
-            AdapterParameterSpec("verbose", bool, False, "Show verbose output from scan."),
-        ])
-    elif tags & {"git", "secrets", "credentials"}:
+    if tags & {"git", "secrets", "credentials"}:
         params.extend([
             AdapterParameterSpec("redact", bool, True, "Redact discovered secrets when supported."),
             AdapterParameterSpec("since_commit", str, "", "Only scan history since this commit when supported."),
@@ -992,42 +952,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
     if tags & {"username", "social", "social-media"}:
         _add_value(tokens, kwargs, "timeout", "--timeout")
 
-    if tool.name == "trufflehog":
-        _add_bool(tokens, kwargs, "json_output", "--json")
-        _add_bool(tokens, kwargs, "github_actions", "--github-actions")
-        _add_value(tokens, kwargs, "concurrency", "--concurrency")
-        _add_bool(tokens, kwargs, "no_verification", "--no-verification")
-        _add_value(tokens, kwargs, "results", "--results")
-        _add_bool(tokens, kwargs, "no_color", "--no-color")
-        _add_bool(tokens, kwargs, "allow_verification_overlap", "--allow-verification-overlap")
-        _add_bool(tokens, kwargs, "filter_unverified", "--filter-unverified")
-        _add_value(tokens, kwargs, "filter_entropy", "--filter-entropy")
-        _add_value(tokens, kwargs, "config_path", "--config")
-        _add_bool(tokens, kwargs, "print_avg_detector_time", "--print-avg-detector-time")
-        _add_bool(tokens, kwargs, "fail", "--fail")
-        _add_value(tokens, kwargs, "log_level", "--log-level")
-    elif tool.name == "gitleaks":
-        if kwargs.get("redact", True):
-            tokens.append("--redact")
-        _add_value(tokens, kwargs, "log_opts", "--log-opts")
-        _add_value(tokens, kwargs, "config_path", "--config")
-        _add_value(tokens, kwargs, "baseline_path", "--baseline-path")
-        _add_value(tokens, kwargs, "ignore_path", "--gitleaks-ignore-path")
-        _add_value(tokens, kwargs, "enable_rule", "--enable-rule")
-        _add_value(tokens, kwargs, "exit_code", "--exit-code")
-        _add_bool(tokens, kwargs, "follow_symlinks", "--follow-symlinks")
-        _add_bool(tokens, kwargs, "ignore_allow", "--ignore-gitleaks-allow")
-        _add_value(tokens, kwargs, "max_decode_depth", "--max-decode-depth")
-        _add_value(tokens, kwargs, "max_archive_depth", "--max-archive-depth")
-        _add_value(tokens, kwargs, "max_target_mb", "--max-target-megabytes")
-        _add_value(tokens, kwargs, "report_format", "--report-format")
-        _add_value(tokens, kwargs, "report_path", "--report-path")
-        _add_value(tokens, kwargs, "report_template", "--report-template")
-        _add_value(tokens, kwargs, "log_level", "--log-level")
-        _add_bool(tokens, kwargs, "no_banner", "--no-banner")
-        _add_bool(tokens, kwargs, "no_color", "--no-color")
-        _add_bool(tokens, kwargs, "verbose", "--verbose")
-    elif tags & {"git", "secrets", "credentials"}:
+    if tags & {"git", "secrets", "credentials"}:
         if kwargs.get("redact", True):
             tokens.append("--redact")
         _add_value(tokens, kwargs, "since_commit", "--log-opts")
