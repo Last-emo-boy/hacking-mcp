@@ -2477,6 +2477,42 @@ def test_instabrute_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_allinone_socialmedia_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert specs["allinone-socialmedia"].exposed is True
+    assert specs["allinone-socialmedia"].requires_confirmation is True
+    assert records["allinone-socialmedia"].source_status == "source-reviewed"
+    assert records["allinone-socialmedia"].unverified_parameters == ()
+    assert records["allinone-socialmedia"].gap == ""
+    assert any("Brute_Force" in item for item in records["allinone-socialmedia"].evidence)
+
+    params = adapter_parameter_names(
+        registry.get_tool("allinone-socialmedia"),
+        specs["allinone-socialmedia"],
+    )
+    assert "timeout" not in params
+    assert "help" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("allinone-socialmedia"),
+        specs["allinone-socialmedia"],
+        {
+            "help": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["confirm_authorized"] is True
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -5083,6 +5119,34 @@ async def test_terminal_multiplexer_source_reviewed_parameters_build_cli_options
     assert request.target == ""
     assert request.options == ""
     assert request.require_confirmation is False
+    assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_allinone_socialmedia_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_allinone_socialmedia",
+        {
+            "help": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "allinone-socialmedia"
+    assert request.target == ""
+    assert request.options == ""
+    assert request.require_confirmation is True
     assert request.confirm_authorized is True
 
 

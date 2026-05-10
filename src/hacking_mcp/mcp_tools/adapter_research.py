@@ -1567,6 +1567,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "proxy",
         ),
     ),
+    "allinone-socialmedia": SourceReview(
+        note=(
+            "Reviewed against upstream Brute_Force README and OptionParser "
+            "definitions for the current registry command shape. The MCP "
+            "adapter is intentionally help-only and runs Brute_Force.py -h; "
+            "it does not expose the brute-force service, password, list, or "
+            "proxy parameters outside this registered help command."
+        ),
+        references=(
+            "https://github.com/Matrix07ksa/Brute_Force",
+            "https://raw.githubusercontent.com/Matrix07ksa/Brute_Force/master/README.md",
+            "https://raw.githubusercontent.com/Matrix07ksa/Brute_Force/master/Brute_Force.py",
+        ),
+        verified_parameters=(
+            "help",
+        ),
+    ),
     "holehe": SourceReview(
         note=(
             "Reviewed against upstream Holehe argparse definitions for email "
