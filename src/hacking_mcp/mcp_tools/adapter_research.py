@@ -1529,6 +1529,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "terminal-multiplexer": SourceReview(
+        note=(
+            "Reviewed against upstream Tilix manpage and application option "
+            "registration for the current registry command shape. The MCP "
+            "adapter is intentionally version-only and runs tilix --version; "
+            "it does not expose generic command, session, or layout parameters "
+            "outside this registered command."
+        ),
+        references=(
+            "https://github.com/gnunn1/tilix",
+            "https://raw.githubusercontent.com/gnunn1/tilix/master/data/man/tilix.1",
+            "https://raw.githubusercontent.com/gnunn1/tilix/master/source/gx/tilix/application.d",
+        ),
+        verified_parameters=(
+            "version",
+        ),
+    ),
     "holehe": SourceReview(
         note=(
             "Reviewed against upstream Holehe argparse definitions for email "
