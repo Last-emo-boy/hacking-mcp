@@ -1534,6 +1534,98 @@ def test_evil_winrm_source_reviewed_and_previewable(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_chisel_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("chisel")
+
+    assert tool.run_command == "chisel"
+    assert specs["chisel"].requires_confirmation is True
+    assert records["chisel"].source_status == "source-reviewed"
+    assert records["chisel"].unverified_parameters == ()
+    assert records["chisel"].gap == ""
+    assert any("jpillora/chisel" in item for item in records["chisel"].evidence)
+
+    params = adapter_parameter_names(tool, specs["chisel"])
+    for removed in (
+        "auth_token",
+        "connect_addr",
+        "listen_addr",
+        "listener",
+        "lhost",
+        "lport",
+        "mode",
+        "protocol",
+        "session_id",
+        "tun_name",
+    ):
+        assert removed not in params
+    for expected in (
+        "command",
+        "server",
+        "remotes",
+        "host",
+        "port",
+        "key_seed",
+        "keygen",
+        "keyfile",
+        "authfile",
+        "auth",
+        "keepalive",
+        "backend",
+        "socks5",
+        "reverse",
+        "tls_key",
+        "tls_cert",
+        "tls_domain",
+        "tls_ca",
+        "fingerprint",
+        "max_retry_count",
+        "max_retry_interval",
+        "proxy",
+        "header",
+        "hostname",
+        "sni",
+        "tls_skip_verify",
+        "pid",
+        "verbose",
+        "version",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["chisel"],
+        {
+            "target": "https://chisel.example:443",
+            "command": "client",
+            "remotes": "R:2222:127.0.0.1:22;socks",
+            "fingerprint": "fp123",
+            "auth": "user:pass",
+            "proxy": "http://proxy.example:8080",
+            "header": "X-Test: 1",
+            "hostname": "front.example",
+            "sni": "tls.example",
+            "tls_skip_verify": True,
+            "verbose": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "client --fingerprint fp123 --auth user:pass "
+        "--proxy http://proxy.example:8080 --header 'X-Test: 1' "
+        "--hostname front.example --sni tls.example --tls-skip-verify "
+        "https://chisel.example:443 R:2222:127.0.0.1:22 socks -v"
+    )
+    assert preview["confirm_authorized"] is True
+
+
 def test_explo_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
@@ -7336,6 +7428,49 @@ async def test_evil_winrm_source_reviewed_parameters_build_cli_options(registry,
     assert request.options == (
         "-u Administrator -p 'Passw0rd!' -P 5986 -S -s /opt/ps1 "
         "-e /opt/exe -a 'Microsoft WinRM Client' -n -N -l"
+    )
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_chisel_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_chisel",
+        {
+            "target": "https://chisel.example:443",
+            "command": "client",
+            "remotes": "R:2222:127.0.0.1:22;socks",
+            "fingerprint": "fp123",
+            "auth": "user:pass",
+            "proxy": "http://proxy.example:8080",
+            "header": "X-Test: 1",
+            "hostname": "front.example",
+            "sni": "tls.example",
+            "tls_skip_verify": True,
+            "verbose": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "chisel"
+    assert request.target == ""
+    assert request.options == (
+        "client --fingerprint fp123 --auth user:pass "
+        "--proxy http://proxy.example:8080 --header 'X-Test: 1' "
+        "--hostname front.example --sni tls.example --tls-skip-verify "
+        "https://chisel.example:443 R:2222:127.0.0.1:22 socks -v"
     )
     assert request.require_confirmation is True
     assert request.confirm_authorized is True

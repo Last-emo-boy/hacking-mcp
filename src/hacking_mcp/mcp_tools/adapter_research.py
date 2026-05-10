@@ -3455,6 +3455,54 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "log_session",
         ),
     ),
+    "chisel": SourceReview(
+        note=(
+            "Reviewed against upstream Chisel README and main.go flag parsing "
+            "for top-level server/client subcommands, version output, server "
+            "host/port/key/auth/keepalive/backend/SOCKS/reverse/TLS flags, "
+            "client server/remotes/fingerprint/auth/retry/proxy/header/Host/"
+            "SNI/TLS flags, and common pid/verbose flags. The registry command "
+            "now invokes chisel directly instead of forcing --help; the adapter "
+            "suppresses base target argv and maps target/server into the client "
+            "<server> positional argument before remotes."
+        ),
+        references=(
+            "https://github.com/jpillora/chisel",
+            "https://raw.githubusercontent.com/jpillora/chisel/master/README.md",
+            "https://raw.githubusercontent.com/jpillora/chisel/master/main.go",
+        ),
+        verified_parameters=(
+            "command",
+            "server",
+            "remotes",
+            "host",
+            "port",
+            "key_seed",
+            "keygen",
+            "keyfile",
+            "authfile",
+            "auth",
+            "keepalive",
+            "backend",
+            "socks5",
+            "reverse",
+            "tls_key",
+            "tls_cert",
+            "tls_domain",
+            "tls_ca",
+            "fingerprint",
+            "max_retry_count",
+            "max_retry_interval",
+            "proxy",
+            "header",
+            "hostname",
+            "sni",
+            "tls_skip_verify",
+            "pid",
+            "verbose",
+            "version",
+        ),
+    ),
     "explo": SourceReview(
         note=(
             "Reviewed against upstream explo argparse parser and README usage. "
