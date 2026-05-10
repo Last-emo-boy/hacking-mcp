@@ -1664,6 +1664,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "showme": SourceReview(
+        note=(
+            "Reviewed against upstream SMWYG.py and README. The tool has no "
+            "CLI parser or positional arguments; domain and email searches "
+            "are selected through stdin menu choices. The adapter is "
+            "therefore intentionally interactive-only and removes generated "
+            "hash, wordlist, git-secret, and OSINT parameters."
+        ),
+        references=(
+            "https://github.com/Viralmaniar/SMWYG-Show-Me-What-You-Got",
+            "https://raw.githubusercontent.com/Viralmaniar/SMWYG-Show-Me-What-You-Got/master/README.md",
+            "https://raw.githubusercontent.com/Viralmaniar/SMWYG-Show-Me-What-You-Got/master/SMWYG.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "allinone-socialmedia": SourceReview(
         note=(
             "Reviewed against upstream Brute_Force README and OptionParser "
