@@ -3481,6 +3481,37 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "mythic": SourceReview(
+        note=(
+            "Reviewed against upstream Mythic README, root Makefile, "
+            "Mythic_CLI README, and Cobra command definitions. The repo "
+            "builds a mythic-cli binary in the Mythic directory; README "
+            "documents sudo ./mythic-cli start for default containers. The "
+            "adapter now models the lifecycle CLI surface for start, stop, "
+            "restart, and status, with service/container positionals, "
+            "start/stop --keep-volume, status --verbose, and command help. "
+            "Mythic remains DANGEROUS and policy/info-only, so this endpoint "
+            "does not execute or bypass policy."
+        ),
+        references=(
+            "https://github.com/its-a-feature/Mythic",
+            "https://raw.githubusercontent.com/its-a-feature/Mythic/master/README.md",
+            "https://raw.githubusercontent.com/its-a-feature/Mythic/master/Makefile",
+            "https://raw.githubusercontent.com/its-a-feature/Mythic/master/Mythic_CLI/README.md",
+            "https://raw.githubusercontent.com/its-a-feature/Mythic/master/Mythic_CLI/src/cmd/rootCmd.go",
+            "https://raw.githubusercontent.com/its-a-feature/Mythic/master/Mythic_CLI/src/cmd/start.go",
+            "https://raw.githubusercontent.com/its-a-feature/Mythic/master/Mythic_CLI/src/cmd/stop.go",
+            "https://raw.githubusercontent.com/its-a-feature/Mythic/master/Mythic_CLI/src/cmd/restart.go",
+            "https://raw.githubusercontent.com/its-a-feature/Mythic/master/Mythic_CLI/src/cmd/status.go",
+        ),
+        verified_parameters=(
+            "command",
+            "service_names",
+            "keep_volume",
+            "verbose",
+            "help",
+        ),
+    ),
     "evil-winrm": SourceReview(
         note=(
             "Reviewed against upstream Evil-WinRM README help text and "

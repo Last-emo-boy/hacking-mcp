@@ -1578,6 +1578,65 @@ def test_havoc_source_reviewed_and_previewable(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_mythic_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("mythic")
+
+    assert tool.run_command == "cd Mythic && sudo ./mythic-cli"
+    assert specs["mythic"].exposed is False
+    assert "classified DANGEROUS" in specs["mythic"].blocked_reason
+    assert records["mythic"].source_status == "source-reviewed"
+    assert records["mythic"].unverified_parameters == ()
+    assert records["mythic"].gap == ""
+    assert any("its-a-feature/Mythic" in item for item in records["mythic"].evidence)
+
+    params = adapter_parameter_names(tool, specs["mythic"])
+    for removed in (
+        "listener",
+        "lhost",
+        "lport",
+        "protocol",
+        "session_id",
+    ):
+        assert removed not in params
+    for expected in (
+        "command",
+        "service_names",
+        "keep_volume",
+        "verbose",
+        "help",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["mythic"],
+        {
+            "target": "ignored-local-host",
+            "command": "start",
+            "service_names": "mythic_server,mythic_react",
+            "keep_volume": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == "start --keep-volume mythic_server mythic_react"
+    assert preview["executable"] is False
+
+    status_preview = adapter_request_preview(
+        tool,
+        specs["mythic"],
+        {"command": "status", "verbose": True},
+    )
+    assert status_preview["options"] == "status --verbose"
+
+
 def test_evil_winrm_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
