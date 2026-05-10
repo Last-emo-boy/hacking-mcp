@@ -3451,6 +3451,36 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "havoc": SourceReview(
+        note=(
+            "Reviewed against upstream README, makefile, and Cobra command "
+            "definitions for the teamserver entrypoint. The built binary is "
+            "./havoc, with server and client subcommands; server exposes "
+            "profile, debug, debug-dev, send-logs, default profile, and "
+            "verbose flags, while client forwards args to client/Havoc. The "
+            "registry no longer forces --help so structured server/client "
+            "arguments can be appended, and the adapter removes unsupported "
+            "listener/session/tunnel placeholder parameters."
+        ),
+        references=(
+            "https://github.com/HavocFramework/Havoc",
+            "https://raw.githubusercontent.com/HavocFramework/Havoc/main/README.md",
+            "https://raw.githubusercontent.com/HavocFramework/Havoc/main/makefile",
+            "https://raw.githubusercontent.com/HavocFramework/Havoc/main/teamserver/cmd/cmd.go",
+            "https://raw.githubusercontent.com/HavocFramework/Havoc/main/teamserver/cmd/server.go",
+            "https://raw.githubusercontent.com/HavocFramework/Havoc/main/teamserver/cmd/client.go",
+        ),
+        verified_parameters=(
+            "command",
+            "profile",
+            "default_profile",
+            "debug",
+            "debug_dev",
+            "send_logs",
+            "verbose",
+            "help",
+        ),
+    ),
     "evil-winrm": SourceReview(
         note=(
             "Reviewed against upstream Evil-WinRM README help text and "

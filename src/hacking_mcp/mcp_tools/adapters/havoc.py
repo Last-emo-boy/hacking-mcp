@@ -1,34 +1,37 @@
 """Dedicated adapter metadata for Havoc."""
 
 from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
-from hacking_mcp.mcp_tools.adapters.helpers import add_value
+from hacking_mcp.mcp_tools.adapters.helpers import add_bool, add_value
 
 
 def parameters() -> list[AdapterParameterSpec]:
     return [
-        AdapterParameterSpec("lhost", str, "", "Listener host for authorized lab use."),
-        AdapterParameterSpec("lport", int, 0, "Listener port when supported; 0 leaves default."),
-        AdapterParameterSpec("session_id", str, "", "Session identifier when supported."),
-        AdapterParameterSpec("listener", str, "", "Listener/profile name when supported."),
-        AdapterParameterSpec("protocol", str, "", "Protocol selector when supported."),
-        AdapterParameterSpec("mode", str, "", "Mode such as server/client/proxy/agent when supported."),
-        AdapterParameterSpec("listen_addr", str, "", "Listen address when supported."),
-        AdapterParameterSpec("connect_addr", str, "", "Connect address when supported."),
-        AdapterParameterSpec("auth_token", str, "", "Auth token/profile when supported."),
-        AdapterParameterSpec("tun_name", str, "", "Tunnel interface name when supported."),
+        AdapterParameterSpec("command", str, "server", "Havoc subcommand: server or client."),
+        AdapterParameterSpec("profile", str, "", "Teamserver profile path for the server command."),
+        AdapterParameterSpec("default_profile", bool, False, "Use the bundled default teamserver profile."),
+        AdapterParameterSpec("debug", bool, False, "Enable teamserver debug logging."),
+        AdapterParameterSpec("debug_dev", bool, False, "Compile agents with developer debug mode enabled."),
+        AdapterParameterSpec("send_logs", bool, False, "Have agents send logs over HTTP(S) to the teamserver."),
+        AdapterParameterSpec("verbose", bool, False, "Show verbose teamserver messages."),
+        AdapterParameterSpec("help", bool, False, "Show help for the selected Havoc command."),
     ]
 
 
 def build_options(kwargs: dict) -> list[str]:
     tokens: list[str] = []
-    add_value(tokens, kwargs, "lhost", "--lhost")
-    add_value(tokens, kwargs, "lport", "--lport")
-    add_value(tokens, kwargs, "session_id", "--session")
-    add_value(tokens, kwargs, "listener", "--listener")
-    add_value(tokens, kwargs, "protocol", "--protocol")
-    add_value(tokens, kwargs, "mode", "--mode")
-    add_value(tokens, kwargs, "listen_addr", "--listen")
-    add_value(tokens, kwargs, "connect_addr", "--connect")
-    add_value(tokens, kwargs, "auth_token", "--auth")
-    add_value(tokens, kwargs, "tun_name", "--tun")
+    command = str(kwargs.get("command") or "server").strip() or "server"
+    tokens.append(command)
+
+    if command == "server":
+        if kwargs.get("default_profile"):
+            tokens.append("--default")
+        else:
+            add_value(tokens, kwargs, "profile", "--profile")
+        add_bool(tokens, kwargs, "debug", "--debug")
+        add_bool(tokens, kwargs, "debug_dev", "--debug-dev")
+        add_bool(tokens, kwargs, "send_logs", "--send-logs")
+        add_bool(tokens, kwargs, "verbose", "--verbose")
+
+    if kwargs.get("help"):
+        tokens.append("--help")
     return tokens

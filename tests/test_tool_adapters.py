@@ -1513,6 +1513,71 @@ def test_sliver_source_reviewed_and_previewable(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_havoc_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("havoc")
+
+    assert tool.run_command == "cd Havoc && ./havoc"
+    assert specs["havoc"].requires_confirmation is True
+    assert records["havoc"].source_status == "source-reviewed"
+    assert records["havoc"].unverified_parameters == ()
+    assert records["havoc"].gap == ""
+    assert any("HavocFramework/Havoc" in item for item in records["havoc"].evidence)
+
+    params = adapter_parameter_names(tool, specs["havoc"])
+    for removed in (
+        "auth_token",
+        "connect_addr",
+        "listen_addr",
+        "listener",
+        "lhost",
+        "lport",
+        "mode",
+        "protocol",
+        "session_id",
+        "tun_name",
+    ):
+        assert removed not in params
+    for expected in (
+        "command",
+        "profile",
+        "default_profile",
+        "debug",
+        "debug_dev",
+        "send_logs",
+        "verbose",
+        "help",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["havoc"],
+        {
+            "target": "ignored-local-host",
+            "command": "server",
+            "profile": "profiles/demo.yaotl",
+            "debug": True,
+            "debug_dev": True,
+            "send_logs": True,
+            "verbose": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "server --profile profiles/demo.yaotl --debug --debug-dev "
+        "--send-logs --verbose"
+    )
+    assert preview["confirm_authorized"] is True
+
+
 def test_evil_winrm_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
@@ -7632,6 +7697,39 @@ async def test_sliver_source_reviewed_parameters_build_cli_options(registry, saf
     assert request.tool_name == "sliver"
     assert request.target == ""
     assert request.options == "--enable-wg mcp --config root_127.0.0.1.cfg"
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_havoc_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_havoc",
+        {
+            "target": "ignored-local-host",
+            "command": "server",
+            "default_profile": True,
+            "debug": True,
+            "send_logs": True,
+            "verbose": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "havoc"
+    assert request.target == ""
+    assert request.options == "server --default --debug --send-logs --verbose"
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
 
