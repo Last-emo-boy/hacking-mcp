@@ -1,11 +1,33 @@
 """Small helpers for dedicated per-tool adapter modules."""
 
+import shlex
+
 
 def add_value(tokens: list[str], kwargs: dict, key: str, flag: str) -> None:
     value = kwargs.get(key)
     if value in (None, "", 0, False):
         return
     tokens.extend([flag, str(value)])
+
+
+def add_values(tokens: list[str], kwargs: dict, key: str, flag: str) -> None:
+    value = kwargs.get(key)
+    if value in (None, "", 0, False):
+        return
+
+    if isinstance(value, (list, tuple, set)):
+        values = [str(item) for item in value if item not in (None, "", 0, False)]
+    else:
+        raw = str(value).replace(",", " ")
+        try:
+            values = shlex.split(raw)
+        except ValueError:
+            values = raw.split()
+
+    if not values:
+        return
+    tokens.append(flag)
+    tokens.extend(values)
 
 
 def add_bool(tokens: list[str], kwargs: dict, key: str, flag: str) -> None:

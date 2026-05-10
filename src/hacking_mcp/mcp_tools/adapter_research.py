@@ -31,6 +31,143 @@ class SourceReview:
 
 
 SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
+    "prowler": SourceReview(
+        note=(
+            "Reviewed against upstream Prowler argparse CLI parser and AWS "
+            "provider argument definitions for provider-as-positional usage, "
+            "profile/region filters, service/check/severity selectors, "
+            "exclusion selectors, output controls, list modes, banner/color, "
+            "verbose output, and logging level."
+        ),
+        references=(
+            "https://github.com/prowler-cloud/prowler",
+            "https://raw.githubusercontent.com/prowler-cloud/prowler/master/prowler/lib/cli/parser.py",
+            "https://raw.githubusercontent.com/prowler-cloud/prowler/master/prowler/providers/aws/lib/arguments/arguments.py",
+        ),
+        verified_parameters=(
+            "profile",
+            "region",
+            "services",
+            "severity",
+            "checks",
+            "excluded_checks",
+            "excluded_services",
+            "output_formats",
+            "output_directory",
+            "output_filename",
+            "list_checks",
+            "list_services",
+            "no_banner",
+            "no_color",
+            "verbose",
+            "log_level",
+        ),
+    ),
+    "scoutsuite": SourceReview(
+        note=(
+            "Reviewed against upstream ScoutSuite CLI parser and run_from_cli "
+            "handoff for provider subcommands, AWS profile/region filters, "
+            "service include/skip controls, listing, report format/location "
+            "controls, local/update modes, rulesets, exceptions, overwrite, "
+            "debug/quiet/browser behavior, and API concurrency/rate limits."
+        ),
+        references=(
+            "https://github.com/nccgroup/ScoutSuite",
+            "https://raw.githubusercontent.com/nccgroup/ScoutSuite/master/ScoutSuite/core/cli_parser.py",
+            "https://raw.githubusercontent.com/nccgroup/ScoutSuite/master/ScoutSuite/__main__.py",
+        ),
+        verified_parameters=(
+            "profile",
+            "regions",
+            "excluded_regions",
+            "services",
+            "skipped_services",
+            "list_services",
+            "result_format",
+            "report_dir",
+            "report_name",
+            "timestamp",
+            "fetch_local",
+            "update",
+            "ruleset",
+            "exceptions",
+            "force_write",
+            "debug",
+            "quiet",
+            "no_browser",
+            "max_workers",
+            "max_rate",
+        ),
+    ),
+    "pacu": SourceReview(
+        note=(
+            "Reviewed against upstream Pacu README and argparse definitions in "
+            "pacu/main.py for session management, key import/set actions, "
+            "module selection/execution/info, database data queries, module "
+            "arguments, module/help listing, region selection, identity lookup, "
+            "version output, and quiet startup."
+        ),
+        references=(
+            "https://github.com/RhinoSecurityLabs/pacu",
+            "https://raw.githubusercontent.com/RhinoSecurityLabs/pacu/master/README.md",
+            "https://raw.githubusercontent.com/RhinoSecurityLabs/pacu/master/pacu/main.py",
+        ),
+        verified_parameters=(
+            "session",
+            "activate_session",
+            "new_session",
+            "set_keys",
+            "import_keys",
+            "module_name",
+            "data",
+            "module_args",
+            "list_modules",
+            "pacu_help",
+            "module_info",
+            "execute_module",
+            "set_regions",
+            "whoami",
+            "version",
+            "quiet",
+        ),
+    ),
+    "trivy": SourceReview(
+        note=(
+            "Reviewed against upstream Trivy Cobra command setup and flag "
+            "definitions for command-before-target usage, reporting flags, "
+            "vulnerability filtering, scan controls, global config/cache/"
+            "timeout flags, and quiet/debug/insecure modes."
+        ),
+        references=(
+            "https://github.com/aquasecurity/trivy",
+            "https://raw.githubusercontent.com/aquasecurity/trivy/main/pkg/commands/app.go",
+            "https://raw.githubusercontent.com/aquasecurity/trivy/main/pkg/flag/report_flags.go",
+            "https://raw.githubusercontent.com/aquasecurity/trivy/main/pkg/flag/vulnerability_flags.go",
+            "https://raw.githubusercontent.com/aquasecurity/trivy/main/pkg/flag/scan_flags.go",
+            "https://raw.githubusercontent.com/aquasecurity/trivy/main/pkg/flag/global_flags.go",
+        ),
+        verified_parameters=(
+            "command",
+            "severity",
+            "output_format",
+            "output_file",
+            "template",
+            "ignorefile",
+            "exit_code",
+            "ignore_unfixed",
+            "scanners",
+            "skip_dirs",
+            "skip_files",
+            "offline_scan",
+            "parallel",
+            "timeout",
+            "config",
+            "cache_dir",
+            "quiet",
+            "debug",
+            "insecure",
+        ),
+    ),
     "binwalk": SourceReview(
         note=(
             "Reviewed against upstream Binwalk v3 clap parser definitions for "

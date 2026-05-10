@@ -433,9 +433,37 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     }.issubset(whatweb_schema)
 
     prowler_schema = tools["security_tool_prowler"].inputSchema["properties"]
-    assert {"provider", "checks", "excluded_checks", "output_format"}.issubset(
-        prowler_schema
-    )
+    assert {
+        "profile", "region", "services", "severity", "checks",
+        "excluded_checks", "excluded_services", "output_formats",
+        "output_directory", "output_filename", "list_checks", "list_services",
+        "no_banner", "no_color", "verbose", "log_level",
+    }.issubset(prowler_schema)
+
+    scoutsuite_schema = tools["security_tool_scoutsuite"].inputSchema["properties"]
+    assert {
+        "profile", "regions", "excluded_regions", "services",
+        "skipped_services", "list_services", "result_format", "report_dir",
+        "report_name", "timestamp", "fetch_local", "update", "ruleset",
+        "exceptions", "force_write", "debug", "quiet", "no_browser",
+        "max_workers", "max_rate",
+    }.issubset(scoutsuite_schema)
+
+    pacu_schema = tools["security_tool_pacu"].inputSchema["properties"]
+    assert {
+        "session", "activate_session", "new_session", "set_keys",
+        "import_keys", "module_name", "data", "module_args", "list_modules",
+        "pacu_help", "module_info", "execute_module", "set_regions", "whoami",
+        "version", "quiet",
+    }.issubset(pacu_schema)
+
+    trivy_schema = tools["security_tool_trivy"].inputSchema["properties"]
+    assert {
+        "command", "severity", "output_format", "output_file", "template",
+        "ignorefile", "exit_code", "ignore_unfixed", "scanners", "skip_dirs",
+        "skip_files", "offline_scan", "parallel", "timeout", "config",
+        "cache_dir", "quiet", "debug", "insecure",
+    }.issubset(trivy_schema)
 
     netexec_schema = tools["security_tool_netexec"].inputSchema["properties"]
     assert {"users_file", "passwords_file", "kerberos", "local_auth"}.issubset(
@@ -702,7 +730,7 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     )
 
     pacu_schema = tools["security_tool_pacu"].inputSchema["properties"]
-    assert {"session", "module", "regions", "report_dir"}.issubset(pacu_schema)
+    assert {"session", "module_name", "set_regions", "whoami"}.issubset(pacu_schema)
 
     evilginx_schema = tools["security_tool_evilginx3"].inputSchema["properties"]
     assert {"site", "redirect_url", "custom_domain", "phishlet"}.issubset(
@@ -3167,6 +3195,177 @@ def test_anonymity_and_wordlist_source_reviewed_previews(registry, safety):
         {"length": 8},
     )
     assert wlcreator["options"] == "8"
+
+
+def test_cloud_security_adapters_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    for tool_name in {"prowler", "scoutsuite", "pacu", "trivy"}:
+        assert records[tool_name].source_status == "source-reviewed"
+        assert records[tool_name].unverified_parameters == ()
+        assert records[tool_name].gap == ""
+
+    assert any("prowler-cloud/prowler" in item for item in records["prowler"].evidence)
+    assert any("nccgroup/ScoutSuite" in item for item in records["scoutsuite"].evidence)
+    assert any("RhinoSecurityLabs/pacu" in item for item in records["pacu"].evidence)
+    assert any("aquasecurity/trivy" in item for item in records["trivy"].evidence)
+
+    assert "provider" not in adapter_parameter_names(
+        registry.get_tool("prowler"),
+        specs["prowler"],
+    )
+    assert "region" not in adapter_parameter_names(
+        registry.get_tool("scoutsuite"),
+        specs["scoutsuite"],
+    )
+    assert "profile" not in adapter_parameter_names(
+        registry.get_tool("trivy"),
+        specs["trivy"],
+    )
+    assert "rhost" not in adapter_parameter_names(
+        registry.get_tool("pacu"),
+        specs["pacu"],
+    )
+
+
+def test_cloud_security_source_reviewed_previews(registry, safety):
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+
+    prowler = adapter_request_preview(
+        registry.get_tool("prowler"),
+        specs["prowler"],
+        {
+            "target": "aws",
+            "profile": "prod",
+            "region": "us-east-1",
+            "services": "s3,ec2",
+            "severity": "high critical",
+            "checks": "iam_user_no_policies",
+            "excluded_checks": "s3_bucket_public_access",
+            "excluded_services": "cloudtrail",
+            "output_formats": "json,csv",
+            "output_directory": "out",
+            "output_filename": "report",
+            "list_services": True,
+            "no_banner": True,
+            "log_level": "INFO",
+        },
+    )
+    assert prowler["target"] == "aws"
+    assert prowler["options"] == (
+        "--profile prod --region us-east-1 --service s3 ec2 "
+        "--severity high critical --check iam_user_no_policies "
+        "--excluded-check s3_bucket_public_access "
+        "--excluded-service cloudtrail --output-formats json csv "
+        "--output-directory out --output-filename report --list-services "
+        "--no-banner --log-level INFO"
+    )
+
+    scoutsuite = adapter_request_preview(
+        registry.get_tool("scoutsuite"),
+        specs["scoutsuite"],
+        {
+            "target": "aws",
+            "profile": "prod",
+            "regions": "us-east-1,us-west-2",
+            "excluded_regions": "eu-west-1",
+            "services": "s3 iam",
+            "skipped_services": "cloudtrail",
+            "result_format": "json",
+            "report_dir": "reports",
+            "report_name": "aws-audit",
+            "fetch_local": True,
+            "force_write": True,
+            "no_browser": True,
+            "max_workers": 8,
+            "max_rate": 10,
+        },
+    )
+    assert scoutsuite["target"] == "aws"
+    assert scoutsuite["options"] == (
+        "--profile prod --regions us-east-1 us-west-2 "
+        "--exclude-regions eu-west-1 --services s3 iam --skip cloudtrail "
+        "--result-format json --report-dir reports --report-name aws-audit "
+        "--local --force --no-browser --max-workers 8 --max-rate 10"
+    )
+
+    pacu = adapter_request_preview(
+        registry.get_tool("pacu"),
+        specs["pacu"],
+        {
+            "session": "lab",
+            "module_name": "iam__enum_users_roles_policies_groups",
+            "module_args": "--regions us-east-1",
+            "execute_module": True,
+            "set_regions": "us-east-1 us-west-2",
+            "whoami": True,
+            "quiet": True,
+        },
+    )
+    assert pacu["target"] == ""
+    assert pacu["options"] == (
+        "--session lab --module-name iam__enum_users_roles_policies_groups "
+        "--module-args '--regions us-east-1' --exec "
+        "--set-regions us-east-1 us-west-2 --whoami --quiet"
+    )
+
+    trivy = adapter_request_preview(
+        registry.get_tool("trivy"),
+        specs["trivy"],
+        {
+            "target": "alpine:3.19",
+            "severity": "HIGH,CRITICAL",
+            "output_format": "json",
+            "output_file": "trivy.json",
+            "ignore_unfixed": True,
+            "scanners": "vuln,secret",
+            "skip_dirs": "vendor",
+            "offline_scan": True,
+            "timeout": "5m",
+            "quiet": True,
+        },
+    )
+    assert trivy["target"] == "alpine:3.19"
+    assert trivy["options"] == (
+        "image --severity HIGH,CRITICAL --format json --output trivy.json "
+        "--ignore-unfixed --scanners vuln,secret --skip-dirs vendor "
+        "--offline-scan --timeout 5m --quiet"
+    )
+
+
+@pytest.mark.asyncio
+async def test_trivy_adapter_places_command_and_flags_before_target(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_trivy",
+        {
+            "target": "alpine:3.19",
+            "command": "image",
+            "severity": "HIGH,CRITICAL",
+            "output_format": "json",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "trivy"
+    assert request.target == "alpine:3.19"
+    assert request.options == "image --severity HIGH,CRITICAL --format json"
+    assert request.options_before_target is True
 
 
 @pytest.mark.asyncio
