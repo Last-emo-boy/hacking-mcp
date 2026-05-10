@@ -168,6 +168,46 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "insecure",
         ),
     ),
+    "bloodhound": SourceReview(
+        note=(
+            "Reviewed against upstream BloodHound.py argparse CLI and README "
+            "for domain-as-target execution, authentication controls, "
+            "collection method selection, DNS/DC/GC overrides, worker and "
+            "pooling controls, output prefix/zip behavior, cache/computer "
+            "allowlist inputs, and LDAP TLS/channel-binding options."
+        ),
+        references=(
+            "https://github.com/dirkjanm/BloodHound.py",
+            "https://raw.githubusercontent.com/dirkjanm/BloodHound.py/master/bloodhound/__init__.py",
+            "https://raw.githubusercontent.com/dirkjanm/BloodHound.py/master/README.md",
+        ),
+        verified_parameters=(
+            "username",
+            "password",
+            "kerberos",
+            "hashes",
+            "no_pass",
+            "aes_key",
+            "auth_method",
+            "collection_method",
+            "verbose",
+            "nameserver",
+            "dns_tcp",
+            "dns_timeout",
+            "domain_controller",
+            "global_catalog",
+            "workers",
+            "exclude_dcs",
+            "disable_pooling",
+            "disable_autogc",
+            "zip_output",
+            "computerfile",
+            "cachefile",
+            "ldap_channel_binding",
+            "use_ldaps",
+            "output_prefix",
+        ),
+    ),
     "responder": SourceReview(
         note=(
             "Reviewed against upstream Responder optparse definitions and "

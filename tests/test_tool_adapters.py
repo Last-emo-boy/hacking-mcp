@@ -776,9 +776,14 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     assert {"length"}.issubset(wlcreator_schema)
 
     bloodhound_schema = tools["security_tool_bloodhound"].inputSchema["properties"]
-    assert {"domain", "username", "dc_ip", "collection_method"}.issubset(
-        bloodhound_schema
-    )
+    assert {
+        "username", "password", "kerberos", "hashes", "no_pass", "aes_key",
+        "auth_method", "collection_method", "verbose", "nameserver",
+        "dns_tcp", "dns_timeout", "domain_controller", "global_catalog",
+        "workers", "exclude_dcs", "disable_pooling", "disable_autogc",
+        "zip_output", "computerfile", "cachefile", "ldap_channel_binding",
+        "use_ldaps", "output_prefix",
+    }.issubset(bloodhound_schema)
 
     jadx_schema = tools["security_tool_jadx"].inputSchema["properties"]
     assert {
@@ -3571,6 +3576,80 @@ def test_certipy_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_bloodhound_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["bloodhound"].source_status == "source-reviewed"
+    assert records["bloodhound"].unverified_parameters == ()
+    assert records["bloodhound"].gap == ""
+    assert any("dirkjanm/BloodHound.py" in item for item in records["bloodhound"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("bloodhound"), specs["bloodhound"])
+    assert "domain" not in params
+    assert "dc_ip" not in params
+    assert "interface" not in params
+    assert "sources" not in params
+    assert "passive" not in params
+    assert "resolvers" not in params
+    assert "api_key" not in params
+    assert "output_file" not in params
+    assert "json_output" not in params
+    assert "ldap" not in params
+    assert "smb" not in params
+    assert "disable_llmnr" not in params
+    assert "domain_controller" in params
+    assert "auth_method" in params
+    assert "zip_output" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("bloodhound"),
+        specs["bloodhound"],
+        {
+            "target": "corp.local",
+            "username": "alice",
+            "password": "Passw0rd!",
+            "kerberos": True,
+            "hashes": "aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c",
+            "no_pass": True,
+            "aes_key": "001122",
+            "auth_method": "kerberos",
+            "collection_method": "Default",
+            "verbose": True,
+            "nameserver": "10.0.0.53",
+            "dns_tcp": True,
+            "dns_timeout": 5,
+            "domain_controller": "dc.corp.local",
+            "global_catalog": "gc.corp.local",
+            "workers": 20,
+            "exclude_dcs": True,
+            "disable_pooling": True,
+            "disable_autogc": True,
+            "zip_output": True,
+            "computerfile": "computers.txt",
+            "cachefile": "cache.json",
+            "ldap_channel_binding": True,
+            "use_ldaps": True,
+            "output_prefix": "bloodhound",
+        },
+    )
+    assert preview["target"] == "corp.local"
+    assert preview["options"] == (
+        "-u alice -p 'Passw0rd!' -k --hashes "
+        "aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c "
+        "-no-pass -aesKey 001122 --auth-method kerberos -c Default -v "
+        "-ns 10.0.0.53 --dns-tcp --dns-timeout 5 -dc dc.corp.local "
+        "-gc gc.corp.local -w 20 --exclude-dcs --disable-pooling "
+        "--disable-autogc --zip --computerfile computers.txt --cachefile "
+        "cache.json --ldap-channel-binding --use-ldaps -op bloodhound"
+    )
+
+
 @pytest.mark.asyncio
 async def test_trivy_adapter_places_command_and_flags_before_target(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -3616,17 +3695,18 @@ async def test_ad_parameters_build_cli_options(registry, safety):
         "security_tool_bloodhound",
         {
             "target": "corp.local",
-            "domain": "corp.local",
             "username": "alice",
-            "dc_ip": "10.0.0.10",
+            "nameserver": "10.0.0.53",
+            "domain_controller": "dc.corp.local",
             "collection_method": "Default",
+            "zip_output": True,
         },
     )
 
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "bloodhound"
     assert request.target == "corp.local"
-    assert request.options == "-d corp.local -u alice -dc-ip 10.0.0.10 -c Default"
+    assert request.options == "-u alice -c Default -ns 10.0.0.53 -dc dc.corp.local --zip"
 
 
 @pytest.mark.asyncio

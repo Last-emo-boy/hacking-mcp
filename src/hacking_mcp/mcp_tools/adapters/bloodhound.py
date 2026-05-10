@@ -6,7 +6,6 @@ from hacking_mcp.mcp_tools.adapters.helpers import add_bool, add_value
 
 def parameters() -> list[AdapterParameterSpec]:
     return [
-        AdapterParameterSpec("domain", str, "", "Active Directory domain when supported."),
         AdapterParameterSpec("username", str, "", "Username for authorized AD assessment."),
         AdapterParameterSpec(
             "password",
@@ -14,44 +13,55 @@ def parameters() -> list[AdapterParameterSpec]:
             "",
             "Password for lab/authorized use; may be present in process/audit logs.",
         ),
-        AdapterParameterSpec("hashes", str, "", "NTLM hashes when supported."),
-        AdapterParameterSpec("dc_ip", str, "", "Domain controller IP address when supported."),
-        AdapterParameterSpec("nameserver", str, "", "DNS nameserver when supported."),
-        AdapterParameterSpec("interface", str, "", "Network interface name when supported."),
-        AdapterParameterSpec("collection_method", str, "", "Collection method, for example All or Default."),
-        AdapterParameterSpec("sources", str, "", "Comma-separated OSINT sources when supported."),
-        AdapterParameterSpec("passive", bool, False, "Use passive enumeration when supported."),
-        AdapterParameterSpec("resolvers", str, "", "Resolver file path when supported."),
-        AdapterParameterSpec("api_key", str, "", "API key/profile name when supported."),
-        AdapterParameterSpec("output_file", str, "", "Output file path when supported."),
-        AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
-        AdapterParameterSpec("ldap", bool, False, "Use LDAP collection/protocol mode when supported."),
-        AdapterParameterSpec("smb", bool, False, "Use SMB protocol mode when supported."),
-        AdapterParameterSpec("no_pass", bool, False, "Use no-password auth mode when supported."),
-        AdapterParameterSpec("output_prefix", str, "", "Output prefix/path when supported."),
-        AdapterParameterSpec("disable_llmnr", bool, False, "Disable LLMNR poisoning when supported."),
+        AdapterParameterSpec("kerberos", bool, False, "Use Kerberos ccache authentication."),
+        AdapterParameterSpec("hashes", str, "", "LM:NTLM hashes."),
+        AdapterParameterSpec("no_pass", bool, False, "Do not ask for password."),
+        AdapterParameterSpec("aes_key", str, "", "AES key for Kerberos authentication."),
+        AdapterParameterSpec("auth_method", str, "", "Authentication method: auto, ntlm, or kerberos."),
+        AdapterParameterSpec("collection_method", str, "", "Collection method, for example Default or All."),
+        AdapterParameterSpec("verbose", bool, False, "Enable verbose output."),
+        AdapterParameterSpec("nameserver", str, "", "Alternative nameserver for DNS queries."),
+        AdapterParameterSpec("dns_tcp", bool, False, "Use TCP instead of UDP for DNS queries."),
+        AdapterParameterSpec("dns_timeout", int, 0, "DNS query timeout in seconds; 0 leaves default."),
+        AdapterParameterSpec("domain_controller", str, "", "Domain controller hostname override."),
+        AdapterParameterSpec("global_catalog", str, "", "Global Catalog hostname override."),
+        AdapterParameterSpec("workers", int, 0, "Worker count for computer enumeration; 0 leaves default."),
+        AdapterParameterSpec("exclude_dcs", bool, False, "Skip DCs during computer enumeration."),
+        AdapterParameterSpec("disable_pooling", bool, False, "Disable subprocess pooling for ACL parsing."),
+        AdapterParameterSpec("disable_autogc", bool, False, "Disable automatic Global Catalog selection."),
+        AdapterParameterSpec("zip_output", bool, False, "Compress JSON output files into a zip archive."),
+        AdapterParameterSpec("computerfile", str, "", "Allowlist file of computer FQDNs."),
+        AdapterParameterSpec("cachefile", str, "", "Experimental cache file."),
+        AdapterParameterSpec("ldap_channel_binding", bool, False, "Use LDAP channel binding."),
+        AdapterParameterSpec("use_ldaps", bool, False, "Use LDAP over TLS on port 636 by default."),
+        AdapterParameterSpec("output_prefix", str, "", "Prefix to prepend to output filenames."),
     ]
 
 
 def build_options(kwargs: dict) -> list[str]:
     tokens: list[str] = []
-    add_value(tokens, kwargs, "domain", "-d")
     add_value(tokens, kwargs, "username", "-u")
     add_value(tokens, kwargs, "password", "-p")
-    add_value(tokens, kwargs, "hashes", "-H")
-    add_value(tokens, kwargs, "dc_ip", "-dc-ip")
-    add_value(tokens, kwargs, "nameserver", "-ns")
-    add_value(tokens, kwargs, "interface", "-I")
+    add_bool(tokens, kwargs, "kerberos", "-k")
+    add_value(tokens, kwargs, "hashes", "--hashes")
+    add_bool(tokens, kwargs, "no_pass", "-no-pass")
+    add_value(tokens, kwargs, "aes_key", "-aesKey")
+    add_value(tokens, kwargs, "auth_method", "--auth-method")
     add_value(tokens, kwargs, "collection_method", "-c")
-    add_value(tokens, kwargs, "sources", "-sources")
-    add_bool(tokens, kwargs, "passive", "-passive")
-    add_value(tokens, kwargs, "resolvers", "-r")
-    add_value(tokens, kwargs, "api_key", "--api-key")
-    add_value(tokens, kwargs, "output_file", "-o")
-    add_bool(tokens, kwargs, "json_output", "-json")
-    add_bool(tokens, kwargs, "ldap", "--ldap")
-    add_bool(tokens, kwargs, "smb", "--smb")
-    add_bool(tokens, kwargs, "no_pass", "--no-pass")
-    add_value(tokens, kwargs, "output_prefix", "-o")
-    add_bool(tokens, kwargs, "disable_llmnr", "-d")
+    add_bool(tokens, kwargs, "verbose", "-v")
+    add_value(tokens, kwargs, "nameserver", "-ns")
+    add_bool(tokens, kwargs, "dns_tcp", "--dns-tcp")
+    add_value(tokens, kwargs, "dns_timeout", "--dns-timeout")
+    add_value(tokens, kwargs, "domain_controller", "-dc")
+    add_value(tokens, kwargs, "global_catalog", "-gc")
+    add_value(tokens, kwargs, "workers", "-w")
+    add_bool(tokens, kwargs, "exclude_dcs", "--exclude-dcs")
+    add_bool(tokens, kwargs, "disable_pooling", "--disable-pooling")
+    add_bool(tokens, kwargs, "disable_autogc", "--disable-autogc")
+    add_bool(tokens, kwargs, "zip_output", "--zip")
+    add_value(tokens, kwargs, "computerfile", "--computerfile")
+    add_value(tokens, kwargs, "cachefile", "--cachefile")
+    add_bool(tokens, kwargs, "ldap_channel_binding", "--ldap-channel-binding")
+    add_bool(tokens, kwargs, "use_ldaps", "--use-ldaps")
+    add_value(tokens, kwargs, "output_prefix", "-op")
     return tokens
