@@ -716,6 +716,9 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     if tool.name == "host2ip":
         return str(kwargs.get("hostname") or "")
 
+    if tool.name == "portscan":
+        return str(kwargs.get("host") or "")
+
     if tool.name != "objection":
         return target
 

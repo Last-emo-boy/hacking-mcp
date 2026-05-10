@@ -1177,6 +1177,22 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "exclude_hosts",
         ),
     ),
+    "portscan": SourceReview(
+        note=(
+            "Reviewed against the official Nmap reference guide. The built-in "
+            "portscan registry command is a fixed nmap wrapper using -O for OS "
+            "detection and -Pn to skip host discovery, so the adapter exposes "
+            "only a host target alias and no generated CLI options."
+        ),
+        references=(
+            "https://nmap.org/book/man.html",
+            "https://nmap.org/book/man-host-discovery.html",
+            "https://nmap.org/book/man-os-detection.html",
+        ),
+        verified_parameters=(
+            "host",
+        ),
+    ),
     "host2ip": SourceReview(
         note=(
             "Reviewed against the Python standard library socket resolver API. "

@@ -150,6 +150,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert "dedicated split adapter module is registered" in records["nmap"].evidence
     assert any("nmap.org" in item for item in records["nmap"].evidence)
 
+    assert records["portscan"].source_status == "source-reviewed"
+    assert records["portscan"].unverified_parameters == ()
+    assert any("nmap.org" in item for item in records["portscan"].evidence)
+
     assert records["host2ip"].source_status == "source-reviewed"
     assert records["host2ip"].unverified_parameters == ()
     assert any("socket.gethostbyname" in item for item in records["host2ip"].evidence)
@@ -1736,6 +1740,50 @@ def test_host2ip_source_reviewed_and_previewable(registry, safety):
         },
     )
     assert preview["target"] == "example.com"
+    assert preview["options"] == ""
+
+
+def test_portscan_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["portscan"].source_status == "source-reviewed"
+    assert records["portscan"].unverified_parameters == ()
+    assert records["portscan"].gap == ""
+    assert any("nmap.org" in item for item in records["portscan"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("portscan"), specs["portscan"])
+    for removed in (
+        "default_scripts",
+        "json_output",
+        "os_detection",
+        "output_file",
+        "ports",
+        "rate",
+        "scan_depth",
+        "scan_type",
+        "service_version",
+        "timeout",
+        "timing",
+        "top_ports",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "host" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("portscan"),
+        specs["portscan"],
+        {
+            "host": "192.0.2.10",
+        },
+    )
+    assert preview["target"] == "192.0.2.10"
     assert preview["options"] == ""
 
 
@@ -3946,6 +3994,31 @@ async def test_host2ip_source_reviewed_parameters_build_target(registry, safety)
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "host2ip"
     assert request.target == "example.com"
+    assert request.options == ""
+
+
+@pytest.mark.asyncio
+async def test_portscan_source_reviewed_parameters_build_target(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_portscan",
+        {
+            "host": "192.0.2.10",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "portscan"
+    assert request.target == "192.0.2.10"
     assert request.options == ""
 
 
