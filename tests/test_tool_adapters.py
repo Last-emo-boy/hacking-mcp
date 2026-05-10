@@ -226,6 +226,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["rang3r"].unverified_parameters == ()
     assert any("floriankunushevci/rang3r" in item for item in records["rang3r"].evidence)
 
+    assert records["striker"].source_status == "source-reviewed"
+    assert records["striker"].unverified_parameters == ()
+    assert any("s0md3v/Striker" in item for item in records["striker"].evidence)
+
     assert records["katana"].source_status == "source-reviewed"
     assert records["katana"].unverified_parameters == ()
     assert any("katana/usage" in item for item in records["katana"].evidence)
@@ -1840,6 +1844,42 @@ def test_rang3r_source_reviewed_and_previewable(registry, safety):
         },
     )
     assert preview["target"] == "192.0.2.0/24"
+    assert preview["options"] == ""
+
+
+def test_striker_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["striker"].source_status == "source-reviewed"
+    assert records["striker"].unverified_parameters == ()
+    assert records["striker"].gap == ""
+    assert any("s0md3v/Striker" in item for item in records["striker"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("striker"), specs["striker"])
+    for removed in (
+        "json_output",
+        "output_file",
+        "scan_depth",
+        "timeout",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "domain" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("striker"),
+        specs["striker"],
+        {
+            "domain": "example.com",
+        },
+    )
+    assert preview["target"] == "example.com"
     assert preview["options"] == ""
 
 
@@ -4186,6 +4226,31 @@ async def test_rang3r_source_reviewed_parameters_build_target(registry, safety):
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "rang3r"
     assert request.target == "192.0.2.0/24"
+    assert request.options == ""
+
+
+@pytest.mark.asyncio
+async def test_striker_source_reviewed_parameters_build_target(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_striker",
+        {
+            "domain": "example.com",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "striker"
+    assert request.target == "example.com"
     assert request.options == ""
 
 

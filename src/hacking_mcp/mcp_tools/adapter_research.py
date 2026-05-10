@@ -1833,6 +1833,21 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "ip",
         ),
     ),
+    "striker": SourceReview(
+        note=(
+            "Reviewed against upstream Striker source. The CLI reads a single "
+            "positional target from sys.argv[1] and does not define named CLI "
+            "flags for output format, timeout, scan depth, or user agent, so "
+            "the adapter exposes only a domain target alias."
+        ),
+        references=(
+            "https://github.com/s0md3v/Striker",
+            "https://raw.githubusercontent.com/s0md3v/Striker/master/striker.py",
+        ),
+        verified_parameters=(
+            "domain",
+        ),
+    ),
     "katana": SourceReview(
         note=(
             "Reviewed against official ProjectDiscovery Katana usage docs for "
