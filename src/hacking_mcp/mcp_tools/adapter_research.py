@@ -3263,6 +3263,25 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "library_usage",
         ),
     ),
+    "leviathan": SourceReview(
+        note=(
+            "Reviewed against upstream Leviathan README and leviathan.py. The "
+            "documented invocation is python leviathan.py and the source is a "
+            "Python 2 menu-driven console using raw_input prompts rather than "
+            "argparse/click options or a positional target. The adapter "
+            "therefore suppresses generated web/SQLi flags and target argv, "
+            "exposing only an interactive marker while preserving CAUTION "
+            "confirmation."
+        ),
+        references=(
+            "https://github.com/utkusen/leviathan",
+            "https://raw.githubusercontent.com/utkusen/leviathan/master/README.md",
+            "https://raw.githubusercontent.com/utkusen/leviathan/master/leviathan.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "explo": SourceReview(
         note=(
             "Reviewed against upstream explo argparse parser and README usage. "
