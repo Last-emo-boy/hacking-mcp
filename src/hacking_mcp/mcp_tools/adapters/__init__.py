@@ -1,8 +1,10 @@
 """Registry for split-out dedicated per-tool adapters."""
 
 from collections.abc import Callable
+from importlib import import_module
 
 from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
+from hacking_mcp.mcp_tools.adapters.generic import GENERIC_MODULES
 from hacking_mcp.mcp_tools.adapters import (
     androguard,
     airgeddon,
@@ -292,6 +294,16 @@ OPTIONS_BUILDERS: dict[str, OptionsBuilder] = {
     "xsstrike": xsstrike.build_options,
     "xsscon": xsscon.build_options,
 }
+
+
+def _register_registry_derived_modules() -> None:
+    for tool_name, module_name in GENERIC_MODULES.items():
+        module = import_module(f"hacking_mcp.mcp_tools.adapters.{module_name}")
+        PARAMETER_PROVIDERS[tool_name] = module.parameters
+        OPTIONS_BUILDERS[tool_name] = module.build_options
+
+
+_register_registry_derived_modules()
 
 
 def has_split_adapter(tool_name: str) -> bool:

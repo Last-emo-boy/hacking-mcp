@@ -368,6 +368,8 @@ def adapter_example_arguments(tool: HackingToolDef, spec: ToolAdapterSpec) -> di
 def _adapter_parameters(
     tool: HackingToolDef,
     spec: ToolAdapterSpec,
+    *,
+    use_split: bool = True,
 ) -> list[AdapterParameterSpec]:
     params = [
         AdapterParameterSpec(
@@ -379,19 +381,20 @@ def _adapter_parameters(
     ]
     tags = set(tool.tags)
 
-    split_params = split_adapter_parameters(tool.name)
-    if split_params is not None:
-        params.extend(split_params)
-        params.extend([
-            AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
-            AdapterParameterSpec(
-                "confirm_authorized",
-                bool,
-                False,
-                "Set true only for targets you own or have explicit written authorization to test.",
-            ),
-        ])
-        return _dedupe_parameters(params)
+    if use_split:
+        split_params = split_adapter_parameters(tool.name)
+        if split_params is not None:
+            params.extend(split_params)
+            params.extend([
+                AdapterParameterSpec("options", str, "", "Raw additional CLI options appended after generated options."),
+                AdapterParameterSpec(
+                    "confirm_authorized",
+                    bool,
+                    False,
+                    "Set true only for targets you own or have explicit written authorization to test.",
+                ),
+            ])
+            return _dedupe_parameters(params)
 
     if "port-scan" in tags or "network" in tags:
         params.extend([
@@ -716,13 +719,14 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     return str(kwargs.get("command") or "start").strip() or "start"
 
 
-def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
+def _structured_options(tool: HackingToolDef, kwargs: dict, *, use_split: bool = True) -> list[str]:
     tokens: list[str] = []
     tags = set(tool.tags)
 
-    split_options = split_adapter_options(tool.name, kwargs)
-    if split_options is not None:
-        return split_options
+    if use_split:
+        split_options = split_adapter_options(tool.name, kwargs)
+        if split_options is not None:
+            return split_options
 
     if "port-scan" in tags or "network" in tags:
         _add_value(tokens, kwargs, "ports", "-p")
