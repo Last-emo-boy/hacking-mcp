@@ -466,9 +466,18 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     }.issubset(trivy_schema)
 
     netexec_schema = tools["security_tool_netexec"].inputSchema["properties"]
-    assert {"users_file", "passwords_file", "kerberos", "local_auth"}.issubset(
-        netexec_schema
-    )
+    assert {
+        "username", "password", "hashes", "domain", "local_auth", "kerberos",
+        "use_kcache", "aes_key", "kdc_host", "cred_id", "ignore_pw_decoding",
+        "no_bruteforce", "continue_on_success", "gfail_limit", "ufail_limit",
+        "fail_limit", "threads", "timeout", "jitter", "no_progress",
+        "log_file", "verbose", "debug", "force_ipv6", "dns_server",
+        "dns_tcp", "dns_timeout", "module", "module_options", "list_modules",
+        "show_module_options", "port", "share", "smb_server_port",
+        "no_smbv1", "no_admin_check", "gen_relay_list", "smb_timeout",
+        "shares", "users", "groups", "pass_pol", "rid_brute", "exec_method",
+        "execute_cmd", "execute_ps",
+    }.issubset(netexec_schema)
 
     certipy_schema = tools["security_tool_certipy"].inputSchema["properties"]
     assert {
@@ -3647,6 +3656,115 @@ def test_bloodhound_source_reviewed_and_previewable(registry, safety):
         "-gc gc.corp.local -w 20 --exclude-dcs --disable-pooling "
         "--disable-autogc --zip --computerfile computers.txt --cachefile "
         "cache.json --ldap-channel-binding --use-ldaps -op bloodhound"
+    )
+
+
+def test_netexec_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["netexec"].source_status == "source-reviewed"
+    assert records["netexec"].unverified_parameters == ()
+    assert records["netexec"].gap == ""
+    assert any("Pennyw0rth/NetExec" in item for item in records["netexec"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("netexec"), specs["netexec"])
+    assert "ports" not in params
+    assert "scan_type" not in params
+    assert "service_version" not in params
+    assert "os_detection" not in params
+    assert "default_scripts" not in params
+    assert "timing" not in params
+    assert "top_ports" not in params
+    assert "rate" not in params
+    assert "dc_ip" not in params
+    assert "nameserver" not in params
+    assert "interface" not in params
+    assert "collection_method" not in params
+    assert "lhost" not in params
+    assert "lport" not in params
+    assert "session_id" not in params
+    assert "listener" not in params
+    assert "protocol" not in params
+    assert "users_file" not in params
+    assert "passwords_file" not in params
+    assert "target_ip" not in params
+    assert "dns_server" in params
+    assert "module_options" in params
+    assert "execute_cmd" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("netexec"),
+        specs["netexec"],
+        {
+            "target": "10.0.0.0/24",
+            "username": "alice",
+            "password": "Passw0rd!",
+            "hashes": "aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c",
+            "domain": "CORP",
+            "local_auth": True,
+            "kerberos": True,
+            "use_kcache": True,
+            "aes_key": "001122",
+            "kdc_host": "dc.corp.local",
+            "cred_id": "3",
+            "ignore_pw_decoding": True,
+            "no_bruteforce": True,
+            "continue_on_success": True,
+            "gfail_limit": 10,
+            "ufail_limit": 3,
+            "fail_limit": 2,
+            "threads": 32,
+            "timeout": 15,
+            "jitter": "1s",
+            "no_progress": True,
+            "log_file": "nxc.log",
+            "verbose": True,
+            "force_ipv6": True,
+            "dns_server": "10.0.0.53",
+            "dns_tcp": True,
+            "dns_timeout": 5,
+            "module": "spooler",
+            "module_options": "LISTENER=foo CMD=whoami",
+            "list_modules": "smb",
+            "show_module_options": True,
+            "port": 445,
+            "share": "C$",
+            "smb_server_port": 445,
+            "no_smbv1": True,
+            "no_admin_check": True,
+            "gen_relay_list": "relay.txt",
+            "smb_timeout": 4,
+            "shares": "read",
+            "users": "alice",
+            "groups": "Domain Admins",
+            "pass_pol": True,
+            "rid_brute": 500,
+            "exec_method": "wmiexec",
+            "execute_cmd": "whoami",
+            "execute_ps": "Get-Process",
+        },
+    )
+    assert preview["target"] == "10.0.0.0/24"
+    assert preview["options"] == (
+        "-u alice -p 'Passw0rd!' -H "
+        "aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c "
+        "-d CORP --local-auth -k --use-kcache --aesKey 001122 "
+        "--kdcHost dc.corp.local -id 3 --ignore-pw-decoding "
+        "--no-bruteforce --continue-on-success --gfail-limit 10 "
+        "--ufail-limit 3 --fail-limit 2 -t 32 --timeout 15 --jitter 1s "
+        "--no-progress --log nxc.log --verbose -6 --dns-server 10.0.0.53 "
+        "--dns-tcp --dns-timeout 5 -M spooler -o LISTENER=foo CMD=whoami "
+        "-L smb --options --port 445 --share 'C$' --smb-server-port 445 "
+        "--no-smbv1 --no-admin-check --gen-relay-list relay.txt "
+        "--smb-timeout 4 --shares read --users alice --groups 'Domain Admins' "
+        "--pass-pol --rid-brute 500 --exec-method wmiexec -x whoami "
+        "-X Get-Process"
     )
 
 
