@@ -1681,6 +1681,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "goblin-wordgenerator": SourceReview(
+        note=(
+            "Reviewed against upstream Goblin WordGenerator source. The tool "
+            "has no CLI parser or positional arguments; size range, personal "
+            "data, output filename, uppercase, special-character, and numeric "
+            "choices are all read via stdin prompts. The adapter is therefore "
+            "intentionally interactive-only and removes generated hashcat-style "
+            "wordlist/hash parameters."
+        ),
+        references=(
+            "https://github.com/UndeadSec/GoblinWordGenerator",
+            "https://raw.githubusercontent.com/UndeadSec/GoblinWordGenerator/master/goblin.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "allinone-socialmedia": SourceReview(
         note=(
             "Reviewed against upstream Brute_Force README and OptionParser "
