@@ -1239,6 +1239,24 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "dracnmap": SourceReview(
+        note=(
+            "Reviewed against upstream Dracnmap README and dracnmap-v2.2.sh. "
+            "The shell script has no CLI parser or positional arguments; "
+            "scan profile, output mode, NSE script, ping mode, and targets "
+            "are all selected through stdin menus and xterm-launched nmap "
+            "commands. The adapter is therefore intentionally interactive-only "
+            "and removes generated nmap-style parameters."
+        ),
+        references=(
+            "https://github.com/Screetsec/Dracnmap",
+            "https://raw.githubusercontent.com/Screetsec/Dracnmap/master/README.md",
+            "https://raw.githubusercontent.com/Screetsec/Dracnmap/master/dracnmap-v2.2.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "xerosploit": SourceReview(
         note=(
             "Reviewed against upstream Xerosploit xerosploit.py. The tool has "

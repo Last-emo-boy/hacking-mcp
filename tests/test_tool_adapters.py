@@ -378,9 +378,9 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["wlcreator"].unverified_parameters == ()
     assert any("Z4nzu/wlcreator" in item for item in records["wlcreator"].evidence)
 
-    assert records["dracnmap"].source_status == "registry-derived"
-    assert records["dracnmap"].named_override is False
-    assert records["dracnmap"].gap
+    assert records["dracnmap"].source_status == "source-reviewed"
+    assert records["dracnmap"].unverified_parameters == ()
+    assert any("Screetsec/Dracnmap" in item for item in records["dracnmap"].evidence)
 
 
 @pytest.mark.asyncio
@@ -2888,6 +2888,38 @@ def test_xerosploit_source_reviewed_interactive_only(registry, safety):
     assert preview["target"] == ""
     assert preview["options"] == ""
     assert preview["confirm_authorized"] is True
+
+
+def test_dracnmap_source_reviewed_interactive_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("dracnmap")
+
+    assert records["dracnmap"].source_status == "source-reviewed"
+    assert records["dracnmap"].unverified_parameters == ()
+    assert records["dracnmap"].gap == ""
+    assert any("Screetsec/Dracnmap" in item for item in records["dracnmap"].evidence)
+
+    params = adapter_parameter_names(tool, specs["dracnmap"])
+    for removed in ("default_scripts", "json_output", "os_detection", "output_file", "ports", "rate", "scan_depth", "scan_type", "service_version", "timeout", "timing", "top_ports", "user_agent"):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["dracnmap"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
 
 
 @pytest.mark.asyncio
@@ -5819,6 +5851,33 @@ async def test_xerosploit_source_reviewed_parameters_build_cli_options(registry,
     assert request.options == ""
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_dracnmap_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_dracnmap",
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "dracnmap"
+    assert request.target == ""
+    assert request.options == ""
+    assert request.require_confirmation is False
 
 
 @pytest.mark.asyncio
