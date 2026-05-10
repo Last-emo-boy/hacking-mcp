@@ -3503,6 +3503,44 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "ligolo-ng": SourceReview(
+        note=(
+            "Reviewed against official Ligolo-ng install/quickstart docs and "
+            "the upstream cmd/proxy Go flag definitions. Ligolo-ng builds two "
+            "separate binaries, proxy and agent; the registry now builds both "
+            "from source but executes the local proxy binary. The adapter "
+            "therefore suppresses target argv and exposes only proxy startup "
+            "flags for listen address, certificate modes/files/domains, config, "
+            "daemon/API mode, profiling, banner, verbosity, version, and help. "
+            "Agent-side flags such as connect, bind, retry, socks/proxy, and "
+            "certificate fingerprint are not exposed because they belong to the "
+            "separate agent binary."
+        ),
+        references=(
+            "https://docs.ligolo.ng/InstallBuild/",
+            "https://docs.ligolo.ng/Quickstart/",
+            "https://raw.githubusercontent.com/nicocha30/ligolo-ng/master/cmd/proxy/main.go",
+            "https://raw.githubusercontent.com/nicocha30/ligolo-ng/master/cmd/agent/main.go",
+        ),
+        verified_parameters=(
+            "listen_addr",
+            "autocert",
+            "selfcert",
+            "cert_file",
+            "key_file",
+            "allow_domains",
+            "selfcert_domain",
+            "config_file",
+            "daemon",
+            "api_listen_addr",
+            "cpu_profile",
+            "mem_profile",
+            "verbose",
+            "no_banner",
+            "version",
+            "help",
+        ),
+    ),
     "peass-ng": SourceReview(
         note=(
             "Reviewed against upstream PEASS-ng linPEAS README usage and "

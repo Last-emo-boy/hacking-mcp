@@ -1704,6 +1704,84 @@ def test_peass_ng_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_ligolo_ng_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("ligolo-ng")
+
+    assert tool.run_command == "cd ligolo-ng && ./proxy"
+    assert records["ligolo-ng"].source_status == "source-reviewed"
+    assert records["ligolo-ng"].unverified_parameters == ()
+    assert records["ligolo-ng"].gap == ""
+    assert any("nicocha30/ligolo-ng" in item for item in records["ligolo-ng"].evidence)
+
+    params = adapter_parameter_names(tool, specs["ligolo-ng"])
+    for removed in (
+        "auth_token",
+        "connect_addr",
+        "listener",
+        "lhost",
+        "lport",
+        "mode",
+        "protocol",
+        "session_id",
+        "tun_name",
+    ):
+        assert removed not in params
+    for expected in (
+        "listen_addr",
+        "autocert",
+        "selfcert",
+        "cert_file",
+        "key_file",
+        "allow_domains",
+        "selfcert_domain",
+        "config_file",
+        "daemon",
+        "api_listen_addr",
+        "cpu_profile",
+        "mem_profile",
+        "verbose",
+        "no_banner",
+        "version",
+        "help",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["ligolo-ng"],
+        {
+            "target": "ignored-local-host",
+            "listen_addr": "127.0.0.1:11601",
+            "selfcert": True,
+            "cert_file": "cert.pem",
+            "key_file": "key.pem",
+            "allow_domains": "lab.example,alt.example",
+            "selfcert_domain": "lab.example",
+            "config_file": "ligolo.yaml",
+            "daemon": True,
+            "api_listen_addr": "127.0.0.1:8080",
+            "verbose": True,
+            "no_banner": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-v -laddr 127.0.0.1:11601 -selfcert -certfile cert.pem "
+        "-keyfile key.pem -allow-domains lab.example,alt.example "
+        "-selfcert-domain lab.example -config ligolo.yaml -daemon "
+        "-api-laddr 127.0.0.1:8080 -nobanner"
+    )
+    assert preview["confirm_authorized"] is True
+
+
 def test_explo_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
@@ -7589,6 +7667,50 @@ async def test_peass_ng_source_reviewed_parameters_build_cli_options(registry, s
         "-o system_information,interesting_files -q -N"
     )
     assert request.require_confirmation is True
+
+
+@pytest.mark.asyncio
+async def test_ligolo_ng_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_ligolo_ng",
+        {
+            "target": "ignored-local-host",
+            "listen_addr": "127.0.0.1:11601",
+            "selfcert": True,
+            "cert_file": "cert.pem",
+            "key_file": "key.pem",
+            "allow_domains": "lab.example,alt.example",
+            "selfcert_domain": "lab.example",
+            "config_file": "ligolo.yaml",
+            "daemon": True,
+            "api_listen_addr": "127.0.0.1:8080",
+            "verbose": True,
+            "no_banner": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "ligolo-ng"
+    assert request.target == ""
+    assert request.options == (
+        "-v -laddr 127.0.0.1:11601 -selfcert -certfile cert.pem "
+        "-keyfile key.pem -allow-domains lab.example,alt.example "
+        "-selfcert-domain lab.example -config ligolo.yaml -daemon "
+        "-api-laddr 127.0.0.1:8080 -nobanner"
+    )
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
 
 
 @pytest.mark.asyncio
