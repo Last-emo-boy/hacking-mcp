@@ -1327,6 +1327,60 @@ def test_routersploit_source_reviewed_and_previewable(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_websploit_source_reviewed_interactive_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("websploit")
+
+    assert tool.run_command == "sudo websploit"
+    assert specs["websploit"].requires_confirmation is True
+    assert records["websploit"].source_status == "source-reviewed"
+    assert records["websploit"].unverified_parameters == ()
+    assert records["websploit"].gap == ""
+    assert any("The404Hacking/websploit" in item for item in records["websploit"].evidence)
+
+    params = adapter_parameter_names(tool, specs["websploit"])
+    for removed in (
+        "check_only",
+        "extensions",
+        "follow_redirects",
+        "match_codes",
+        "module",
+        "password",
+        "payload",
+        "proxy",
+        "recursive",
+        "resource_file",
+        "rhost",
+        "rport",
+        "set_options",
+        "threads",
+        "username",
+        "wordlist",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["websploit"],
+        {
+            "target": "https://ignored.example",
+            "interactive": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is True
+    assert preview["confirm_authorized"] is True
+
+
 def test_explo_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
@@ -7022,6 +7076,35 @@ async def test_routersploit_source_reviewed_parameters_build_cli_options(registr
         "-m exploits/routers/example -s 'target 192.0.2.10' "
         "-s 'port 80' -s 'ssl true'"
     )
+    assert request.require_confirmation is True
+    assert request.confirm_authorized is True
+
+
+@pytest.mark.asyncio
+async def test_websploit_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_websploit",
+        {
+            "target": "https://ignored.example",
+            "interactive": True,
+            "confirm_authorized": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "websploit"
+    assert request.target == ""
+    assert request.options == ""
     assert request.require_confirmation is True
     assert request.confirm_authorized is True
 

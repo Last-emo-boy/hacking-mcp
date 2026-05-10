@@ -712,6 +712,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "rvuln",
         "showme",
         "routersploit",
+        "websploit",
         "web2attack",
         "wireshark",
         "xss-payload-generator",

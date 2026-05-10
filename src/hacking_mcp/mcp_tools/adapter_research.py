@@ -3364,6 +3364,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "websploit": SourceReview(
+        note=(
+            "Reviewed against upstream WebSploit README, install script, "
+            "console entrypoint, and an interactive module. The installed "
+            "command launches websploit.py, which reads commands from "
+            "raw_input at the wsf prompt and dispatches use/show/help/os "
+            "commands; modules such as directory_scanner also read set/run "
+            "commands from raw_input. No argparse, getopt, or sys.argv CLI "
+            "surface was found, so the adapter suppresses target argv and "
+            "generated web/exploit placeholders and exposes only an "
+            "interactive marker."
+        ),
+        references=(
+            "https://github.com/The404Hacking/websploit",
+            "https://raw.githubusercontent.com/The404Hacking/websploit/master/README.md",
+            "https://raw.githubusercontent.com/The404Hacking/websploit/master/Setup/install.sh",
+            "https://raw.githubusercontent.com/The404Hacking/websploit/master/websploit.py",
+            "https://raw.githubusercontent.com/The404Hacking/websploit/master/modules/directory_scanner.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "explo": SourceReview(
         note=(
             "Reviewed against upstream explo argparse parser and README usage. "
