@@ -1647,6 +1647,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "debug",
         ),
     ),
+    "appcheck": SourceReview(
+        note=(
+            "Reviewed against upstream underhanded.sh. The script has no "
+            "CLI parser or positional arguments; app selection, custom URL, "
+            "and redirect URL are read interactively from stdin before the "
+            "script starts its local PHP/ngrok workflow. The adapter is "
+            "therefore intentionally interactive-only and removes generated "
+            "scanner/depth/output parameters."
+        ),
+        references=(
+            "https://github.com/jakuta-tech/underhanded",
+            "https://raw.githubusercontent.com/jakuta-tech/underhanded/master/underhanded.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "allinone-socialmedia": SourceReview(
         note=(
             "Reviewed against upstream Brute_Force README and OptionParser "

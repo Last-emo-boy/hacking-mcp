@@ -2724,6 +2724,38 @@ def test_socialscan_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_appcheck_source_reviewed_interactive_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("appcheck")
+
+    assert records["appcheck"].source_status == "source-reviewed"
+    assert records["appcheck"].unverified_parameters == ()
+    assert records["appcheck"].gap == ""
+    assert any("underhanded" in item.lower() for item in records["appcheck"].evidence)
+
+    params = adapter_parameter_names(tool, specs["appcheck"])
+    for removed in ("json_output", "output_file", "scan_depth", "timeout", "user_agent"):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["appcheck"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -5513,6 +5545,33 @@ async def test_socialscan_source_reviewed_parameters_build_cli_options(registry,
         "-p github instagram --view-by platform -a -c --proxy-list proxies.txt "
         "-v --show-urls --json social.json --debug"
     )
+    assert request.require_confirmation is False
+
+
+@pytest.mark.asyncio
+async def test_appcheck_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_appcheck",
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "appcheck"
+    assert request.target == ""
+    assert request.options == ""
     assert request.require_confirmation is False
 
 
