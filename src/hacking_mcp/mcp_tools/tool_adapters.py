@@ -32,13 +32,10 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "binwalk",
         "blackeye",
         "blackphish",
-        "blisqy",
         "brutal",
         "chisel",
-        "commix",
         "evil-winrm",
         "evilginx3",
-        "explo",
         "fluxion",
         "hashcat",
         "havoc",
@@ -47,31 +44,26 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "hiddeneye",
         "jadx",
         "john",
-        "leviathan",
         "ligolo-ng",
         "maskphish",
         "mobdroid",
         "mobsf",
         "msfvenom",
         "multitor",
-        "nosqlmap",
         "owasp-zap",
         "peass-ng",
         "pwncat-cs",
         "pyphisher",
-        "routersploit",
         "setoolkit",
         "shellphish",
         "sherlock",
         "sliver",
-        "sqlmap",
         "steghide",
         "stegcracker",
         "theHarvester",
         "thefatrat",
         "venom",
         "volatility3",
-        "websploit",
         "whatweb",
         "wifiphisher",
         "wifite",
@@ -691,16 +683,6 @@ def _adapter_parameters(
             AdapterParameterSpec("json_output", bool, False, "Request JSON output when supported."),
         ])
 
-    if tool.name == "sqlmap":
-        params.extend([
-            AdapterParameterSpec("cookie", str, "", "Cookie header for authorized testing."),
-            AdapterParameterSpec("headers", str, "", "Additional HTTP headers, newline or semicolon separated."),
-            AdapterParameterSpec("tamper", str, "", "Comma-separated sqlmap tamper scripts."),
-            AdapterParameterSpec("technique", str, "", "SQLi techniques, for example BEUSTQ."),
-            AdapterParameterSpec("proxy", str, "", "HTTP proxy URL."),
-            AdapterParameterSpec("random_agent", bool, False, "Use a random User-Agent."),
-        ])
-
     if tool.name in {"evil-winrm", "pwncat-cs"}:
         params.extend([
             AdapterParameterSpec("ssl", bool, False, "Use SSL/TLS when supported."),
@@ -724,23 +706,6 @@ def _adapter_parameters(
             AdapterParameterSpec("peas_variant", str, "", "PEASS variant such as linpeas or winpeas."),
             AdapterParameterSpec("checks", str, "", "Checks/profile selector when supported."),
             AdapterParameterSpec("quiet", bool, False, "Reduce output when supported."),
-        ])
-
-    if tool.name in {"commix", "nosqlmap", "blisqy", "leviathan", "explo"}:
-        params.extend([
-            AdapterParameterSpec("parameter", str, "", "Parameter to test when supported."),
-            AdapterParameterSpec("method", str, "", "HTTP method when supported."),
-            AdapterParameterSpec("delay", int, 0, "Time delay for blind testing when supported; 0 leaves default."),
-            AdapterParameterSpec("os_shell", bool, False, "Request OS shell mode when supported."),
-            AdapterParameterSpec("batch", bool, True, "Non-interactive/batch mode when supported."),
-        ])
-
-    if tool.name in {"routersploit", "websploit"}:
-        params.extend([
-            AdapterParameterSpec("module", str, "", "Framework module path when supported."),
-            AdapterParameterSpec("set_options", str, "", "Comma/semicolon-separated framework option assignments."),
-            AdapterParameterSpec("check_only", bool, False, "Check vulnerability without exploitation when supported."),
-            AdapterParameterSpec("resource_file", str, "", "Resource/script file when supported."),
         ])
 
     if tool.name in {
@@ -1057,14 +1022,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "output_file", "-o")
         _add_bool(tokens, kwargs, "json_output", "--json")
 
-    if tool.name == "sqlmap":
-        _add_value(tokens, kwargs, "cookie", "--cookie")
-        _add_value(tokens, kwargs, "headers", "--headers")
-        _add_value(tokens, kwargs, "tamper", "--tamper")
-        _add_value(tokens, kwargs, "technique", "--technique")
-        _add_value(tokens, kwargs, "proxy", "--proxy")
-        _add_bool(tokens, kwargs, "random_agent", "--random-agent")
-
     if tool.name in {"evil-winrm", "pwncat-cs"}:
         _add_bool(tokens, kwargs, "ssl", "-S")
         _add_value(tokens, kwargs, "key_file", "-k")
@@ -1083,19 +1040,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "peas_variant", "--variant")
         _add_value(tokens, kwargs, "checks", "--checks")
         _add_bool(tokens, kwargs, "quiet", "-q")
-
-    if tool.name in {"commix", "nosqlmap", "blisqy", "leviathan", "explo"}:
-        _add_value(tokens, kwargs, "parameter", "-p")
-        _add_value(tokens, kwargs, "method", "--method")
-        _add_value(tokens, kwargs, "delay", "--time-sec")
-        _add_bool(tokens, kwargs, "os_shell", "--os-shell")
-        if kwargs.get("batch", True):
-            tokens.append("--batch")
-
-    if tool.name in {"routersploit", "websploit"}:
-        _add_value(tokens, kwargs, "set_options", "--set")
-        _add_bool(tokens, kwargs, "check_only", "--check")
-        _add_value(tokens, kwargs, "resource_file", "-r")
 
     if tool.name in {
         "setoolkit", "pyphisher", "hiddeneye", "blackeye", "shellphish",
