@@ -61,14 +61,11 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "netexec",
         "nosqlmap",
         "owasp-zap",
-        "pacu",
         "peass-ng",
-        "prowler",
         "pwncat-cs",
         "pyphisher",
         "responder",
         "routersploit",
-        "scoutsuite",
         "setoolkit",
         "shellphish",
         "sherlock",
@@ -78,7 +75,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "stegcracker",
         "theHarvester",
         "thefatrat",
-        "trivy",
         "venom",
         "volatility3",
         "websploit",
@@ -711,15 +707,6 @@ def _adapter_parameters(
             AdapterParameterSpec("random_agent", bool, False, "Use a random User-Agent."),
         ])
 
-    if tool.name in {"prowler", "trivy"}:
-        params.extend([
-            AdapterParameterSpec("provider", str, "", "Cloud/provider selector when supported."),
-            AdapterParameterSpec("checks", str, "", "Comma-separated checks to include when supported."),
-            AdapterParameterSpec("excluded_checks", str, "", "Comma-separated checks to exclude when supported."),
-            AdapterParameterSpec("output_format", str, "", "Output format when supported."),
-            AdapterParameterSpec("ignore_unfixed", bool, False, "Ignore unfixed vulnerabilities when supported."),
-        ])
-
     if tool.name in {"netexec", "certipy", "kerbrute"}:
         params.extend([
             AdapterParameterSpec("users_file", str, "", "Username list path when supported."),
@@ -778,14 +765,6 @@ def _adapter_parameters(
             AdapterParameterSpec("set_options", str, "", "Comma/semicolon-separated framework option assignments."),
             AdapterParameterSpec("check_only", bool, False, "Check vulnerability without exploitation when supported."),
             AdapterParameterSpec("resource_file", str, "", "Resource/script file when supported."),
-        ])
-
-    if tool.name in {"pacu", "scoutsuite"}:
-        params.extend([
-            AdapterParameterSpec("session", str, "", "Cloud assessment session/profile when supported."),
-            AdapterParameterSpec("module", str, "", "Cloud module/service module when supported."),
-            AdapterParameterSpec("regions", str, "", "Comma-separated cloud regions when supported."),
-            AdapterParameterSpec("report_dir", str, "", "Report directory when supported."),
         ])
 
     if tool.name in {
@@ -1110,13 +1089,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "proxy", "--proxy")
         _add_bool(tokens, kwargs, "random_agent", "--random-agent")
 
-    if tool.name in {"prowler", "trivy"}:
-        _add_value(tokens, kwargs, "provider", "--provider")
-        _add_value(tokens, kwargs, "checks", "--checks")
-        _add_value(tokens, kwargs, "excluded_checks", "--excluded-checks")
-        _add_value(tokens, kwargs, "output_format", "--output")
-        _add_bool(tokens, kwargs, "ignore_unfixed", "--ignore-unfixed")
-
     if tool.name in {"netexec", "certipy", "kerbrute"}:
         _add_value(tokens, kwargs, "users_file", "-U")
         _add_value(tokens, kwargs, "passwords_file", "-P")
@@ -1162,13 +1134,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "set_options", "--set")
         _add_bool(tokens, kwargs, "check_only", "--check")
         _add_value(tokens, kwargs, "resource_file", "-r")
-
-    if tool.name in {"pacu", "scoutsuite"}:
-        _add_value(tokens, kwargs, "session", "--session")
-        if tool.name != "pacu":
-            _add_value(tokens, kwargs, "module", "--module")
-        _add_value(tokens, kwargs, "regions", "--regions")
-        _add_value(tokens, kwargs, "report_dir", "--report-dir")
 
     if tool.name in {
         "setoolkit", "pyphisher", "hiddeneye", "blackeye", "shellphish",
