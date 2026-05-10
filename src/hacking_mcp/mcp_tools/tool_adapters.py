@@ -49,7 +49,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "feroxbuster",
         "ffuf",
         "fluxion",
-        "ghidra",
         "gitleaks",
         "gobuster",
         "hashcat",
@@ -1372,14 +1371,6 @@ def _adapter_parameters(
             AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
         ])
 
-    if tool.name == "ghidra":
-        params.extend([
-            AdapterParameterSpec("project_name", str, "", "Project name when supported."),
-            AdapterParameterSpec("analysis_level", str, "", "Analysis depth/profile when supported."),
-            AdapterParameterSpec("entrypoint", str, "", "Entrypoint/address when supported."),
-            AdapterParameterSpec("headless", bool, False, "Run in headless mode when supported."),
-        ])
-
     if tool.name == "ffuf":
         params.extend([
             AdapterParameterSpec("filter_codes", str, "", "HTTP status codes to filter out."),
@@ -2344,12 +2335,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "kerberos", "-k")
         _add_bool(tokens, kwargs, "local_auth", "--local-auth")
         _add_value(tokens, kwargs, "target_ip", "--target-ip")
-
-    if tool.name == "ghidra":
-        _add_value(tokens, kwargs, "project_name", "--project")
-        _add_value(tokens, kwargs, "analysis_level", "--analysis")
-        _add_value(tokens, kwargs, "entrypoint", "--entrypoint")
-        _add_bool(tokens, kwargs, "headless", "--headless")
 
     if tool.name == "ffuf":
         _add_value(tokens, kwargs, "filter_codes", "-fc")

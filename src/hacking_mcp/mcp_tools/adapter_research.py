@@ -444,6 +444,57 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "no_stderr",
         ),
     ),
+    "ghidra": SourceReview(
+        note=(
+            "Reviewed against upstream Ghidra AnalyzeHeadless argument enum "
+            "and usage builder for project location/name input, import or "
+            "process modes, pre/post scripts with arguments, script and "
+            "properties paths, log destinations, overwrite/mirror/recursive/"
+            "read-only/delete/no-analysis controls, processor/compiler "
+            "selection, analysis timeout, server authentication/commit modes, "
+            "CPU limits, library search paths, loader selection, and loader "
+            "argument forwarding."
+        ),
+        references=(
+            "https://github.com/NationalSecurityAgency/ghidra",
+            "https://raw.githubusercontent.com/NationalSecurityAgency/ghidra/master/Ghidra/Features/Base/src/main/java/ghidra/app/util/headless/AnalyzeHeadless.java",
+        ),
+        verified_parameters=(
+            "project_name",
+            "folder_path",
+            "import_path",
+            "process_path",
+            "pre_script",
+            "pre_script_args",
+            "post_script",
+            "post_script_args",
+            "script_path",
+            "properties_path",
+            "script_log",
+            "log_file",
+            "overwrite",
+            "mirror",
+            "recursive",
+            "recursive_depth",
+            "read_only",
+            "delete_project",
+            "no_analysis",
+            "processor",
+            "cspec",
+            "analysis_timeout_per_file",
+            "keystore",
+            "connect",
+            "connect_user",
+            "password",
+            "commit",
+            "commit_comment",
+            "ok_to_delete",
+            "max_cpu",
+            "library_search_paths",
+            "loader",
+            "loader_args",
+        ),
+    ),
     "mobsf": SourceReview(
         note=(
             "Reviewed against upstream MobSF run.sh server entrypoint. The "

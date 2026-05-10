@@ -128,6 +128,7 @@ def test_split_adapter_registry_includes_migrated_tools():
     migrated = {
         "binwalk",
         "frida",
+        "ghidra",
         "haiti",
         "objection",
         "owasp-zap",
@@ -300,6 +301,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["radare2"].source_status == "source-reviewed"
     assert records["radare2"].unverified_parameters == ()
     assert any("radareorg/radare2" in item for item in records["radare2"].evidence)
+
+    assert records["ghidra"].source_status == "source-reviewed"
+    assert records["ghidra"].unverified_parameters == ()
+    assert any("NationalSecurityAgency/ghidra" in item for item in records["ghidra"].evidence)
 
     assert records["dracnmap"].source_status == "registry-derived"
     assert records["dracnmap"].named_override is False
@@ -742,6 +747,18 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "no_exec", "no_extr", "no_strings", "load_strings", "connect_mode",
         "zero_sep", "stderr_to_stdout", "no_stderr",
     }.issubset(radare2_schema)
+
+    ghidra_schema = tools["security_tool_ghidra"].inputSchema["properties"]
+    assert {
+        "project_name", "folder_path", "import_path", "process_path",
+        "pre_script", "pre_script_args", "post_script", "post_script_args",
+        "script_path", "properties_path", "script_log", "log_file",
+        "overwrite", "mirror", "recursive", "recursive_depth", "read_only",
+        "delete_project", "no_analysis", "processor", "cspec",
+        "analysis_timeout_per_file", "keystore", "connect", "connect_user",
+        "password", "commit", "commit_comment", "ok_to_delete", "max_cpu",
+        "library_search_paths", "loader", "loader_args",
+    }.issubset(ghidra_schema)
 
     setoolkit_schema = tools["security_tool_setoolkit"].inputSchema["properties"]
     assert {"template", "listener_host", "listener_port", "tunnel"}.issubset(
@@ -2624,6 +2641,64 @@ async def test_radare2_source_reviewed_parameters_build_cli_options(registry, sa
     assert request.options == (
         "-a x86 -A -b 64 -B 0x400000 -c afl -d -e scr.color=false "
         "-i init.r2 -I pre.r2 -j -LL -NN -nn -p audit -qq -w -zz"
+    )
+
+
+@pytest.mark.asyncio
+async def test_ghidra_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_ghidra",
+        {
+            "target": "/tmp/ghidra-projects",
+            "project_name": "firmware",
+            "folder_path": "imports",
+            "import_path": "firmware.bin",
+            "pre_script": "Setup.java",
+            "pre_script_args": "--mode fast",
+            "post_script": "Report.java",
+            "post_script_args": "out.json",
+            "script_path": "scripts",
+            "properties_path": "props",
+            "script_log": "script.log",
+            "log_file": "ghidra.log",
+            "overwrite": True,
+            "recursive": True,
+            "recursive_depth": 2,
+            "read_only": True,
+            "processor": "x86:LE:64:default",
+            "cspec": "gcc",
+            "analysis_timeout_per_file": 300,
+            "connect_user": "analyst",
+            "commit_comment": "import firmware",
+            "max_cpu": 4,
+            "library_search_paths": "libs",
+            "loader": "ElfLoader",
+            "loader_args": "imagebase=0x400000,applyLabels=true",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "ghidra"
+    assert request.target == "/tmp/ghidra-projects"
+    assert request.options_before_target is False
+    assert request.options == (
+        "firmware/imports -import firmware.bin -preScript Setup.java "
+        "--mode fast -postScript Report.java out.json -scriptPath scripts "
+        "-propertiesPath props -scriptlog script.log -log ghidra.log "
+        "-overwrite -recursive 2 -readOnly -processor x86:LE:64:default "
+        "-cspec gcc -analysisTimeoutPerFile 300 -connect analyst "
+        "-commit 'import firmware' -max-cpu 4 -librarySearchPaths libs "
+        "-loader ElfLoader -loader-imagebase 0x400000 -loader-applyLabels true"
     )
 
 
