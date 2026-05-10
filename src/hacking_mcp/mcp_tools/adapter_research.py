@@ -1621,6 +1621,32 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "input_file",
         ),
     ),
+    "socialscan": SourceReview(
+        note=(
+            "Reviewed against upstream socialscan README and CLI argparse "
+            "definitions. The registry target is the positional username or "
+            "email query; the adapter exposes source-backed platform "
+            "selection, result grouping, availability filtering, token "
+            "caching, proxy-list, verbosity, profile URL, JSON output, and "
+            "debug flags."
+        ),
+        references=(
+            "https://github.com/iojw/socialscan",
+            "https://raw.githubusercontent.com/iojw/socialscan/master/README.md",
+            "https://raw.githubusercontent.com/iojw/socialscan/master/socialscan/cli.py",
+        ),
+        verified_parameters=(
+            "platforms",
+            "view_by",
+            "available_only",
+            "cache_tokens",
+            "proxy_list",
+            "verbose",
+            "show_urls",
+            "json_file",
+            "debug",
+        ),
+    ),
     "allinone-socialmedia": SourceReview(
         note=(
             "Reviewed against upstream Brute_Force README and OptionParser "

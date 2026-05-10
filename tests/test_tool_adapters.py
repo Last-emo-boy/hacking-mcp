@@ -2680,6 +2680,50 @@ def test_knockmail_source_reviewed_and_previewable(registry, safety):
     assert file_preview["options"] == "-f emails.txt"
 
 
+def test_socialscan_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("socialscan")
+
+    assert records["socialscan"].source_status == "source-reviewed"
+    assert records["socialscan"].unverified_parameters == ()
+    assert records["socialscan"].gap == ""
+    assert any("socialscan" in item for item in records["socialscan"].evidence)
+
+    params = adapter_parameter_names(tool, specs["socialscan"])
+    for removed in ("api_key", "json_output", "output_file", "passive", "resolvers", "scan_depth", "sources", "timeout", "user_agent"):
+        assert removed not in params
+    for expected in ("platforms", "view_by", "available_only", "cache_tokens", "proxy_list", "verbose", "show_urls", "json_file", "debug"):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["socialscan"],
+        {
+            "target": "alice",
+            "platforms": "github,instagram",
+            "view_by": "platform",
+            "available_only": True,
+            "cache_tokens": True,
+            "proxy_list": "proxies.txt",
+            "verbose": True,
+            "show_urls": True,
+            "json_file": "social.json",
+            "debug": True,
+        },
+    )
+    assert preview["target"] == "alice"
+    assert preview["options"] == (
+        "-p github instagram --view-by platform -a -c --proxy-list proxies.txt "
+        "-v --show-urls --json social.json --debug"
+    )
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -5431,6 +5475,44 @@ async def test_knockmail_source_reviewed_parameters_build_cli_options(registry, 
     assert request.tool_name == "knockmail"
     assert request.target == ""
     assert request.options == "--email user@example.com"
+    assert request.require_confirmation is False
+
+
+@pytest.mark.asyncio
+async def test_socialscan_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_socialscan",
+        {
+            "target": "alice",
+            "platforms": "github,instagram",
+            "view_by": "platform",
+            "available_only": True,
+            "cache_tokens": True,
+            "proxy_list": "proxies.txt",
+            "verbose": True,
+            "show_urls": True,
+            "json_file": "social.json",
+            "debug": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "socialscan"
+    assert request.target == "alice"
+    assert request.options == (
+        "-p github instagram --view-by platform -a -c --proxy-list proxies.txt "
+        "-v --show-urls --json social.json --debug"
+    )
     assert request.require_confirmation is False
 
 
