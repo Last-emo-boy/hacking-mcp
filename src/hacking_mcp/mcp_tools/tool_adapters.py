@@ -713,6 +713,9 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     if tool.name == "apk2gold":
         return str(kwargs.get("apk_file") or "")
 
+    if tool.name == "host2ip":
+        return str(kwargs.get("hostname") or "")
+
     if tool.name != "objection":
         return target
 

@@ -1177,6 +1177,20 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "exclude_hosts",
         ),
     ),
+    "host2ip": SourceReview(
+        note=(
+            "Reviewed against the Python standard library socket resolver API. "
+            "The registry command resolves a single hostname with "
+            "socket.gethostbyname, so the adapter exposes only a hostname "
+            "target alias and no generated CLI options."
+        ),
+        references=(
+            "https://docs.python.org/3/library/socket.html#socket.gethostbyname",
+        ),
+        verified_parameters=(
+            "hostname",
+        ),
+    ),
     "nuclei": SourceReview(
         note=(
             "Reviewed against official ProjectDiscovery Nuclei docs for "

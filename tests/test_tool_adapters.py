@@ -150,6 +150,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert "dedicated split adapter module is registered" in records["nmap"].evidence
     assert any("nmap.org" in item for item in records["nmap"].evidence)
 
+    assert records["host2ip"].source_status == "source-reviewed"
+    assert records["host2ip"].unverified_parameters == ()
+    assert any("socket.gethostbyname" in item for item in records["host2ip"].evidence)
+
     assert records["ffuf"].source_status == "source-reviewed"
     assert records["ffuf"].unverified_parameters == ()
     assert records["ffuf"].gap == ""
@@ -1687,6 +1691,52 @@ def test_stegocracker_source_reviewed_and_previewable(registry, safety):
     )
     assert preview["target"] == "cover.png"
     assert preview["options"] == "--input cover.png --output out.png --message secret --encode"
+
+
+def test_host2ip_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["host2ip"].source_status == "source-reviewed"
+    assert records["host2ip"].unverified_parameters == ()
+    assert records["host2ip"].gap == ""
+    assert any("socket.gethostbyname" in item for item in records["host2ip"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("host2ip"), specs["host2ip"])
+    for removed in (
+        "api_key",
+        "default_scripts",
+        "json_output",
+        "os_detection",
+        "ports",
+        "rate",
+        "resolvers",
+        "scan_depth",
+        "scan_type",
+        "service_version",
+        "sources",
+        "timeout",
+        "timing",
+        "top_ports",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "hostname" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("host2ip"),
+        specs["host2ip"],
+        {
+            "hostname": "example.com",
+        },
+    )
+    assert preview["target"] == "example.com"
+    assert preview["options"] == ""
 
 
 @pytest.mark.asyncio
@@ -3872,6 +3922,31 @@ async def test_stegocracker_source_reviewed_parameters_build_cli_options(registr
     assert request.tool_name == "stegocracker"
     assert request.target == "cover.png"
     assert request.options == "--input cover.png --output out.png --message secret --encode"
+
+
+@pytest.mark.asyncio
+async def test_host2ip_source_reviewed_parameters_build_target(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_host2ip",
+        {
+            "hostname": "example.com",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "host2ip"
+    assert request.target == "example.com"
+    assert request.options == ""
 
 
 @pytest.mark.asyncio
