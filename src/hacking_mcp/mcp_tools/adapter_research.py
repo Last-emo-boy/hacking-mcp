@@ -168,6 +168,69 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "insecure",
         ),
     ),
+    "responder": SourceReview(
+        note=(
+            "Reviewed against upstream Responder optparse definitions and "
+            "README usage for interface-target execution, passive analyze "
+            "mode, external poison addresses, RDNSS/DNSSL/TTL/answer-name "
+            "poisoning controls, DHCP/DHCPv6/WPAD/proxy-auth modes, "
+            "authentication downgrades, output verbosity, and OSX local IP."
+        ),
+        references=(
+            "https://github.com/lgandx/Responder",
+            "https://raw.githubusercontent.com/lgandx/Responder/master/Responder.py",
+            "https://raw.githubusercontent.com/lgandx/Responder/master/README.md",
+        ),
+        verified_parameters=(
+            "analyze",
+            "external_ip",
+            "external_ipv6",
+            "rdnss",
+            "dnssl_domain",
+            "ttl",
+            "answer_name",
+            "dhcp",
+            "dhcp_dns",
+            "dhcpv6",
+            "wpad",
+            "force_wpad_auth",
+            "proxy_auth",
+            "upstream_proxy",
+            "basic",
+            "lm",
+            "disable_ess",
+            "error_code",
+            "verbose",
+            "quiet",
+            "local_ip",
+        ),
+    ),
+    "kerbrute": SourceReview(
+        note=(
+            "Reviewed against upstream Kerbrute Cobra root/userenum command "
+            "definitions and README usage for domain-as-target userenum "
+            "execution, KDC selection, output logs, verbosity, safe mode, "
+            "thread/delay controls, downgrade mode, AS-REP hash capture, "
+            "and username wordlist positional input."
+        ),
+        references=(
+            "https://github.com/ropnop/kerbrute",
+            "https://raw.githubusercontent.com/ropnop/kerbrute/master/README.md",
+            "https://raw.githubusercontent.com/ropnop/kerbrute/master/cmd/kerbrute.go",
+            "https://raw.githubusercontent.com/ropnop/kerbrute/master/cmd/userenum.go",
+        ),
+        verified_parameters=(
+            "dc",
+            "output_file",
+            "verbose",
+            "safe",
+            "threads",
+            "delay",
+            "downgrade",
+            "hash_file",
+            "users_file",
+        ),
+    ),
     "binwalk": SourceReview(
         note=(
             "Reviewed against upstream Binwalk v3 clap parser definitions for "

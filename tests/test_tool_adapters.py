@@ -3339,6 +3339,97 @@ def test_cloud_security_source_reviewed_previews(registry, safety):
     )
 
 
+def test_responder_kerbrute_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    for tool_name in {"responder", "kerbrute"}:
+        assert records[tool_name].source_status == "source-reviewed"
+        assert records[tool_name].unverified_parameters == ()
+        assert records[tool_name].gap == ""
+
+    assert any("lgandx/Responder" in item for item in records["responder"].evidence)
+    assert any("ropnop/kerbrute" in item for item in records["kerbrute"].evidence)
+
+    responder_params = adapter_parameter_names(
+        registry.get_tool("responder"),
+        specs["responder"],
+    )
+    assert "domain" not in responder_params
+    assert "analyze" in responder_params
+    assert "dhcpv6" in responder_params
+
+    kerbrute_params = adapter_parameter_names(
+        registry.get_tool("kerbrute"),
+        specs["kerbrute"],
+    )
+    assert "passwords_file" not in kerbrute_params
+    assert "dc" in kerbrute_params
+    assert "users_file" in kerbrute_params
+
+    responder = adapter_request_preview(
+        registry.get_tool("responder"),
+        specs["responder"],
+        {
+            "target": "eth0",
+            "analyze": True,
+            "external_ip": "10.0.0.5",
+            "external_ipv6": "fe80::1",
+            "rdnss": True,
+            "dnssl_domain": "corp.local",
+            "ttl": "1e",
+            "answer_name": "wpad",
+            "dhcp": True,
+            "dhcp_dns": True,
+            "dhcpv6": True,
+            "wpad": True,
+            "force_wpad_auth": True,
+            "proxy_auth": True,
+            "upstream_proxy": "127.0.0.1:8080",
+            "basic": True,
+            "lm": True,
+            "disable_ess": True,
+            "error_code": True,
+            "verbose": True,
+            "quiet": True,
+            "local_ip": "10.0.0.20",
+        },
+    )
+    assert responder["target"] == "eth0"
+    assert responder["options"] == (
+        "-A -e 10.0.0.5 -6 fe80::1 --rdnss --dnssl corp.local "
+        "-t 1e -N wpad -d -D --dhcpv6 -w -F -P -u 127.0.0.1:8080 "
+        "-b --lm --disable-ess -E -v -Q -i 10.0.0.20"
+    )
+
+    kerbrute = adapter_request_preview(
+        registry.get_tool("kerbrute"),
+        specs["kerbrute"],
+        {
+            "target": "corp.local",
+            "dc": "dc.corp.local",
+            "output_file": "kerbrute.log",
+            "verbose": True,
+            "safe": True,
+            "threads": 20,
+            "delay": 100,
+            "downgrade": True,
+            "hash_file": "asrep.txt",
+            "users_file": "users.txt",
+        },
+    )
+    assert kerbrute["target"] == "corp.local"
+    assert kerbrute["options"] == (
+        "--dc dc.corp.local -o kerbrute.log -v --safe -t 20 --delay 100 "
+        "--downgrade --hash-file asrep.txt users.txt"
+    )
+
+
 @pytest.mark.asyncio
 async def test_trivy_adapter_places_command_and_flags_before_target(registry, safety):
     from mcp.server.fastmcp import FastMCP
