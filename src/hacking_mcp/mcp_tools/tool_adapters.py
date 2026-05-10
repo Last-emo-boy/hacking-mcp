@@ -1020,4 +1020,4 @@ def _should_validate_scope(tool: HackingToolDef) -> bool:
 
 
 def _options_before_target(tool: HackingToolDef) -> bool:
-    return tool.name in {"frida", "jadx", "radare2", "testssl", "trivy"}
+    return tool.name in {"frida", "jadx", "radare2", "skipfish", "testssl", "trivy"}

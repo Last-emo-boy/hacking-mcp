@@ -262,6 +262,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["takeover"].unverified_parameters == ()
     assert any("edoardottt/takeover" in item for item in records["takeover"].evidence)
 
+    assert records["skipfish"].source_status == "source-reviewed"
+    assert records["skipfish"].unverified_parameters == ()
+    assert any("skipfish" in item for item in records["skipfish"].evidence)
+
     assert records["nikto"].source_status == "source-reviewed"
     assert records["nikto"].unverified_parameters == ()
     assert any("sullo/nikto" in item for item in records["nikto"].evidence)
@@ -2227,6 +2231,110 @@ def test_takeover_source_reviewed_and_previewable(registry, safety):
     assert preview["options"] == (
         "-p http://127.0.0.1:8080 -o takeover.json -t 8 -T 20 "
         "-u takeover-bot -k -v"
+    )
+
+
+def test_skipfish_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["skipfish"].source_status == "source-reviewed"
+    assert records["skipfish"].unverified_parameters == ()
+    assert records["skipfish"].gap == ""
+    assert any("skipfish" in item for item in records["skipfish"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("skipfish"), specs["skipfish"])
+    for removed in ("extensions", "follow_redirects", "json_output", "match_codes", "recursive", "threads", "wordlist"):
+        assert removed not in params
+    for verified in (
+        "output_dir",
+        "write_wordlist",
+        "read_wordlist",
+        "auth",
+        "host_ip",
+        "cookie",
+        "header",
+        "browser",
+        "no_new_cookies",
+        "max_depth",
+        "max_children",
+        "max_descendants",
+        "request_limit",
+        "crawl_probability",
+        "seed",
+        "include_url",
+        "exclude_url",
+        "skip_param",
+        "crawl_domain",
+        "trust_domain",
+        "skip_5xx",
+        "no_forms",
+        "no_html_parse",
+        "log_mixed_content",
+        "log_cache_mismatches",
+        "log_external_urls",
+        "suppress_duplicates",
+        "quiet",
+        "verbose",
+        "no_autolearn",
+        "no_extension_fuzzing",
+        "purge_age",
+        "form_autofill",
+        "max_guesses",
+        "signatures",
+        "max_connections",
+        "host_connections",
+        "max_failures",
+        "request_timeout",
+        "io_timeout",
+        "idle_timeout",
+        "response_size_limit",
+        "drop_binary_responses",
+        "max_requests_per_second",
+        "stop_after",
+        "config_file",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("skipfish"),
+        specs["skipfish"],
+        {
+            "target": "https://example.test",
+            "output_dir": "out",
+            "write_wordlist": "words.wl",
+            "auth": "user:pass",
+            "cookie": "a=b",
+            "header": "X-Test: 1",
+            "max_depth": 3,
+            "max_children": 20,
+            "include_url": "/admin",
+            "exclude_url": "logout",
+            "skip_param": "token",
+            "crawl_domain": "example.org",
+            "skip_5xx": True,
+            "no_forms": True,
+            "log_mixed_content": True,
+            "suppress_duplicates": True,
+            "quiet": True,
+            "verbose": True,
+            "max_connections": 20,
+            "host_connections": 5,
+            "request_timeout": 10,
+            "max_requests_per_second": 30,
+            "config_file": "skipfish.conf",
+        },
+    )
+    assert preview["target"] == "https://example.test"
+    assert preview["options"] == (
+        "-o out -W words.wl -A user:pass -C a=b -H 'X-Test: 1' "
+        "-d 3 -c 20 -I /admin -X logout -K token -D example.org "
+        "-Z -O -M -Q -u -v -g 20 -m 5 -t 10 -l 30 --config skipfish.conf"
     )
 
 
@@ -4700,6 +4808,58 @@ async def test_takeover_source_reviewed_parameters_build_cli_options(registry, s
     assert request.options == (
         "-p http://127.0.0.1:8080 -o takeover.json -t 8 -T 20 "
         "-u takeover-bot -k -v"
+    )
+
+
+@pytest.mark.asyncio
+async def test_skipfish_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_skipfish",
+        {
+            "target": "https://example.test",
+            "output_dir": "out",
+            "write_wordlist": "words.wl",
+            "auth": "user:pass",
+            "cookie": "a=b",
+            "header": "X-Test: 1",
+            "max_depth": 3,
+            "max_children": 20,
+            "include_url": "/admin",
+            "exclude_url": "logout",
+            "skip_param": "token",
+            "crawl_domain": "example.org",
+            "skip_5xx": True,
+            "no_forms": True,
+            "log_mixed_content": True,
+            "suppress_duplicates": True,
+            "quiet": True,
+            "verbose": True,
+            "max_connections": 20,
+            "host_connections": 5,
+            "request_timeout": 10,
+            "max_requests_per_second": 30,
+            "config_file": "skipfish.conf",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "skipfish"
+    assert request.target == "https://example.test"
+    assert request.options_before_target is True
+    assert request.options == (
+        "-o out -W words.wl -A user:pass -C a=b -H 'X-Test: 1' "
+        "-d 3 -c 20 -I /admin -X logout -K token -D example.org "
+        "-Z -O -M -Q -u -v -g 20 -m 5 -t 10 -l 30 --config skipfish.conf"
     )
 
 

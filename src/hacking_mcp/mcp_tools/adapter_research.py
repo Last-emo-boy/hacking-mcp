@@ -2210,6 +2210,68 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "verbose",
         ),
     ),
+    "skipfish": SourceReview(
+        note=(
+            "Reviewed against the Skipfish packaged usage documentation for "
+            "options-before-target execution: mandatory output directory, "
+            "wordlist, authentication, host/IP, cookie/header/browser controls, "
+            "crawl limits and URL/domain filters, reporting toggles, learning/"
+            "extension settings, form autofill, dictionaries/signatures, and "
+            "connection, timeout, size, rate, stop, and config controls."
+        ),
+        references=(
+            "https://www.kali.org/tools/skipfish/",
+            "https://manpages.ubuntu.com/manpages/jammy/man1/skipfish.1.html",
+        ),
+        verified_parameters=(
+            "output_dir",
+            "write_wordlist",
+            "read_wordlist",
+            "auth",
+            "host_ip",
+            "cookie",
+            "header",
+            "browser",
+            "no_new_cookies",
+            "max_depth",
+            "max_children",
+            "max_descendants",
+            "request_limit",
+            "crawl_probability",
+            "seed",
+            "include_url",
+            "exclude_url",
+            "skip_param",
+            "crawl_domain",
+            "trust_domain",
+            "skip_5xx",
+            "no_forms",
+            "no_html_parse",
+            "log_mixed_content",
+            "log_cache_mismatches",
+            "log_external_urls",
+            "suppress_duplicates",
+            "quiet",
+            "verbose",
+            "no_autolearn",
+            "no_extension_fuzzing",
+            "purge_age",
+            "form_autofill",
+            "max_guesses",
+            "signatures",
+            "max_connections",
+            "host_connections",
+            "max_failures",
+            "request_timeout",
+            "io_timeout",
+            "idle_timeout",
+            "response_size_limit",
+            "drop_binary_responses",
+            "max_requests_per_second",
+            "stop_after",
+            "config_file",
+        ),
+    ),
     "nikto": SourceReview(
         note=(
             "Reviewed against the upstream Nikto README help/options for CGI "

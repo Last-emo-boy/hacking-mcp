@@ -20,7 +20,7 @@ WEB_ATTACK_TOOLS: list[HackingToolDef] = [
         description="Fully automated, active web application security reconnaissance tool. Usage: skipfish -o [FolderName] target",
         category="Web Attack",
         install_commands=["sudo apt-get install -y skipfish"],
-        run_command="sudo skipfish -o skipfish_out {target}",
+        run_command="sudo skipfish {target}",
         tags=["web", "scanner", "automated"],
         safety_tier=SafetyTier.SAFE,
     ),
