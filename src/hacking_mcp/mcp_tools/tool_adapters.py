@@ -33,9 +33,7 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "blackeye",
         "blackphish",
         "blisqy",
-        "bloodhound",
         "brutal",
-        "certipy",
         "chisel",
         "commix",
         "evil-winrm",
@@ -47,10 +45,8 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "hcxdumptool",
         "hcxtools",
         "hiddeneye",
-        "impacket",
         "jadx",
         "john",
-        "kerbrute",
         "leviathan",
         "ligolo-ng",
         "maskphish",
@@ -58,13 +54,11 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "mobsf",
         "msfvenom",
         "multitor",
-        "netexec",
         "nosqlmap",
         "owasp-zap",
         "peass-ng",
         "pwncat-cs",
         "pyphisher",
-        "responder",
         "routersploit",
         "setoolkit",
         "shellphish",
@@ -707,24 +701,6 @@ def _adapter_parameters(
             AdapterParameterSpec("random_agent", bool, False, "Use a random User-Agent."),
         ])
 
-    if tool.name in {"netexec", "certipy", "kerbrute"}:
-        params.extend([
-            AdapterParameterSpec("users_file", str, "", "Username list path when supported."),
-            AdapterParameterSpec("passwords_file", str, "", "Password list path when supported."),
-            AdapterParameterSpec("kerberos", bool, False, "Use Kerberos authentication when supported."),
-            AdapterParameterSpec("local_auth", bool, False, "Use local authentication when supported."),
-            AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
-        ])
-
-    if tool.name in {"bloodhound", "impacket", "responder"}:
-        params.extend([
-            AdapterParameterSpec("ldap", bool, False, "Use LDAP collection/protocol mode when supported."),
-            AdapterParameterSpec("smb", bool, False, "Use SMB protocol mode when supported."),
-            AdapterParameterSpec("no_pass", bool, False, "Use no-password auth mode when supported."),
-            AdapterParameterSpec("output_prefix", str, "", "Output prefix/path when supported."),
-            AdapterParameterSpec("disable_llmnr", bool, False, "Disable LLMNR poisoning when supported."),
-        ])
-
     if tool.name in {"evil-winrm", "pwncat-cs"}:
         params.extend([
             AdapterParameterSpec("ssl", bool, False, "Use SSL/TLS when supported."),
@@ -1088,20 +1064,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "technique", "--technique")
         _add_value(tokens, kwargs, "proxy", "--proxy")
         _add_bool(tokens, kwargs, "random_agent", "--random-agent")
-
-    if tool.name in {"netexec", "certipy", "kerbrute"}:
-        _add_value(tokens, kwargs, "users_file", "-U")
-        _add_value(tokens, kwargs, "passwords_file", "-P")
-        _add_bool(tokens, kwargs, "kerberos", "-k")
-        _add_bool(tokens, kwargs, "local_auth", "--local-auth")
-        _add_value(tokens, kwargs, "target_ip", "--target-ip")
-
-    if tool.name in {"bloodhound", "impacket", "responder"}:
-        _add_bool(tokens, kwargs, "ldap", "--ldap")
-        _add_bool(tokens, kwargs, "smb", "--smb")
-        _add_bool(tokens, kwargs, "no_pass", "--no-pass")
-        _add_value(tokens, kwargs, "output_prefix", "-o")
-        _add_bool(tokens, kwargs, "disable_llmnr", "-d")
 
     if tool.name in {"evil-winrm", "pwncat-cs"}:
         _add_bool(tokens, kwargs, "ssl", "-S")
