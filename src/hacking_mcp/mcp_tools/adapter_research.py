@@ -537,6 +537,23 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "config_file",
         ),
     ),
+    "toolsley": SourceReview(
+        note=(
+            "Reviewed against the Toolsley project page and the Python "
+            "standard library hashlib API used by the registry wrapper. "
+            "There is no Toolsley CLI parser in this project; the registered "
+            "command computes a SHA-256 digest for one positional text input, "
+            "so the adapter exposes only a text target alias and no generated "
+            "CLI options."
+        ),
+        references=(
+            "https://www.toolsley.com/",
+            "https://docs.python.org/3/library/hashlib.html#hashlib.sha256",
+        ),
+        verified_parameters=(
+            "text",
+        ),
+    ),
     "volatility3": SourceReview(
         note=(
             "Reviewed against upstream Volatility 3 CLI source and generated "

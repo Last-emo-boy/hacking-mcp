@@ -3310,6 +3310,56 @@ def test_guymager_source_reviewed_and_previewable(registry, safety):
     assert preview["options"] == "log=guymager.log cfg=guymager.cfg"
 
 
+def test_toolsley_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("toolsley")
+
+    assert "hashlib.sha256(sys.argv[1].encode())" in tool.run_command
+    assert records["toolsley"].source_status == "source-reviewed"
+    assert records["toolsley"].unverified_parameters == ()
+    assert records["toolsley"].gap == ""
+    assert any("hashlib.sha256" in item for item in records["toolsley"].evidence)
+
+    params = adapter_parameter_names(tool, specs["toolsley"])
+    for removed in (
+        "attack_mode",
+        "extensions",
+        "extract",
+        "follow_redirects",
+        "hash_file",
+        "hash_type",
+        "match_codes",
+        "max_length",
+        "min_length",
+        "output_dir",
+        "output_file",
+        "plugin",
+        "profile",
+        "proxy",
+        "recursive",
+        "threads",
+        "wordlist",
+    ):
+        assert removed not in params
+    assert "text" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["toolsley"],
+        {
+            "text": "hello",
+        },
+    )
+    assert preview["target"] == "hello"
+    assert preview["options"] == ""
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -6495,6 +6545,32 @@ async def test_bulk_extractor_source_reviewed_parameters_build_cli_options(regis
         "-o case-out -j 4 -R -S hash_alg=sha1 -e email -e url -x gps -q"
     )
     assert request.options_before_target is True
+    assert request.require_confirmation is False
+
+
+@pytest.mark.asyncio
+async def test_toolsley_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_toolsley",
+        {
+            "text": "hello",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "toolsley"
+    assert request.target == "hello"
+    assert request.options == ""
     assert request.require_confirmation is False
 
 

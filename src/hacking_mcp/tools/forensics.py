@@ -54,7 +54,7 @@ FORENSICS_TOOLS: list[HackingToolDef] = [
         description="Web-based forensics toolbox: file signature verifier, hash & validate, binary inspector, encode text, data URI generator, password generator.",
         category="Forensics",
         install_commands=["sudo apt-get install -y python3"],
-        run_command="python3 -c \"import hashlib; data='{target}'.encode(); print(hashlib.sha256(data).hexdigest())\"",
+        run_command="python3 -c \"import hashlib, sys; print(hashlib.sha256(sys.argv[1].encode()).hexdigest())\" {target}",
         project_url="https://www.toolsley.com/",
         tags=["forensics", "web", "hash", "encode", "binary"],
         safety_tier=SafetyTier.SAFE,
