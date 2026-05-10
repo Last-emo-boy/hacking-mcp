@@ -1465,6 +1465,22 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "hatcloud": SourceReview(
+        note=(
+            "Reviewed against upstream HatCloud Ruby OptionParser definitions. "
+            "The registry command uses the -b/--byp CloudFlare bypass lookup "
+            "with the supplied target domain; the upstream -o/--out option is "
+            "only a placeholder in the script, so the adapter exposes only a "
+            "domain target alias and no generated CLI options."
+        ),
+        references=(
+            "https://github.com/HatBashBR/HatCloud",
+            "https://raw.githubusercontent.com/HatBashBR/HatCloud/master/hatcloud.rb",
+        ),
+        verified_parameters=(
+            "domain",
+        ),
+    ),
     "holehe": SourceReview(
         note=(
             "Reviewed against upstream Holehe argparse definitions for email "

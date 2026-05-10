@@ -298,6 +298,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["whatweb"].unverified_parameters == ()
     assert any("urbanadventurer/WhatWeb" in item for item in records["whatweb"].evidence)
 
+    assert records["hatcloud"].source_status == "source-reviewed"
+    assert records["hatcloud"].unverified_parameters == ()
+    assert any("HatBashBR/HatCloud" in item for item in records["hatcloud"].evidence)
+
     assert records["frida"].source_status == "source-reviewed"
     assert records["frida"].unverified_parameters == ()
     assert any("frida/frida-tools" in item for item in records["frida"].evidence)
@@ -1828,6 +1832,49 @@ def test_isitdown_source_reviewed_and_previewable(registry, safety):
         specs["isitdown"],
         {
             "url": "example.com",
+        },
+    )
+    assert preview["target"] == "example.com"
+    assert preview["options"] == ""
+
+
+def test_hatcloud_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["hatcloud"].source_status == "source-reviewed"
+    assert records["hatcloud"].unverified_parameters == ()
+    assert records["hatcloud"].gap == ""
+    assert any("HatBashBR/HatCloud" in item for item in records["hatcloud"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("hatcloud"), specs["hatcloud"])
+    for removed in (
+        "extensions",
+        "follow_redirects",
+        "json_output",
+        "match_codes",
+        "output_file",
+        "proxy",
+        "recursive",
+        "scan_depth",
+        "threads",
+        "timeout",
+        "user_agent",
+        "wordlist",
+    ):
+        assert removed not in params
+    assert "domain" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("hatcloud"),
+        specs["hatcloud"],
+        {
+            "domain": "example.com",
         },
     )
     assert preview["target"] == "example.com"
@@ -4090,6 +4137,31 @@ async def test_isitdown_source_reviewed_parameters_build_target(registry, safety
 
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "isitdown"
+    assert request.target == "example.com"
+    assert request.options == ""
+
+
+@pytest.mark.asyncio
+async def test_hatcloud_source_reviewed_parameters_build_target(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_hatcloud",
+        {
+            "domain": "example.com",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "hatcloud"
     assert request.target == "example.com"
     assert request.options == ""
 

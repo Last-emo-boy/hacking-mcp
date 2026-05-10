@@ -722,6 +722,9 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     if tool.name == "isitdown":
         return str(kwargs.get("url") or "")
 
+    if tool.name == "hatcloud":
+        return str(kwargs.get("domain") or "")
+
     if tool.name != "objection":
         return target
 
