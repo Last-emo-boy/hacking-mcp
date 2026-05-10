@@ -3430,6 +3430,53 @@ def test_responder_kerbrute_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_impacket_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["impacket"].source_status == "source-reviewed"
+    assert records["impacket"].unverified_parameters == ()
+    assert records["impacket"].gap == ""
+    assert any("fortra/impacket" in item for item in records["impacket"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("impacket"), specs["impacket"])
+    assert "domain" not in params
+    assert "collection_method" not in params
+    assert "input_file" in params
+    assert "aes_key" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("impacket"),
+        specs["impacket"],
+        {
+            "target": "CORP/alice:Passw0rd@fileserver",
+            "input_file": "commands.txt",
+            "output_file": "smb.log",
+            "debug": True,
+            "timestamp": True,
+            "hashes": "aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c",
+            "no_pass": True,
+            "kerberos": True,
+            "aes_key": "001122",
+            "dc_ip": "10.0.0.10",
+            "target_ip": "10.0.0.20",
+            "port": "445",
+        },
+    )
+    assert preview["target"] == "CORP/alice:Passw0rd@fileserver"
+    assert preview["options"] == (
+        "-inputfile commands.txt -outputfile smb.log -debug -ts "
+        "-hashes aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c "
+        "-no-pass -k -aesKey 001122 -dc-ip 10.0.0.10 -target-ip 10.0.0.20 "
+        "-port 445"
+    )
+
+
 @pytest.mark.asyncio
 async def test_trivy_adapter_places_command_and_flags_before_target(registry, safety):
     from mcp.server.fastmcp import FastMCP

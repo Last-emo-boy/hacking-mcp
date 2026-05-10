@@ -231,6 +231,32 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "users_file",
         ),
     ),
+    "impacket": SourceReview(
+        note=(
+            "Reviewed against upstream Impacket smbclient.py argparse source "
+            "for positional target identity syntax, mini-shell input/output "
+            "files, debug/timestamp logging, NTLM hash/no-password/Kerberos/"
+            "AES-key authentication, and DC/target IP plus SMB port controls."
+        ),
+        references=(
+            "https://github.com/fortra/impacket",
+            "https://raw.githubusercontent.com/fortra/impacket/master/examples/smbclient.py",
+            "https://raw.githubusercontent.com/fortra/impacket/master/README.md",
+        ),
+        verified_parameters=(
+            "input_file",
+            "output_file",
+            "debug",
+            "timestamp",
+            "hashes",
+            "no_pass",
+            "kerberos",
+            "aes_key",
+            "dc_ip",
+            "target_ip",
+            "port",
+        ),
+    ),
     "binwalk": SourceReview(
         note=(
             "Reviewed against upstream Binwalk v3 clap parser definitions for "
