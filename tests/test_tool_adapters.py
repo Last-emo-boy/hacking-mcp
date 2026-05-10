@@ -1167,6 +1167,62 @@ def test_nosqlmap_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_blisqy_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("blisqy")
+
+    assert tool.run_command == ""
+    assert tool.archived is True
+    assert specs["blisqy"].exposed is False
+    assert "archived" in specs["blisqy"].blocked_reason
+    assert records["blisqy"].source_status == "source-reviewed"
+    assert records["blisqy"].unverified_parameters == ()
+    assert records["blisqy"].gap == ""
+    assert any("JohnTroony/Blisqy" in item for item in records["blisqy"].evidence)
+
+    params = adapter_parameter_names(tool, specs["blisqy"])
+    for removed in (
+        "batch",
+        "data",
+        "dbms",
+        "delay",
+        "enumerate_databases",
+        "level",
+        "method",
+        "module",
+        "os_shell",
+        "parameter",
+        "password",
+        "payload",
+        "rhost",
+        "risk",
+        "rport",
+        "username",
+    ):
+        assert removed not in params
+    assert "library_usage" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["blisqy"],
+        {
+            "target": "https://example.test",
+            "library_usage": True,
+            "confirm_authorized": True,
+        },
+    )
+    assert preview["target"] == "https://example.test"
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+    assert preview["confirm_authorized"] is True
+
+
 def test_explo_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

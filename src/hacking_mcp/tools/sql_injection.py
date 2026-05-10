@@ -59,10 +59,12 @@ SQL_INJECTION_TOOLS: list[HackingToolDef] = [
         description="Find time-based blind SQL injections on HTTP headers and exploit them.",
         category="SQL Injection",
         install_commands=["git clone https://github.com/JohnTroony/Blisqy.git"],
-        run_command="cd Blisqy && python3 blisqy.py {target}",
+        run_command="",
         project_url="https://github.com/JohnTroony/Blisqy",
         tags=["sqli", "blind", "time-based", "headers", "exploit"],
         safety_tier=SafetyTier.CAUTION,
+        archived=True,
+        archived_reason="Upstream provides importable modules and hard-coded examples, but no target-safe CLI entrypoint.",
     ),
     HackingToolDef(
         name="leviathan",

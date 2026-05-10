@@ -68,8 +68,8 @@ class TestServerCreation:
 
         result = metadata["result"]
         assert "Total adapters: 184" in result
-        assert "Executable adapters: 123" in result
-        assert "Policy/info-only adapters: 61" in result
+        assert "Executable adapters: 122" in result
+        assert "Policy/info-only adapters: 62" in result
         assert "policy/info-only" in result
         assert "params:" in result
         assert content

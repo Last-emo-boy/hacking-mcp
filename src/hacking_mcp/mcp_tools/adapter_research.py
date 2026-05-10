@@ -3243,6 +3243,26 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "save_path",
         ),
     ),
+    "blisqy": SourceReview(
+        note=(
+            "Reviewed against upstream Blisqy README and top-level example "
+            "scripts. The repository exposes importable blindfuzzer and "
+            "blindexploit modules plus hard-coded FindBlindSpot.py and "
+            "ExploitBlindSpot.py examples; it does not provide the registry's "
+            "previous blisqy.py CLI or a target-safe command-line parser. The "
+            "registry command is therefore intentionally empty and the adapter "
+            "is policy/info-only with a library-usage marker parameter."
+        ),
+        references=(
+            "https://github.com/JohnTroony/Blisqy",
+            "https://raw.githubusercontent.com/JohnTroony/Blisqy/master/README.md",
+            "https://raw.githubusercontent.com/JohnTroony/Blisqy/master/FindBlindSpot.py",
+            "https://raw.githubusercontent.com/JohnTroony/Blisqy/master/ExploitBlindSpot.py",
+        ),
+        verified_parameters=(
+            "library_usage",
+        ),
+    ),
     "explo": SourceReview(
         note=(
             "Reviewed against upstream explo argparse parser and README usage. "
