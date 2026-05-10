@@ -744,7 +744,7 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     )
 
     commix_schema = tools["security_tool_commix"].inputSchema["properties"]
-    assert {"parameter", "method", "delay", "os_shell", "batch"}.issubset(
+    assert {"parameter", "method", "delay", "time_sec", "os_cmd", "batch"}.issubset(
         commix_schema
     )
 
@@ -1552,6 +1552,90 @@ def test_spiderfoot_source_reviewed_and_previewable(registry, safety):
         "--debug -m sfp_dnsresolve,sfp_whois -t DOMAIN_NAME,IP_ADDRESS "
         "-u passive -o json -H -n -r -S 120 -D ';' -f -F DOMAIN_NAME "
         "-x -q -max-threads 4"
+    )
+
+
+def test_commix_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["commix"].source_status == "source-reviewed"
+    assert records["commix"].unverified_parameters == ()
+    assert records["commix"].gap == ""
+    assert any("commixproject/commix" in item for item in records["commix"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("commix"), specs["commix"])
+    for removed in (
+        "wordlist",
+        "extensions",
+        "match_codes",
+        "recursive",
+        "follow_redirects",
+        "module",
+        "rhost",
+        "rport",
+        "username",
+        "password",
+        "payload",
+        "os_shell",
+    ):
+        assert removed not in params
+    for verified in (
+        "batch",
+        "data",
+        "method",
+        "cookie",
+        "headers",
+        "proxy",
+        "timeout",
+        "retries",
+        "parameter",
+        "skip",
+        "technique",
+        "delay",
+        "time_sec",
+        "os_cmd",
+        "level",
+        "skip_waf",
+        "disable_coloring",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("commix"),
+        specs["commix"],
+        {
+            "target": "https://example.test/vuln?x=1",
+            "data": "x=1",
+            "method": "POST",
+            "cookie": "SID=abc",
+            "headers": "X-Test: 1",
+            "proxy": "http://127.0.0.1:8080",
+            "timeout": 10,
+            "retries": 2,
+            "parameter": "x",
+            "skip": "csrf",
+            "technique": "f",
+            "delay": 1,
+            "time_sec": "5.0",
+            "os_cmd": "whoami",
+            "level": 2,
+            "skip_waf": True,
+            "disable_coloring": True,
+        },
+    )
+    assert preview["target"] == "https://example.test/vuln?x=1"
+    assert preview["options"] == (
+        "--batch --method POST --data x=1 --cookie SID=abc "
+        "--headers 'X-Test: 1' --proxy http://127.0.0.1:8080 "
+        "--timeout 10 --retries 2 -p x --skip csrf --technique f "
+        "--delay 1 --time-sec 5.0 --os-cmd whoami --level 2 "
+        "--skip-waf --disable-coloring"
     )
 
 
@@ -3759,13 +3843,13 @@ async def test_offensive_named_parameters_build_cli_options(registry, safety):
             "parameter": "x",
             "method": "POST",
             "delay": 5,
-            "os_shell": True,
+            "os_cmd": "whoami",
         },
     )
 
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "commix"
-    assert request.options == "-p x --method POST --time-sec 5 --os-shell --batch"
+    assert request.options == "--batch --method POST -p x --delay 5 --os-cmd whoami"
 
 
 @pytest.mark.asyncio

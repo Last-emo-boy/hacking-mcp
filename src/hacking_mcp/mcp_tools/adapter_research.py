@@ -2302,6 +2302,74 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "suffix",
         ),
     ),
+    "commix": SourceReview(
+        note=(
+            "Reviewed against upstream Commix OptionParser definitions for "
+            "batch/answers/general checks, target crawl and method controls, "
+            "request headers/auth/proxy/Tor settings, timeout/retry controls, "
+            "injection parameter selection, prefix/suffix/technique/delay/"
+            "time-sec settings, OS command execution, tamper/OS hints, "
+            "detection level and skip controls, and miscellaneous safety/output "
+            "modes. Upstream exposes --os-cmd, not a --os-shell flag."
+        ),
+        references=(
+            "https://github.com/commixproject/commix",
+            "https://raw.githubusercontent.com/commixproject/commix/master/src/utils/menu.py",
+            "https://raw.githubusercontent.com/commixproject/commix/master/README.md",
+        ),
+        verified_parameters=(
+            "batch",
+            "answers",
+            "check_internet",
+            "crawl",
+            "crawl_exclude",
+            "method",
+            "data",
+            "host",
+            "referer",
+            "user_agent",
+            "random_agent",
+            "cookie",
+            "headers",
+            "proxy",
+            "tor",
+            "tor_port",
+            "auth_url",
+            "auth_data",
+            "auth_type",
+            "auth_cred",
+            "timeout",
+            "retries",
+            "parameter",
+            "skip",
+            "prefix",
+            "suffix",
+            "technique",
+            "skip_technique",
+            "delay",
+            "time_sec",
+            "tmp_path",
+            "web_root",
+            "alter_shell",
+            "os_cmd",
+            "os",
+            "tamper",
+            "level",
+            "skip_calc",
+            "skip_empty",
+            "failed_tries",
+            "smart",
+            "ignore_dependencies",
+            "list_tampers",
+            "no_logging",
+            "purge",
+            "skip_waf",
+            "mobile",
+            "offline",
+            "wizard",
+            "disable_coloring",
+        ),
+    ),
     "sqlmap": SourceReview(
         note=(
             "Reviewed against upstream sqlmap cmdline parser for URL target "
