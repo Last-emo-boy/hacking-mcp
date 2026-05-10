@@ -731,6 +731,9 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     if tool.name == "striker":
         return str(kwargs.get("domain") or "")
 
+    if tool.name == "gospider":
+        return str(kwargs.get("site") or "")
+
     if tool.name != "objection":
         return target
 

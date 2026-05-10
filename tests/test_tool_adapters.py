@@ -310,6 +310,10 @@ def test_adapter_research_distinguishes_named_overrides(registry, safety):
     assert records["hatcloud"].unverified_parameters == ()
     assert any("HatBashBR/HatCloud" in item for item in records["hatcloud"].evidence)
 
+    assert records["gospider"].source_status == "source-reviewed"
+    assert records["gospider"].unverified_parameters == ()
+    assert any("jaeles-project/gospider" in item for item in records["gospider"].evidence)
+
     assert records["frida"].source_status == "source-reviewed"
     assert records["frida"].unverified_parameters == ()
     assert any("frida/frida-tools" in item for item in records["frida"].evidence)
@@ -1967,6 +1971,84 @@ def test_hatcloud_source_reviewed_and_previewable(registry, safety):
     )
     assert preview["target"] == "example.com"
     assert preview["options"] == ""
+
+
+def test_gospider_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["gospider"].source_status == "source-reviewed"
+    assert records["gospider"].unverified_parameters == ()
+    assert records["gospider"].gap == ""
+    assert any("jaeles-project/gospider" in item for item in records["gospider"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("gospider"), specs["gospider"])
+    for removed in ("extensions", "follow_redirects", "match_codes", "recursive", "wordlist"):
+        assert removed not in params
+    for verified in (
+        "site",
+        "output_dir",
+        "proxy",
+        "user_agent",
+        "cookie",
+        "header",
+        "burp_request",
+        "blacklist",
+        "whitelist",
+        "whitelist_domain",
+        "threads",
+        "concurrent",
+        "depth",
+        "delay",
+        "random_delay",
+        "timeout",
+        "base",
+        "js",
+        "subs",
+        "sitemap",
+        "robots",
+        "other_source",
+        "include_subs",
+        "include_other_source",
+        "debug",
+        "json_output",
+        "verbose",
+        "length",
+        "filter_length",
+        "raw",
+        "quiet",
+        "no_redirect",
+        "version",
+    ):
+        assert verified in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("gospider"),
+        specs["gospider"],
+        {
+            "site": "https://example.test",
+            "output_dir": "out",
+            "concurrent": 10,
+            "depth": 2,
+            "other_source": True,
+            "include_subs": True,
+            "cookie": "a=b",
+            "header": "Accept: */*",
+            "blacklist": ".(jpg|png)",
+            "json_output": True,
+            "quiet": True,
+        },
+    )
+    assert preview["target"] == "https://example.test"
+    assert preview["options"] == (
+        "-o out --cookie a=b -H 'Accept: */*' --blacklist '.(jpg|png)' "
+        "-c 10 -d 2 -a -w --json -q"
+    )
 
 
 @pytest.mark.asyncio
@@ -4302,6 +4384,44 @@ async def test_hatcloud_source_reviewed_parameters_build_target(registry, safety
     assert request.tool_name == "hatcloud"
     assert request.target == "example.com"
     assert request.options == ""
+
+
+@pytest.mark.asyncio
+async def test_gospider_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_gospider",
+        {
+            "site": "https://example.test",
+            "output_dir": "out",
+            "concurrent": 10,
+            "depth": 2,
+            "other_source": True,
+            "include_subs": True,
+            "cookie": "a=b",
+            "header": "Accept: */*",
+            "blacklist": ".(jpg|png)",
+            "json_output": True,
+            "quiet": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "gospider"
+    assert request.target == "https://example.test"
+    assert request.options == (
+        "-o out --cookie a=b -H 'Accept: */*' --blacklist '.(jpg|png)' "
+        "-c 10 -d 2 -a -w --json -q"
+    )
 
 
 @pytest.mark.asyncio

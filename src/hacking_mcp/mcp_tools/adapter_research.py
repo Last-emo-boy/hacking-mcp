@@ -1481,6 +1481,54 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "domain",
         ),
     ),
+    "gospider": SourceReview(
+        note=(
+            "Reviewed against upstream GoSpider README usage output for single "
+            "site crawling, output/proxy/user-agent/cookie/header controls, "
+            "URL/domain filters, concurrency/depth/delay/timeouts, content "
+            "source toggles, third-party source options, and output/debug "
+            "modes."
+        ),
+        references=(
+            "https://github.com/jaeles-project/gospider",
+            "https://raw.githubusercontent.com/jaeles-project/gospider/master/README.md",
+        ),
+        verified_parameters=(
+            "site",
+            "output_dir",
+            "proxy",
+            "user_agent",
+            "cookie",
+            "header",
+            "burp_request",
+            "blacklist",
+            "whitelist",
+            "whitelist_domain",
+            "threads",
+            "concurrent",
+            "depth",
+            "delay",
+            "random_delay",
+            "timeout",
+            "base",
+            "js",
+            "subs",
+            "sitemap",
+            "robots",
+            "other_source",
+            "include_subs",
+            "include_other_source",
+            "debug",
+            "json_output",
+            "verbose",
+            "length",
+            "filter_length",
+            "raw",
+            "quiet",
+            "no_redirect",
+            "version",
+        ),
+    ),
     "holehe": SourceReview(
         note=(
             "Reviewed against upstream Holehe argparse definitions for email "
