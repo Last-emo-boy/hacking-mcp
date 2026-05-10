@@ -470,6 +470,16 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         netexec_schema
     )
 
+    certipy_schema = tools["security_tool_certipy"].inputSchema["properties"]
+    assert {
+        "password", "hashes", "kerberos", "aes_key", "no_pass", "dc_ip",
+        "dc_host", "target_ip", "target_host", "nameserver", "dns_tcp",
+        "timeout", "ldap_scheme", "ldap_port", "no_ldap_channel_binding",
+        "no_ldap_signing", "ldap_simple_auth", "ldap_user_dn", "text",
+        "stdout", "json_output", "csv", "output_prefix", "enabled",
+        "dc_only", "vulnerable", "oids", "hide_admins", "sid", "dn",
+    }.issubset(certipy_schema)
+
     volatility_schema = tools["security_tool_volatility3"].inputSchema["properties"]
     assert {
         "config_file", "parallelism", "extend", "plugin_dirs", "symbol_dirs",
@@ -3474,6 +3484,90 @@ def test_impacket_source_reviewed_and_previewable(registry, safety):
         "-hashes aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c "
         "-no-pass -k -aesKey 001122 -dc-ip 10.0.0.10 -target-ip 10.0.0.20 "
         "-port 445"
+    )
+
+
+def test_certipy_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+
+    assert records["certipy"].source_status == "source-reviewed"
+    assert records["certipy"].unverified_parameters == ()
+    assert records["certipy"].gap == ""
+    assert any("ly4k/Certipy" in item for item in records["certipy"].evidence)
+
+    params = adapter_parameter_names(registry.get_tool("certipy"), specs["certipy"])
+    assert "domain" not in params
+    assert "username" not in params
+    assert "interface" not in params
+    assert "collection_method" not in params
+    assert "sources" not in params
+    assert "passive" not in params
+    assert "resolvers" not in params
+    assert "api_key" not in params
+    assert "output_file" not in params
+    assert "users_file" not in params
+    assert "passwords_file" not in params
+    assert "local_auth" not in params
+    assert "dc_host" in params
+    assert "target_host" in params
+    assert "ldap_simple_auth" in params
+    assert "output_prefix" in params
+
+    preview = adapter_request_preview(
+        registry.get_tool("certipy"),
+        specs["certipy"],
+        {
+            "target": "alice@corp.local",
+            "password": "Passw0rd!",
+            "hashes": "aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c",
+            "kerberos": True,
+            "aes_key": "001122",
+            "no_pass": True,
+            "dc_ip": "10.0.0.10",
+            "dc_host": "dc.corp.local",
+            "target_ip": "10.0.0.20",
+            "target_host": "ca.corp.local",
+            "nameserver": "10.0.0.53",
+            "dns_tcp": True,
+            "timeout": 15,
+            "ldap_scheme": "ldap",
+            "ldap_port": 389,
+            "no_ldap_channel_binding": True,
+            "no_ldap_signing": True,
+            "ldap_simple_auth": True,
+            "ldap_user_dn": "CN=Alice,CN=Users,DC=corp,DC=local",
+            "text": True,
+            "stdout": True,
+            "json_output": True,
+            "csv": True,
+            "output_prefix": "certipy-find",
+            "enabled": True,
+            "dc_only": True,
+            "vulnerable": True,
+            "oids": True,
+            "hide_admins": True,
+            "sid": "S-1-5-21-1-2-3-1100",
+            "dn": "CN=Alice,CN=Users,DC=corp,DC=local",
+        },
+    )
+    assert preview["target"] == "alice@corp.local"
+    assert preview["options"] == (
+        "-p 'Passw0rd!' -hashes "
+        "aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c "
+        "-k -aes 001122 -no-pass -dc-ip 10.0.0.10 -dc-host dc.corp.local "
+        "-target-ip 10.0.0.20 -target ca.corp.local -ns 10.0.0.53 "
+        "-dns-tcp -timeout 15 -ldap-scheme ldap -ldap-port 389 "
+        "-no-ldap-channel-binding -no-ldap-signing -ldap-simple-auth "
+        "-ldap-user-dn CN=Alice,CN=Users,DC=corp,DC=local -text -stdout "
+        "-json -csv -output certipy-find -enabled -dc-only -vulnerable "
+        "-oids -hide-admins -sid S-1-5-21-1-2-3-1100 "
+        "-dn CN=Alice,CN=Users,DC=corp,DC=local"
     )
 
 

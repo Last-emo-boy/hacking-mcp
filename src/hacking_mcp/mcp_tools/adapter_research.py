@@ -257,6 +257,53 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "port",
         ),
     ),
+    "certipy": SourceReview(
+        note=(
+            "Reviewed against upstream Certipy find parser and shared target "
+            "parser for registry target-as-username execution, output format "
+            "flags, template/CA filtering controls, identity selectors, "
+            "domain-controller/target/DNS connection controls, authentication "
+            "modes, and LDAP connection options."
+        ),
+        references=(
+            "https://github.com/ly4k/Certipy",
+            "https://raw.githubusercontent.com/ly4k/Certipy/main/certipy/commands/parsers/find.py",
+            "https://raw.githubusercontent.com/ly4k/Certipy/main/certipy/commands/parsers/target.py",
+            "https://raw.githubusercontent.com/ly4k/Certipy/main/certipy/commands/find.py",
+        ),
+        verified_parameters=(
+            "password",
+            "hashes",
+            "kerberos",
+            "aes_key",
+            "no_pass",
+            "dc_ip",
+            "dc_host",
+            "target_ip",
+            "target_host",
+            "nameserver",
+            "dns_tcp",
+            "timeout",
+            "ldap_scheme",
+            "ldap_port",
+            "no_ldap_channel_binding",
+            "no_ldap_signing",
+            "ldap_simple_auth",
+            "ldap_user_dn",
+            "text",
+            "stdout",
+            "json_output",
+            "csv",
+            "output_prefix",
+            "enabled",
+            "dc_only",
+            "vulnerable",
+            "oids",
+            "hide_admins",
+            "sid",
+            "dn",
+        ),
+    ),
     "binwalk": SourceReview(
         note=(
             "Reviewed against upstream Binwalk v3 clap parser definitions for "
