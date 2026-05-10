@@ -40,16 +40,12 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "chisel",
         "commix",
         "dalfox",
-        "dirsearch",
         "dsss",
         "evil-winrm",
         "evilginx3",
         "explo",
-        "feroxbuster",
-        "ffuf",
         "fluxion",
         "gitleaks",
-        "gobuster",
         "hashcat",
         "havoc",
         "hcxdumptool",
@@ -70,7 +66,6 @@ NAMED_OVERRIDE_TOOL_NAMES = frozenset(
         "netexec",
         "nikto",
         "nosqlmap",
-        "nuclei",
         "owasp-zap",
         "pacu",
         "peass-ng",
@@ -491,15 +486,7 @@ def _adapter_parameters(
             AdapterParameterSpec("rate", int, 0, "Packet/request rate limit when supported; 0 leaves default."),
         ])
 
-    if tool.name == "nuclei":
-        params.extend([
-            AdapterParameterSpec("severity", str, "", "Comma-separated severities, for example critical,high."),
-            AdapterParameterSpec("tags", str, "", "Comma-separated nuclei template tags."),
-            AdapterParameterSpec("template_path", str, "", "Template file or directory path."),
-            AdapterParameterSpec("rate_limit", int, 0, "Maximum requests per second; 0 leaves default."),
-            AdapterParameterSpec("proxy", str, "", "Optional HTTP proxy URL."),
-        ])
-    elif tool.name == "nikto":
+    if tool.name == "nikto":
         params.extend([
             AdapterParameterSpec("ask", str, "", "Interactive prompt behavior."),
             AdapterParameterSpec("cgi_dirs", str, "", "CGI directories to scan."),
@@ -582,118 +569,6 @@ def _adapter_parameters(
             AdapterParameterSpec("passive", str, "", "Passive discovery domain, or '-' to use target URL domain."),
             AdapterParameterSpec("casing", str, "", "Parameter casing style."),
             AdapterParameterSpec("headers", str, "", "Custom HTTP headers."),
-        ])
-    elif tool.name == "gobuster":
-        params.extend([
-            AdapterParameterSpec("wordlist", str, "", "Wordlist path for directory enumeration."),
-            AdapterParameterSpec("extensions", str, "", "Comma-separated extensions to append."),
-            AdapterParameterSpec("headers", str, "", "Custom HTTP header."),
-            AdapterParameterSpec("cookies", str, "", "Cookie header value."),
-            AdapterParameterSpec("show_length", bool, False, "Show response length."),
-            AdapterParameterSpec("status_codes", str, "", "Positive status codes or ranges."),
-            AdapterParameterSpec("threads", int, 0, "Number of concurrent threads; 0 leaves default."),
-            AdapterParameterSpec("delay", str, "", "Delay between requests, for example 1s."),
-            AdapterParameterSpec("user_agent", str, "", "HTTP User-Agent value."),
-            AdapterParameterSpec("timeout", str, "", "HTTP timeout, for example 10s."),
-            AdapterParameterSpec("output_file", str, "", "Output file path."),
-            AdapterParameterSpec("quiet", bool, False, "Quiet output mode."),
-            AdapterParameterSpec("no_progress", bool, False, "Disable progress output."),
-            AdapterParameterSpec("expanded", bool, False, "Expanded mode: print full URLs."),
-            AdapterParameterSpec("add_slash", bool, False, "Append slash to each request."),
-        ])
-    elif tool.name == "feroxbuster":
-        params.extend([
-            AdapterParameterSpec("wordlist", str, "", "Wordlist path or URL."),
-            AdapterParameterSpec("extensions", str, "", "File extensions to search for."),
-            AdapterParameterSpec("methods", str, "", "HTTP methods to send."),
-            AdapterParameterSpec("data", str, "", "Request body data."),
-            AdapterParameterSpec("headers", str, "", "Custom HTTP header."),
-            AdapterParameterSpec("cookies", str, "", "HTTP cookies."),
-            AdapterParameterSpec("query", str, "", "URL query parameter."),
-            AdapterParameterSpec("add_slash", bool, False, "Append slash to request URLs."),
-            AdapterParameterSpec("protocol", str, "", "Protocol for request-file/domain-only targets."),
-            AdapterParameterSpec("dont_scan", str, "", "URL or regex pattern to exclude from scanning."),
-            AdapterParameterSpec("scope", str, "", "Additional in-scope URL or domain."),
-            AdapterParameterSpec("filter_size", str, "", "Filter responses by size."),
-            AdapterParameterSpec("filter_regex", str, "", "Filter responses by regex."),
-            AdapterParameterSpec("filter_words", str, "", "Filter responses by word count."),
-            AdapterParameterSpec("filter_lines", str, "", "Filter responses by line count."),
-            AdapterParameterSpec("filter_codes", str, "", "Filter/deny-list status codes."),
-            AdapterParameterSpec("status_codes", str, "", "Allow-list status codes."),
-            AdapterParameterSpec("unique", bool, False, "Only show unique responses."),
-            AdapterParameterSpec("timeout", int, 0, "Client timeout in seconds; 0 leaves default."),
-            AdapterParameterSpec("follow_redirects", bool, False, "Follow HTTP redirects."),
-            AdapterParameterSpec("insecure", bool, False, "Disable TLS certificate validation."),
-            AdapterParameterSpec("threads", int, 0, "Number of concurrent threads; 0 leaves default."),
-            AdapterParameterSpec("no_recursion", bool, False, "Disable recursive scanning."),
-            AdapterParameterSpec("depth", int, 0, "Maximum recursion depth; 0 leaves default."),
-            AdapterParameterSpec("force_recursion", bool, False, "Force recursion attempts."),
-            AdapterParameterSpec("dont_extract_links", bool, False, "Disable link extraction from responses."),
-            AdapterParameterSpec("scan_limit", int, 0, "Total concurrent scans; 0 leaves default."),
-            AdapterParameterSpec("parallelism", int, 0, "Parallel feroxbuster child scans; 0 leaves default."),
-            AdapterParameterSpec("rate_limit", int, 0, "Requests per second per directory; 0 leaves default."),
-            AdapterParameterSpec("response_size_limit", str, "", "Limit response body read size."),
-            AdapterParameterSpec("time_limit", str, "", "Total runtime limit, for example 10m."),
-            AdapterParameterSpec("auto_tune", bool, False, "Automatically lower scan rate on errors."),
-            AdapterParameterSpec("auto_bail", bool, False, "Stop scanning on excessive errors."),
-            AdapterParameterSpec("dont_filter", bool, False, "Disable auto-filtering wildcard responses."),
-            AdapterParameterSpec("collect_extensions", bool, False, "Discover and add extensions dynamically."),
-            AdapterParameterSpec("collect_backups", str, "", "Backup extensions to request."),
-            AdapterParameterSpec("collect_words", bool, False, "Discover words from responses."),
-            AdapterParameterSpec("dont_collect", str, "", "Extensions to ignore during collection."),
-            AdapterParameterSpec("verbosity", int, 0, "Verbosity level 1-3; 0 leaves default."),
-            AdapterParameterSpec("silent", bool, False, "Only print URLs or JSON output."),
-            AdapterParameterSpec("quiet", bool, False, "Hide progress bars and banner."),
-            AdapterParameterSpec("json_output", bool, False, "Emit JSON logs."),
-            AdapterParameterSpec("output_file", str, "", "Output file path."),
-            AdapterParameterSpec("debug_log", str, "", "Debug log output path."),
-            AdapterParameterSpec("no_state", bool, False, "Disable state output file."),
-            AdapterParameterSpec("limit_bars", int, 0, "Maximum directory scan bars; 0 leaves default."),
-        ])
-    elif tool.name == "dirsearch":
-        params.extend([
-            AdapterParameterSpec("wordlist", str, "", "Wordlist path."),
-            AdapterParameterSpec("extensions", str, "", "Comma-separated extensions."),
-            AdapterParameterSpec("include_status", str, "", "Status codes to include."),
-            AdapterParameterSpec("exclude_status", str, "", "Status codes to exclude."),
-            AdapterParameterSpec("exclude_sizes", str, "", "Response sizes to exclude."),
-            AdapterParameterSpec("exclude_text", str, "", "Text to exclude from responses."),
-            AdapterParameterSpec("exclude_regex", str, "", "Regex to exclude from responses."),
-            AdapterParameterSpec("prefixes", str, "", "Prefixes to add to paths."),
-            AdapterParameterSpec("suffixes", str, "", "Suffixes to add to paths."),
-            AdapterParameterSpec("threads", int, 0, "Number of threads; 0 leaves default."),
-            AdapterParameterSpec("recursive", bool, False, "Enable recursive scanning."),
-            AdapterParameterSpec("deep_recursive", bool, False, "Enable deep recursive scanning."),
-            AdapterParameterSpec("force_recursive", bool, False, "Force recursive scanning."),
-            AdapterParameterSpec("recursion_depth", int, 0, "Maximum recursion depth; 0 leaves default."),
-            AdapterParameterSpec("recursion_status", str, "", "Status codes that trigger recursion."),
-            AdapterParameterSpec("subdirs", str, "", "Subdirectories to scan."),
-            AdapterParameterSpec("exclude_subdirs", str, "", "Subdirectories to exclude."),
-            AdapterParameterSpec("method", str, "", "HTTP method."),
-            AdapterParameterSpec("data", str, "", "HTTP request body."),
-            AdapterParameterSpec("headers", str, "", "Custom HTTP header."),
-            AdapterParameterSpec("header_list", str, "", "File containing headers."),
-            AdapterParameterSpec("follow_redirects", bool, False, "Follow HTTP redirects."),
-            AdapterParameterSpec("random_agent", bool, False, "Use a random User-Agent."),
-            AdapterParameterSpec("user_agent", str, "", "Custom HTTP User-Agent."),
-            AdapterParameterSpec("cookies", str, "", "Cookie header value."),
-            AdapterParameterSpec("proxy", str, "", "Proxy URL."),
-            AdapterParameterSpec("proxy_list", str, "", "File containing proxies."),
-            AdapterParameterSpec("timeout", int, 0, "Connection timeout; 0 leaves default."),
-            AdapterParameterSpec("delay", str, "", "Delay between requests."),
-            AdapterParameterSpec("max_rate", int, 0, "Maximum requests per second; 0 leaves default."),
-            AdapterParameterSpec("retries", int, 0, "Number of retries; 0 leaves default."),
-            AdapterParameterSpec("format", str, "", "Report format."),
-            AdapterParameterSpec("output_file", str, "", "Output file path."),
-            AdapterParameterSpec("json_report", str, "", "JSON report output path."),
-            AdapterParameterSpec("plain_text_report", str, "", "Plain text report output path."),
-            AdapterParameterSpec("csv_report", str, "", "CSV report output path."),
-            AdapterParameterSpec("markdown_report", str, "", "Markdown report output path."),
-            AdapterParameterSpec("xml_report", str, "", "XML report output path."),
-            AdapterParameterSpec("sqlite_report", str, "", "SQLite report output path."),
-            AdapterParameterSpec("quiet", bool, False, "Quiet mode."),
-            AdapterParameterSpec("full_url", bool, False, "Show full URLs in output."),
-            AdapterParameterSpec("no_color", bool, False, "Disable colored output."),
         ])
     elif tool.name == "dalfox":
         params.extend([
@@ -1188,21 +1063,6 @@ def _adapter_parameters(
             AdapterParameterSpec("random_agent", bool, False, "Use a random User-Agent."),
         ])
 
-    if tool.name == "ffuf":
-        params.extend([
-            AdapterParameterSpec("fuzz_keyword", str, "", "Fuzz marker keyword when supported, for example FUZZ."),
-            AdapterParameterSpec("host_header", str, "", "Host header for vhost fuzzing when supported."),
-            AdapterParameterSpec("recursion_depth", int, 0, "Recursive discovery depth when supported; 0 leaves default."),
-        ])
-
-    if tool.name == "nuclei":
-        params.extend([
-            AdapterParameterSpec("workflows", str, "", "Nuclei workflow file or directory."),
-            AdapterParameterSpec("exclude_templates", str, "", "Comma-separated templates to exclude."),
-            AdapterParameterSpec("headless", bool, False, "Enable headless browser templates."),
-            AdapterParameterSpec("interactsh", bool, False, "Enable interactsh/OAST interaction support."),
-        ])
-
     if tool.name in {"prowler", "trivy"}:
         params.extend([
             AdapterParameterSpec("provider", str, "", "Cloud/provider selector when supported."),
@@ -1219,14 +1079,6 @@ def _adapter_parameters(
             AdapterParameterSpec("kerberos", bool, False, "Use Kerberos authentication when supported."),
             AdapterParameterSpec("local_auth", bool, False, "Use local authentication when supported."),
             AdapterParameterSpec("target_ip", str, "", "Target/DC IP override when supported."),
-        ])
-
-    if tool.name == "ffuf":
-        params.extend([
-            AdapterParameterSpec("filter_codes", str, "", "HTTP status codes to filter out."),
-            AdapterParameterSpec("filter_size", str, "", "Response size filter when supported."),
-            AdapterParameterSpec("filter_words", str, "", "Word-count filter when supported."),
-            AdapterParameterSpec("add_slash", bool, False, "Append trailing slash to discovered paths when supported."),
         ])
 
     if tool.name in {"bloodhound", "impacket", "responder"}:
@@ -1425,13 +1277,7 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "top_ports", "--top-ports")
         _add_value(tokens, kwargs, "rate", "--rate")
 
-    if tool.name == "nuclei":
-        _add_value(tokens, kwargs, "severity", "-severity")
-        _add_value(tokens, kwargs, "tags", "-tags")
-        _add_value(tokens, kwargs, "template_path", "-t")
-        _add_value(tokens, kwargs, "rate_limit", "-rate-limit")
-        _add_value(tokens, kwargs, "proxy", "-proxy")
-    elif tool.name == "nikto":
+    if tool.name == "nikto":
         _add_value(tokens, kwargs, "ask", "-ask")
         _add_value(tokens, kwargs, "cgi_dirs", "-Cgidirs")
         _add_value(tokens, kwargs, "config_file", "-config")
@@ -1509,114 +1355,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "passive", "--passive")
         _add_value(tokens, kwargs, "casing", "--casing")
         _add_value(tokens, kwargs, "headers", "--headers")
-    elif tool.name == "gobuster":
-        _add_value(tokens, kwargs, "wordlist", "-w")
-        _add_value(tokens, kwargs, "extensions", "-x")
-        _add_value(tokens, kwargs, "headers", "-H")
-        _add_value(tokens, kwargs, "cookies", "-c")
-        _add_bool(tokens, kwargs, "show_length", "-l")
-        _add_value(tokens, kwargs, "status_codes", "-s")
-        _add_value(tokens, kwargs, "threads", "-t")
-        _add_value(tokens, kwargs, "delay", "--delay")
-        _add_value(tokens, kwargs, "user_agent", "-a")
-        _add_value(tokens, kwargs, "timeout", "--timeout")
-        _add_value(tokens, kwargs, "output_file", "-o")
-        _add_bool(tokens, kwargs, "quiet", "-q")
-        _add_bool(tokens, kwargs, "no_progress", "--no-progress")
-        _add_bool(tokens, kwargs, "expanded", "-e")
-        _add_bool(tokens, kwargs, "add_slash", "-f")
-    elif tool.name == "feroxbuster":
-        _add_value(tokens, kwargs, "wordlist", "-w")
-        _add_value(tokens, kwargs, "extensions", "-x")
-        _add_value(tokens, kwargs, "methods", "-m")
-        _add_value(tokens, kwargs, "data", "--data")
-        _add_value(tokens, kwargs, "headers", "-H")
-        _add_value(tokens, kwargs, "cookies", "-b")
-        _add_value(tokens, kwargs, "query", "-Q")
-        _add_bool(tokens, kwargs, "add_slash", "-f")
-        _add_value(tokens, kwargs, "protocol", "--protocol")
-        _add_value(tokens, kwargs, "dont_scan", "--dont-scan")
-        _add_value(tokens, kwargs, "scope", "--scope")
-        _add_value(tokens, kwargs, "filter_size", "-S")
-        _add_value(tokens, kwargs, "filter_regex", "-X")
-        _add_value(tokens, kwargs, "filter_words", "-W")
-        _add_value(tokens, kwargs, "filter_lines", "-N")
-        _add_value(tokens, kwargs, "filter_codes", "-C")
-        _add_value(tokens, kwargs, "status_codes", "-s")
-        _add_bool(tokens, kwargs, "unique", "--unique")
-        _add_value(tokens, kwargs, "timeout", "-T")
-        _add_bool(tokens, kwargs, "follow_redirects", "-r")
-        _add_bool(tokens, kwargs, "insecure", "-k")
-        _add_value(tokens, kwargs, "threads", "-t")
-        _add_bool(tokens, kwargs, "no_recursion", "-n")
-        _add_value(tokens, kwargs, "depth", "-d")
-        _add_bool(tokens, kwargs, "force_recursion", "--force-recursion")
-        _add_bool(tokens, kwargs, "dont_extract_links", "--dont-extract-links")
-        _add_value(tokens, kwargs, "scan_limit", "-L")
-        _add_value(tokens, kwargs, "parallelism", "--parallel")
-        _add_value(tokens, kwargs, "rate_limit", "--rate-limit")
-        _add_value(tokens, kwargs, "response_size_limit", "--response-size-limit")
-        _add_value(tokens, kwargs, "time_limit", "--time-limit")
-        _add_bool(tokens, kwargs, "auto_tune", "--auto-tune")
-        _add_bool(tokens, kwargs, "auto_bail", "--auto-bail")
-        _add_bool(tokens, kwargs, "dont_filter", "-D")
-        _add_bool(tokens, kwargs, "collect_extensions", "-E")
-        _add_value(tokens, kwargs, "collect_backups", "-B")
-        _add_bool(tokens, kwargs, "collect_words", "-g")
-        _add_value(tokens, kwargs, "dont_collect", "-I")
-        verbosity = _int_value(kwargs, "verbosity")
-        if verbosity:
-            tokens.append("-" + ("v" * min(verbosity, 3)))
-        _add_bool(tokens, kwargs, "silent", "--silent")
-        _add_bool(tokens, kwargs, "quiet", "-q")
-        _add_bool(tokens, kwargs, "json_output", "--json")
-        _add_value(tokens, kwargs, "output_file", "-o")
-        _add_value(tokens, kwargs, "debug_log", "--debug-log")
-        _add_bool(tokens, kwargs, "no_state", "--no-state")
-        _add_value(tokens, kwargs, "limit_bars", "--limit-bars")
-    elif tool.name == "dirsearch":
-        _add_value(tokens, kwargs, "wordlist", "-w")
-        _add_value(tokens, kwargs, "extensions", "-e")
-        _add_value(tokens, kwargs, "include_status", "-i")
-        _add_value(tokens, kwargs, "exclude_status", "-x")
-        _add_value(tokens, kwargs, "exclude_sizes", "-X")
-        _add_value(tokens, kwargs, "exclude_text", "--exclude-text")
-        _add_value(tokens, kwargs, "exclude_regex", "--exclude-regex")
-        _add_value(tokens, kwargs, "prefixes", "--prefixes")
-        _add_value(tokens, kwargs, "suffixes", "--suffixes")
-        _add_value(tokens, kwargs, "threads", "-t")
-        _add_bool(tokens, kwargs, "recursive", "-r")
-        _add_bool(tokens, kwargs, "deep_recursive", "--deep-recursive")
-        _add_bool(tokens, kwargs, "force_recursive", "--force-recursive")
-        _add_value(tokens, kwargs, "recursion_depth", "-R")
-        _add_value(tokens, kwargs, "recursion_status", "--recursion-status")
-        _add_value(tokens, kwargs, "subdirs", "--subdirs")
-        _add_value(tokens, kwargs, "exclude_subdirs", "--exclude-subdirs")
-        _add_value(tokens, kwargs, "method", "-m")
-        _add_value(tokens, kwargs, "data", "-d")
-        _add_value(tokens, kwargs, "headers", "-H")
-        _add_value(tokens, kwargs, "header_list", "--header-list")
-        _add_bool(tokens, kwargs, "follow_redirects", "-F")
-        _add_bool(tokens, kwargs, "random_agent", "--random-agent")
-        _add_value(tokens, kwargs, "user_agent", "--user-agent")
-        _add_value(tokens, kwargs, "cookies", "--cookie")
-        _add_value(tokens, kwargs, "proxy", "--proxy")
-        _add_value(tokens, kwargs, "proxy_list", "--proxy-list")
-        _add_value(tokens, kwargs, "timeout", "--timeout")
-        _add_value(tokens, kwargs, "delay", "--delay")
-        _add_value(tokens, kwargs, "max_rate", "--max-rate")
-        _add_value(tokens, kwargs, "retries", "--retries")
-        _add_value(tokens, kwargs, "format", "--format")
-        _add_value(tokens, kwargs, "output_file", "-o")
-        _add_value(tokens, kwargs, "json_report", "--json-report")
-        _add_value(tokens, kwargs, "plain_text_report", "--plain-text-report")
-        _add_value(tokens, kwargs, "csv_report", "--csv-report")
-        _add_value(tokens, kwargs, "markdown_report", "--md-report")
-        _add_value(tokens, kwargs, "xml_report", "--xml-report")
-        _add_value(tokens, kwargs, "sqlite_report", "--sqlite-report")
-        _add_bool(tokens, kwargs, "quiet", "--quiet")
-        _add_bool(tokens, kwargs, "full_url", "--full-url")
-        _add_bool(tokens, kwargs, "no_color", "--no-color")
     elif tool.name == "dalfox":
         _add_value(tokens, kwargs, "blind_callback", "-b")
         _add_value(tokens, kwargs, "config_file", "--config")
@@ -2040,16 +1778,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_value(tokens, kwargs, "proxy", "--proxy")
         _add_bool(tokens, kwargs, "random_agent", "--random-agent")
 
-    if tool.name == "ffuf":
-        _add_value(tokens, kwargs, "host_header", "-H")
-        _add_value(tokens, kwargs, "recursion_depth", "-recursion-depth")
-
-    if tool.name == "nuclei":
-        _add_value(tokens, kwargs, "workflows", "-w")
-        _add_value(tokens, kwargs, "exclude_templates", "-exclude-templates")
-        _add_bool(tokens, kwargs, "headless", "-headless")
-        _add_bool(tokens, kwargs, "interactsh", "-interactsh-server")
-
     if tool.name in {"prowler", "trivy"}:
         _add_value(tokens, kwargs, "provider", "--provider")
         _add_value(tokens, kwargs, "checks", "--checks")
@@ -2063,12 +1791,6 @@ def _structured_options(tool: HackingToolDef, kwargs: dict) -> list[str]:
         _add_bool(tokens, kwargs, "kerberos", "-k")
         _add_bool(tokens, kwargs, "local_auth", "--local-auth")
         _add_value(tokens, kwargs, "target_ip", "--target-ip")
-
-    if tool.name == "ffuf":
-        _add_value(tokens, kwargs, "filter_codes", "-fc")
-        _add_value(tokens, kwargs, "filter_size", "-fs")
-        _add_value(tokens, kwargs, "filter_words", "-fw")
-        _add_bool(tokens, kwargs, "add_slash", "--add-slash")
 
     if tool.name in {"bloodhound", "impacket", "responder"}:
         _add_bool(tokens, kwargs, "ldap", "--ldap")
