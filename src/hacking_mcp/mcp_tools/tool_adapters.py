@@ -706,6 +706,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "goblin-wordgenerator",
         "knockmail",
         "redhawk",
+        "reconspider",
         "showme",
         "xerosploit",
     }:

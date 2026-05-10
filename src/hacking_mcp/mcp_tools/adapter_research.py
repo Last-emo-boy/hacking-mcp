@@ -1257,6 +1257,24 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "reconspider": SourceReview(
+        note=(
+            "Reviewed against upstream ReconSpider README and reconspider.py. "
+            "The entrypoint has no CLI parser or positional arguments; OSINT "
+            "modules and targets are selected through a stdin menu/REPL. The "
+            "adapter is therefore intentionally interactive-only and removes "
+            "generated API key, resolver, passive, timeout, depth, output, and "
+            "JSON parameters."
+        ),
+        references=(
+            "https://github.com/bhavsec/reconspider",
+            "https://raw.githubusercontent.com/bhavsec/reconspider/master/README.md",
+            "https://raw.githubusercontent.com/bhavsec/reconspider/master/reconspider.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "xerosploit": SourceReview(
         note=(
             "Reviewed against upstream Xerosploit xerosploit.py. The tool has "

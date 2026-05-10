@@ -2922,6 +2922,38 @@ def test_dracnmap_source_reviewed_interactive_only(registry, safety):
     assert preview["options"] == ""
 
 
+def test_reconspider_source_reviewed_interactive_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("reconspider")
+
+    assert records["reconspider"].source_status == "source-reviewed"
+    assert records["reconspider"].unverified_parameters == ()
+    assert records["reconspider"].gap == ""
+    assert any("bhavsec/reconspider" in item for item in records["reconspider"].evidence)
+
+    params = adapter_parameter_names(tool, specs["reconspider"])
+    for removed in ("api_key", "json_output", "output_file", "passive", "resolvers", "scan_depth", "sources", "timeout", "user_agent"):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["reconspider"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+
+
 @pytest.mark.asyncio
 async def test_second_wave_named_parameters_build_cli_options(registry, safety):
     from mcp.server.fastmcp import FastMCP
@@ -5875,6 +5907,33 @@ async def test_dracnmap_source_reviewed_parameters_build_cli_options(registry, s
 
     request = orchestrator.execute.await_args.args[0]
     assert request.tool_name == "dracnmap"
+    assert request.target == ""
+    assert request.options == ""
+    assert request.require_confirmation is False
+
+
+@pytest.mark.asyncio
+async def test_reconspider_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_reconspider",
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "reconspider"
     assert request.target == ""
     assert request.options == ""
     assert request.require_confirmation is False
