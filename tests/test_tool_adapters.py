@@ -6402,6 +6402,130 @@ def test_fluxion_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_wifiphisher_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("wifiphisher")
+
+    assert tool.run_command == "cd wifiphisher && sudo wifiphisher"
+    assert specs["wifiphisher"].exposed is False
+    assert "Wireless Attack" in specs["wifiphisher"].blocked_reason
+    assert records["wifiphisher"].source_status == "source-reviewed"
+    assert records["wifiphisher"].unverified_parameters == ()
+    assert records["wifiphisher"].gap == ""
+    assert any("wifiphisher/wifiphisher" in item for item in records["wifiphisher"].evidence)
+
+    params = adapter_parameter_names(tool, specs["wifiphisher"])
+    for expected in (
+        "interface",
+        "internet_interface",
+        "protect_interfaces",
+        "mitm_interface",
+        "essid",
+        "deauth_essid",
+        "deauth_channels",
+        "ap_interface",
+        "extensions_interface",
+        "no_mac_randomization",
+        "keep_networkmanager",
+        "no_extensions",
+        "no_deauth",
+        "phishing_scenario",
+        "preshared_key",
+        "credential_log",
+        "payload_path",
+        "handshake_capture",
+        "quitonsuccess",
+        "lure10_capture",
+        "lure10_exploit",
+        "logging",
+        "disable_karma",
+        "log_path",
+        "channel_monitor",
+        "wps_pbc",
+        "wpspbc_assoc_interface",
+        "known_beacons",
+        "force_hostapd",
+        "phishing_pages_directory",
+        "dnsmasq_conf",
+        "phishing_essid",
+        "mac_ap_interface",
+        "mac_extensions_interface",
+        "help",
+    ):
+        assert expected in params
+    for removed in (
+        "bssid",
+        "channel",
+        "wordlist",
+        "pmkid",
+        "deauth_count",
+        "capture_file",
+        "target_essid",
+        "ble",
+    ):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["wifiphisher"],
+        {
+            "target": "ignored.example",
+            "interface": "wlan0",
+            "internet_interface": "eth0",
+            "protect_interfaces": "wlan1 wlan2",
+            "mitm_interface": "wlan3",
+            "essid": "Free WiFi",
+            "deauth_essid": "TargetNet",
+            "deauth_channels": "1 6 11",
+            "ap_interface": "wlan4",
+            "extensions_interface": "wlan5",
+            "no_mac_randomization": True,
+            "keep_networkmanager": True,
+            "no_extensions": True,
+            "no_deauth": True,
+            "phishing_scenario": "firmware_upgrade",
+            "preshared_key": "secretpass",
+            "credential_log": "creds.log",
+            "payload_path": "payload.bin",
+            "handshake_capture": "capture.pcap",
+            "quitonsuccess": True,
+            "lure10_capture": True,
+            "lure10_exploit": "lure.db",
+            "logging": True,
+            "disable_karma": True,
+            "log_path": "wf.log",
+            "channel_monitor": True,
+            "wps_pbc": True,
+            "wpspbc_assoc_interface": "wlan6",
+            "known_beacons": True,
+            "force_hostapd": True,
+            "phishing_pages_directory": "pages",
+            "dnsmasq_conf": "dnsmasq.conf",
+            "phishing_essid": "Portal",
+            "mac_ap_interface": "02:00:00:00:00:01",
+            "mac_extensions_interface": "02:00:00:00:00:02",
+            "help": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-i wlan0 -iI eth0 -pI 'wlan1 wlan2' -mI wlan3 -e 'Free WiFi' "
+        "-dE TargetNet -dC '1 6 11' -aI wlan4 -eI wlan5 -iNM -kN -nE "
+        "-nD -p firmware_upgrade -pK secretpass -cP creds.log "
+        "--payload-path payload.bin -hC capture.pcap -qS -lC -lE lure.db "
+        "--logging -dK -lP wf.log -cM -wP -wAI wlan6 -kB -fH -pPD pages "
+        "--dnsmasq-conf dnsmasq.conf -pE Portal -iAM 02:00:00:00:00:01 "
+        "-iEM 02:00:00:00:00:02 --help"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

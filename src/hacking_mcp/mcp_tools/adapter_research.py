@@ -4087,6 +4087,65 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "wifiphisher": SourceReview(
+        note=(
+            "Reviewed against upstream wifiphisher/wifiphisher README and "
+            "wifiphisher/pywifiphisher.py argparse parser. The console "
+            "entrypoint is wifiphisher, and the parser supports interface "
+            "selection, internet/MITM/protected interfaces, AP/extension "
+            "interfaces, MAC randomization controls, NetworkManager handling, "
+            "extension/deauth controls, ESSID/deauth ESSID/deauth channels, "
+            "phishing scenario and pages, pre-shared key, handshake capture, "
+            "credential/log paths, payload path, Lure10, KARMA, channel "
+            "monitoring, WPS-PBC, known beacon, hostapd, dnsmasq, phishing "
+            "ESSID, MAC override, and help flags. The old generic wireless "
+            "wordlist/PMKID/deauth-count/capture-file placeholders are not "
+            "present in the upstream CLI. Execution remains policy/info-only "
+            "because Wireless Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/wifiphisher/wifiphisher",
+            "https://raw.githubusercontent.com/wifiphisher/wifiphisher/master/README.md",
+            "https://raw.githubusercontent.com/wifiphisher/wifiphisher/master/wifiphisher/pywifiphisher.py",
+        ),
+        verified_parameters=(
+            "interface",
+            "internet_interface",
+            "protect_interfaces",
+            "mitm_interface",
+            "essid",
+            "deauth_essid",
+            "deauth_channels",
+            "ap_interface",
+            "extensions_interface",
+            "no_mac_randomization",
+            "keep_networkmanager",
+            "no_extensions",
+            "no_deauth",
+            "phishing_scenario",
+            "preshared_key",
+            "credential_log",
+            "payload_path",
+            "handshake_capture",
+            "quitonsuccess",
+            "lure10_capture",
+            "lure10_exploit",
+            "logging",
+            "disable_karma",
+            "log_path",
+            "channel_monitor",
+            "wps_pbc",
+            "wpspbc_assoc_interface",
+            "known_beacons",
+            "force_hostapd",
+            "phishing_pages_directory",
+            "dnsmasq_conf",
+            "phishing_essid",
+            "mac_ap_interface",
+            "mac_extensions_interface",
+            "help",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
