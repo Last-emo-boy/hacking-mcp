@@ -823,7 +823,7 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     )
 
     msfvenom_schema = tools["security_tool_msfvenom"].inputSchema["properties"]
-    assert {"stager", "listener_name", "apk_name", "bundle_id", "sign_apk"}.issubset(
+    assert {"shell", "direction", "stager", "method", "batch", "loop"}.issubset(
         msfvenom_schema
     )
 
@@ -927,7 +927,7 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     assert {"interactive"}.issubset(setoolkit_schema)
 
     msfvenom_schema = tools["security_tool_msfvenom"].inputSchema["properties"]
-    assert {"payload_type", "platform", "lhost", "lport", "format"}.issubset(
+    assert {"platform", "lhost", "lport", "shell", "direction", "method"}.issubset(
         msfvenom_schema
     )
 
@@ -5810,6 +5810,75 @@ def test_stitch_source_reviewed_interactive_policy_only(registry, safety):
     )
     assert preview["target"] == ""
     assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
+def test_msfvenom_source_reviewed_msfpc_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("msfvenom")
+
+    assert tool.run_command == "cd msfpc && sudo bash msfpc.sh -h -v"
+    assert specs["msfvenom"].exposed is False
+    assert "Payload Creation" in specs["msfvenom"].blocked_reason
+    assert records["msfvenom"].source_status == "source-reviewed"
+    assert records["msfvenom"].unverified_parameters == ()
+    assert records["msfvenom"].gap == ""
+    assert any("g0tmi1k/msfpc" in item for item in records["msfvenom"].evidence)
+
+    params = adapter_parameter_names(tool, specs["msfvenom"])
+    for expected in (
+        "platform",
+        "lhost",
+        "lport",
+        "shell",
+        "direction",
+        "stager",
+        "method",
+        "batch",
+        "loop",
+        "verbose",
+        "help",
+    ):
+        assert expected in params
+    for removed in (
+        "payload_type",
+        "architecture",
+        "format",
+        "encoder",
+        "output_file",
+        "listener_name",
+        "apk_name",
+        "bundle_id",
+        "sign_apk",
+    ):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["msfvenom"],
+        {
+            "platform": "windows",
+            "lhost": "127.0.0.1",
+            "lport": 4444,
+            "shell": "msf",
+            "direction": "reverse",
+            "stager": "stageless",
+            "method": "https",
+            "batch": True,
+            "verbose": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "--platform windows --ip 127.0.0.1 --port 4444 --shell msf "
+        "--direction reverse --stage stageless --method https --batch --verbose"
+    )
     assert preview["executable"] is False
 
 

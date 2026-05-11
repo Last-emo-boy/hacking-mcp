@@ -1,7 +1,7 @@
 """Dedicated adapter metadata for msfvenom payload wrappers."""
 
 from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
-from hacking_mcp.mcp_tools.adapters.helpers import add_assignment, add_bool, add_value
+from hacking_mcp.mcp_tools.adapters.helpers import add_bool, add_value
 
 
 def parameters() -> list[AdapterParameterSpec]:
@@ -14,35 +14,31 @@ def build_options(kwargs: dict) -> list[str]:
 
 def _payload_parameters() -> list[AdapterParameterSpec]:
     return [
-        AdapterParameterSpec("payload_type", str, "", "Payload identifier when supported."),
-        AdapterParameterSpec("platform", str, "", "Target platform when supported."),
-        AdapterParameterSpec("architecture", str, "", "Target architecture when supported."),
-        AdapterParameterSpec("lhost", str, "", "Listener host for authorized lab use."),
-        AdapterParameterSpec("lport", int, 0, "Listener port when supported; 0 leaves default."),
-        AdapterParameterSpec("format", str, "", "Output format when supported."),
-        AdapterParameterSpec("encoder", str, "", "Encoder when supported."),
-        AdapterParameterSpec("output_file", str, "", "Output file path when supported."),
-        AdapterParameterSpec("stager", str, "", "Stager/profile selector when supported."),
-        AdapterParameterSpec("listener_name", str, "", "Listener/profile name when supported."),
-        AdapterParameterSpec("apk_name", str, "", "APK/app output name when supported."),
-        AdapterParameterSpec("bundle_id", str, "", "Mobile bundle/package id when supported."),
-        AdapterParameterSpec("sign_apk", bool, False, "Sign APK output when supported."),
+        AdapterParameterSpec("platform", str, "", "MSFPC payload type/format, for example windows, elf, apk, php, or py."),
+        AdapterParameterSpec("lhost", str, "", "Listener host, domain, IP, interface, or wan."),
+        AdapterParameterSpec("lport", int, 0, "Listener port; 0 leaves MSFPC default."),
+        AdapterParameterSpec("shell", str, "", "Shell family, usually cmd/shell or msf/meterpreter."),
+        AdapterParameterSpec("direction", str, "", "Connection direction, for example bind or reverse."),
+        AdapterParameterSpec("stager", str, "", "Stage selector, for example staged or stageless."),
+        AdapterParameterSpec("method", str, "", "Transport method, for example tcp, http, https, or find_port."),
+        AdapterParameterSpec("batch", bool, False, "Generate as many combinations as MSFPC supports."),
+        AdapterParameterSpec("loop", bool, False, "Generate one payload for each MSFPC type."),
+        AdapterParameterSpec("verbose", bool, False, "Enable verbose MSFPC output."),
+        AdapterParameterSpec("help", bool, False, "Show MSFPC help/options."),
     ]
 
 
 def _payload_options(kwargs: dict) -> list[str]:
     tokens: list[str] = []
-    add_value(tokens, kwargs, "payload_type", "-p")
     add_value(tokens, kwargs, "platform", "--platform")
-    add_value(tokens, kwargs, "architecture", "-a")
-    add_assignment(tokens, kwargs, "lhost", "LHOST")
-    add_assignment(tokens, kwargs, "lport", "LPORT")
-    add_value(tokens, kwargs, "format", "-f")
-    add_value(tokens, kwargs, "encoder", "-e")
-    add_value(tokens, kwargs, "output_file", "-o")
-    add_value(tokens, kwargs, "stager", "--stager")
-    add_value(tokens, kwargs, "listener_name", "--listener")
-    add_value(tokens, kwargs, "apk_name", "--apk-name")
-    add_value(tokens, kwargs, "bundle_id", "--bundle-id")
-    add_bool(tokens, kwargs, "sign_apk", "--sign")
+    add_value(tokens, kwargs, "lhost", "--ip")
+    add_value(tokens, kwargs, "lport", "--port")
+    add_value(tokens, kwargs, "shell", "--shell")
+    add_value(tokens, kwargs, "direction", "--direction")
+    add_value(tokens, kwargs, "stager", "--stage")
+    add_value(tokens, kwargs, "method", "--method")
+    add_bool(tokens, kwargs, "batch", "--batch")
+    add_bool(tokens, kwargs, "loop", "--loop")
+    add_bool(tokens, kwargs, "verbose", "--verbose")
+    add_bool(tokens, kwargs, "help", "--help")
     return tokens

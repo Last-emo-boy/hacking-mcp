@@ -3816,6 +3816,39 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "msfvenom": SourceReview(
+        note=(
+            "Reviewed against registry project g0tmi1k/msfpc, README, and "
+            "msfpc.sh. The registry msfvenom adapter is an MSFPC wrapper, not "
+            "raw msfvenom. Upstream help documents positional TYPE, DOMAIN/IP, "
+            "PORT, CMD/MSF, BIND/REVERSE, STAGED/STAGELESS, TCP/HTTP/HTTPS/"
+            "FIND_PORT, BATCH/LOOP, and VERBOSE inputs. The shell parser also "
+            "accepts --platform/--type, --ip, --port, --shell, --direction, "
+            "--stage/--staged/--stageless, --method, --batch, --loop, "
+            "--verbose, and --help. It does not expose raw msfvenom "
+            "architecture, encoder, output file, APK signing, listener name, "
+            "or bundle id flags. Execution remains policy/info-only because "
+            "Payload Creation is disabled by policy."
+        ),
+        references=(
+            "https://github.com/g0tmi1k/msfpc",
+            "https://raw.githubusercontent.com/g0tmi1k/msfpc/master/README.md",
+            "https://raw.githubusercontent.com/g0tmi1k/msfpc/master/msfpc.sh",
+        ),
+        verified_parameters=(
+            "platform",
+            "lhost",
+            "lport",
+            "shell",
+            "direction",
+            "stager",
+            "method",
+            "batch",
+            "loop",
+            "verbose",
+            "help",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
