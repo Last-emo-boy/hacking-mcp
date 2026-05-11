@@ -5613,6 +5613,56 @@ def test_maskphish_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_blackphish_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("blackphish")
+
+    assert tool.run_command == "cd BlackPhish && sudo python3 blackphish.py"
+    assert specs["blackphish"].exposed is False
+    assert "Phishing Attack" in specs["blackphish"].blocked_reason
+    assert records["blackphish"].source_status == "source-reviewed"
+    assert records["blackphish"].unverified_parameters == ()
+    assert records["blackphish"].gap == ""
+    assert any("iinc0gnit0/BlackPhish" in item for item in records["blackphish"].evidence)
+    assert any("yangr0/BlackPhish" in item for item in records["blackphish"].evidence)
+
+    params = adapter_parameter_names(tool, specs["blackphish"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "site",
+        "redirect_url",
+        "custom_domain",
+        "phishlet",
+        "capture_path",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["blackphish"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

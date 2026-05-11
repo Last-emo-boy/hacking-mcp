@@ -3713,6 +3713,33 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "blackphish": SourceReview(
+        note=(
+            "Reviewed against registry project BlackPhish, which redirects to "
+            "yangr0/BlackPhish, plus README, repository listing, install.sh, "
+            "blackphish.py, and the Windows variant. The documented startup is "
+            "sudo python3 blackphish.py. The Python entrypoint checks root and "
+            "internet connectivity, asks for responsible-use confirmation, then "
+            "uses input() menus for template choice, tunnel provider, redirect "
+            "URL, and Localtunnel domain/port. It has no argparse/getopt parser, "
+            "positional target, or generic phishing CLI flags. The adapter "
+            "therefore suppresses target argv, removes generated placeholders, "
+            "and exposes only an interactive marker. Execution remains policy/"
+            "info-only because Phishing Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/iinc0gnit0/BlackPhish",
+            "https://github.com/yangr0/BlackPhish",
+            "https://raw.githubusercontent.com/iinc0gnit0/BlackPhish/master/README.md",
+            "https://raw.githubusercontent.com/yangr0/BlackPhish/master/blackphish.py",
+            "https://raw.githubusercontent.com/yangr0/BlackPhish/master/blackphishwin.py",
+            "https://raw.githubusercontent.com/yangr0/BlackPhish/master/install.sh",
+            "https://api.github.com/repos/iinc0gnit0/BlackPhish/contents?ref=master",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
