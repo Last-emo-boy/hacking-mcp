@@ -720,6 +720,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "ligolo-ng",
         "mythic",
         "peass-ng",
+        "pyphisher",
         "redhawk",
         "reconspider",
         "rvuln",

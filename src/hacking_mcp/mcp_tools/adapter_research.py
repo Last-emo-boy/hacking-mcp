@@ -3340,6 +3340,43 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "pyphisher": SourceReview(
+        note=(
+            "Reviewed against the current upstream GitLab PyPhisher README, "
+            "single-file pyphisher.py argparse definitions, PyPI project "
+            "metadata, and the PyPI wheel console_scripts entry point. The "
+            "original GitHub URL now returns access errors, while the package "
+            "metadata points to GitLab. The adapter exposes the documented "
+            "port, template option, tunneler, region, custom folder, domain, "
+            "subdomain, redirect URL, mode, troubleshoot target, nokey, "
+            "kshrt, noupdate, and nokill flags, and removes generic phishing "
+            "placeholders that are not accepted by argparse. The endpoint "
+            "remains policy/info-only because Phishing Attack is disabled by "
+            "policy."
+        ),
+        references=(
+            "https://gitlab.com/KasRoudra/PyPhisher",
+            "https://gitlab.com/KasRoudra/PyPhisher/-/raw/main/README.md",
+            "https://gitlab.com/KasRoudra/PyPhisher/-/raw/main/pyphisher.py",
+            "https://pypi.org/pypi/pyphisher/json",
+        ),
+        verified_parameters=(
+            "port",
+            "template_option",
+            "tunneler",
+            "region",
+            "folder",
+            "domain",
+            "subdomain",
+            "redirect_url",
+            "mode",
+            "troubleshoot",
+            "nokey",
+            "kshrt",
+            "noupdate",
+            "nokill",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

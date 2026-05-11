@@ -4848,6 +4848,87 @@ def test_autophisher_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_pyphisher_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("pyphisher")
+
+    assert tool.run_command == "cd PyPhisher && sudo python3 pyphisher.py"
+    assert specs["pyphisher"].exposed is False
+    assert "Phishing Attack" in specs["pyphisher"].blocked_reason
+    assert records["pyphisher"].source_status == "source-reviewed"
+    assert records["pyphisher"].unverified_parameters == ()
+    assert records["pyphisher"].gap == ""
+    assert any("KasRoudra/PyPhisher" in item for item in records["pyphisher"].evidence)
+
+    params = adapter_parameter_names(tool, specs["pyphisher"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "output_dir",
+        "site",
+        "custom_domain",
+        "phishlet",
+        "capture_path",
+    ):
+        assert removed not in params
+    for expected in (
+        "port",
+        "template_option",
+        "tunneler",
+        "region",
+        "folder",
+        "domain",
+        "subdomain",
+        "redirect_url",
+        "mode",
+        "troubleshoot",
+        "nokey",
+        "kshrt",
+        "noupdate",
+        "nokill",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["pyphisher"],
+        {
+            "target": "ignored.example",
+            "port": 8081,
+            "template_option": "12",
+            "tunneler": "cloudflared",
+            "region": "eu",
+            "folder": "custom-site",
+            "domain": "example.com",
+            "subdomain": "training",
+            "redirect_url": "https://example.com/after",
+            "mode": "test",
+            "troubleshoot": "cloudflared",
+            "nokey": True,
+            "kshrt": True,
+            "noupdate": True,
+            "nokill": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "--port 8081 --option 12 --tunneler cloudflared --region eu "
+        "--folder custom-site --domain example.com --subdomain training "
+        "--url https://example.com/after --mode test --troubleshoot "
+        "cloudflared --nokey --kshrt --noupdate --nokill"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
