@@ -752,6 +752,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "venom",
         "websploit",
         "web2attack",
+        "wifipumpkin",
         "wireshark",
         "xss-payload-generator",
         "xss-freak",

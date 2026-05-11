@@ -3941,6 +3941,42 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "wifipumpkin": SourceReview(
+        note=(
+            "Reviewed against upstream P0cL4bs/wifipumpkin3 README, setup.py, "
+            "and wifipumpkin3/__main__.py. The console entrypoint is "
+            "wifipumpkin3, and the argparse parser supports wireless/AP "
+            "interface selection, internet sharing interface, session and "
+            "Pulp scripting inputs, XPulp command strings, wireless mode, "
+            "no-color mode, REST API mode/port/credentials, NetworkManager "
+            "ignore/remove operations, and version output. The old generic "
+            "wireless bssid/essid/channel/wordlist/handshake placeholders are "
+            "not present in the upstream CLI. Execution remains policy/"
+            "info-only because Wireless Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/P0cL4bs/wifipumpkin3",
+            "https://raw.githubusercontent.com/P0cL4bs/wifipumpkin3/master/README.md",
+            "https://raw.githubusercontent.com/P0cL4bs/wifipumpkin3/master/setup.py",
+            "https://raw.githubusercontent.com/P0cL4bs/wifipumpkin3/master/wifipumpkin3/__main__.py",
+        ),
+        verified_parameters=(
+            "interface",
+            "interface_net",
+            "session",
+            "pulp_file",
+            "xpulp_commands",
+            "wireless_mode",
+            "no_colors",
+            "rest",
+            "restport",
+            "username",
+            "password",
+            "ignore_networkmanager",
+            "remove_networkmanager",
+            "version",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

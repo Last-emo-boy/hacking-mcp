@@ -6094,6 +6094,82 @@ def test_enigma_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_wifipumpkin_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("wifipumpkin")
+
+    assert tool.run_command == "sudo wifipumpkin3"
+    assert specs["wifipumpkin"].exposed is False
+    assert "Wireless Attack" in specs["wifipumpkin"].blocked_reason
+    assert records["wifipumpkin"].source_status == "source-reviewed"
+    assert records["wifipumpkin"].unverified_parameters == ()
+    assert records["wifipumpkin"].gap == ""
+    assert any("P0cL4bs/wifipumpkin3" in item for item in records["wifipumpkin"].evidence)
+
+    params = adapter_parameter_names(tool, specs["wifipumpkin"])
+    for expected in (
+        "interface",
+        "interface_net",
+        "session",
+        "pulp_file",
+        "xpulp_commands",
+        "wireless_mode",
+        "no_colors",
+        "rest",
+        "restport",
+        "username",
+        "password",
+        "ignore_networkmanager",
+        "remove_networkmanager",
+        "version",
+    ):
+        assert expected in params
+    for removed in (
+        "bssid",
+        "essid",
+        "channel",
+        "wordlist",
+        "handshake_file",
+        "monitor_mode",
+    ):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["wifipumpkin"],
+        {
+            "target": "ignored.example",
+            "interface": "wlan0",
+            "interface_net": "eth0",
+            "session": "lab",
+            "pulp_file": "setup.pulp",
+            "xpulp_commands": "show;exit",
+            "wireless_mode": "ap",
+            "no_colors": True,
+            "rest": True,
+            "restport": 8080,
+            "username": "api",
+            "password": "secret",
+            "ignore_networkmanager": "wlan0",
+            "remove_networkmanager": "wlan1",
+            "version": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-i wlan0 -iNet eth0 -s lab -p setup.pulp -x 'show;exit' -m ap "
+        "--no-colors --rest --restport 8080 --username api --password secret "
+        "-iNM wlan0 -rNM wlan1 --version"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
