@@ -4200,6 +4200,60 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "hcxdumptool": SourceReview(
+        note=(
+            "Reviewed against upstream ZerBea/hcxdumptool README and "
+            "hcxdumptool.c getopt_long parser/help text. The adapter maps "
+            "source-supported capture and interface controls including "
+            "interface, pcapng output, channel/frequency selection, dwell "
+            "time, ACK mode, interface list/info modes, BPF file input, "
+            "fake time clock, real-time display modes, RCA scan, monitor-mode "
+            "setup, M1M2/association/probe-response limits, ESSID list, "
+            "error/watchdog/time limits, EAPOL exit bitmask, daemon mode, "
+            "help, extended help, and version flags. The old generated "
+            "wireless placeholders for BSSID, ESSID, wordlist, handshake "
+            "file, monitor_mode bool, PMKID toggle, deauth count, capture "
+            "file, target ESSID, and BLE are not hcxdumptool CLI arguments. "
+            "Execution remains policy/info-only because Wireless Attack is "
+            "disabled by policy."
+        ),
+        references=(
+            "https://github.com/ZerBea/hcxdumptool",
+            "https://raw.githubusercontent.com/ZerBea/hcxdumptool/master/README.md",
+            "https://raw.githubusercontent.com/ZerBea/hcxdumptool/master/hcxdumptool.c",
+        ),
+        verified_parameters=(
+            "interface",
+            "output_file",
+            "channel",
+            "frequency",
+            "use_all_frequencies",
+            "stay_time",
+            "ack_frames",
+            "list_interfaces",
+            "list_interfaces_short",
+            "interface_info",
+            "bpf_file",
+            "fake_time_clock",
+            "real_time_display",
+            "disable_terminal_size",
+            "rcascan",
+            "monitor_interface",
+            "m2max",
+            "associationmax",
+            "disable_disassociation",
+            "proberesponsetx",
+            "essidlist",
+            "error_max",
+            "watchdog_max",
+            "timeout_minutes",
+            "exit_on_eapol",
+            "daemonize",
+            "help",
+            "extended_help",
+            "version",
+        ),
+    ),
     "eviltwin": SourceReview(
         note=(
             "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "

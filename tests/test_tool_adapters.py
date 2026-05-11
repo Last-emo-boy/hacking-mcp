@@ -6632,6 +6632,118 @@ def test_airgeddon_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_hcxdumptool_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("hcxdumptool")
+
+    assert tool.run_command == "hcxdumptool --help"
+    assert specs["hcxdumptool"].exposed is False
+    assert "Wireless Attack" in specs["hcxdumptool"].blocked_reason
+    assert records["hcxdumptool"].source_status == "source-reviewed"
+    assert records["hcxdumptool"].unverified_parameters == ()
+    assert records["hcxdumptool"].gap == ""
+    assert any("ZerBea/hcxdumptool" in item for item in records["hcxdumptool"].evidence)
+
+    params = adapter_parameter_names(tool, specs["hcxdumptool"])
+    for expected in (
+        "interface",
+        "output_file",
+        "channel",
+        "frequency",
+        "use_all_frequencies",
+        "stay_time",
+        "ack_frames",
+        "list_interfaces",
+        "list_interfaces_short",
+        "interface_info",
+        "bpf_file",
+        "fake_time_clock",
+        "real_time_display",
+        "disable_terminal_size",
+        "rcascan",
+        "monitor_interface",
+        "m2max",
+        "associationmax",
+        "disable_disassociation",
+        "proberesponsetx",
+        "essidlist",
+        "error_max",
+        "watchdog_max",
+        "timeout_minutes",
+        "exit_on_eapol",
+        "daemonize",
+        "help",
+        "extended_help",
+        "version",
+    ):
+        assert expected in params
+    for removed in (
+        "bssid",
+        "essid",
+        "wordlist",
+        "handshake_file",
+        "monitor_mode",
+        "pmkid",
+        "deauth_count",
+        "capture_file",
+        "target_essid",
+        "ble",
+    ):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["hcxdumptool"],
+        {
+            "target": "ignored.example",
+            "interface": "wlan0",
+            "output_file": "capture.pcapng",
+            "channel": "6a",
+            "frequency": "2437",
+            "use_all_frequencies": True,
+            "stay_time": 5,
+            "ack_frames": True,
+            "list_interfaces": True,
+            "list_interfaces_short": True,
+            "interface_info": "wlan1",
+            "bpf_file": "filter.bpf",
+            "fake_time_clock": True,
+            "real_time_display": 2,
+            "disable_terminal_size": True,
+            "rcascan": "active",
+            "monitor_interface": "wlan2",
+            "m2max": 3,
+            "associationmax": 4,
+            "disable_disassociation": True,
+            "proberesponsetx": 2,
+            "essidlist": "essids.txt",
+            "error_max": 9,
+            "watchdog_max": 60,
+            "timeout_minutes": 15,
+            "exit_on_eapol": 1,
+            "daemonize": True,
+            "help": True,
+            "extended_help": True,
+            "version": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-i wlan0 -w capture.pcapng -c 6a -f 2437 -F -t 5 -A -L -l "
+        "-I wlan1 --bpf filter.bpf --ftc --rds 2 --rdt --rcascan active "
+        "-m wlan2 --m2max 3 --associationmax 4 --disable_disassociation "
+        "--proberesponsetx 2 --essidlist essids.txt --errormax 9 "
+        "--watchdogmax 60 --tot 15 --exitoneapol 1 --daemonize -h --help -v"
+    )
+    assert preview["executable"] is False
+
+
 def test_eviltwin_source_reviewed_interactive_policy_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
