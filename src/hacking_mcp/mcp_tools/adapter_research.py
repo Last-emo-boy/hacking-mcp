@@ -3529,6 +3529,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "saycheese": SourceReview(
+        note=(
+            "Reviewed against upstream SayCheese README and saycheese.sh. "
+            "The documented startup is bash saycheese/saycheese.sh; the Bash "
+            "entrypoint checks dependencies, presents a Serveo/Ngrok forwarding "
+            "menu, prompts for optional subdomain values with read, then starts "
+            "ssh/ngrok and a local PHP server before waiting for captured files. "
+            "It has no argparse/getopt parser, positional target, or supported "
+            "command-line flags. The adapter therefore suppresses target argv, "
+            "removes generic phishing placeholders, and exposes only an "
+            "interactive marker. Execution remains policy/info-only because "
+            "Phishing Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/hangetzzu/saycheese",
+            "https://raw.githubusercontent.com/hangetzzu/saycheese/master/README.md",
+            "https://raw.githubusercontent.com/hangetzzu/saycheese/master/saycheese.sh",
+            "https://api.github.com/repos/hangetzzu/saycheese/contents?ref=master",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

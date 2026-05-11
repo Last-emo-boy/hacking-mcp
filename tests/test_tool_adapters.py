@@ -5244,6 +5244,55 @@ def test_iseeyou_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_saycheese_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("saycheese")
+
+    assert tool.run_command == "cd saycheese && sudo bash saycheese.sh"
+    assert specs["saycheese"].exposed is False
+    assert "Phishing Attack" in specs["saycheese"].blocked_reason
+    assert records["saycheese"].source_status == "source-reviewed"
+    assert records["saycheese"].unverified_parameters == ()
+    assert records["saycheese"].gap == ""
+    assert any("hangetzzu/saycheese" in item for item in records["saycheese"].evidence)
+
+    params = adapter_parameter_names(tool, specs["saycheese"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "site",
+        "redirect_url",
+        "custom_domain",
+        "phishlet",
+        "capture_path",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["saycheese"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
