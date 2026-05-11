@@ -741,6 +741,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "maskphish",
         "mobdroid",
         "mythic",
+        "mysms",
         "peass-ng",
         "pixiewps",
         "pyshell",

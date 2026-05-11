@@ -7063,6 +7063,55 @@ def test_keydroid_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_mysms_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("mysms")
+
+    assert tool.run_command == "cd mysms && bash mysms.sh"
+    assert specs["mysms"].exposed is False
+    assert "classified DANGEROUS" in specs["mysms"].blocked_reason
+    assert records["mysms"].source_status == "source-reviewed"
+    assert records["mysms"].unverified_parameters == ()
+    assert records["mysms"].gap == ""
+    assert any("papusingh2sms/mysms" in item for item in records["mysms"].evidence)
+
+    params = adapter_parameter_names(tool, specs["mysms"])
+    for removed in (
+        "apk_path",
+        "package_name",
+        "device_id",
+        "spawn",
+        "lhost",
+        "lport",
+        "payload_type",
+        "platform",
+        "architecture",
+        "format",
+        "encoder",
+        "output_file",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["mysms"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_eviltwin_source_reviewed_interactive_policy_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

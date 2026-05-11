@@ -4398,6 +4398,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "mysms": SourceReview(
+        note=(
+            "Reviewed against upstream papusingh2sms/mysms mysms.sh. The "
+            "registry startup is bash mysms.sh. The Bash entrypoint checks "
+            "dependencies, then uses read prompts for Android SDK path, "
+            "server port, build confirmation, and server startup while "
+            "generating/signing an APK, starting SSH/PHP services, and "
+            "waiting for SMS/contact output files. It has no argparse/getopt "
+            "parser, positional target, or stable CLI flags for Android "
+            "package, listener host/port, payload, or output paths. The "
+            "adapter therefore suppresses target argv, removes generated "
+            "mobile/payload placeholders, and exposes only an interactive "
+            "marker. Execution remains policy/info-only because MySMS is "
+            "classified dangerous and excluded from MCP."
+        ),
+        references=(
+            "https://github.com/papusingh2sms/mysms",
+            "https://raw.githubusercontent.com/papusingh2sms/mysms/master/mysms.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "eviltwin": SourceReview(
         note=(
             "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "
