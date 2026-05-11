@@ -4357,6 +4357,71 @@ def test_slowloris_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_goldeneye_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("goldeneye")
+
+    assert tool.run_command == "cd GoldenEye && sudo ./goldeneye.py {target}"
+    assert specs["goldeneye"].exposed is False
+    assert "DDOS Attack" in specs["goldeneye"].blocked_reason
+    assert records["goldeneye"].source_status == "source-reviewed"
+    assert records["goldeneye"].unverified_parameters == ()
+    assert records["goldeneye"].gap == ""
+    assert any("jseidl/GoldenEye" in item for item in records["goldeneye"].evidence)
+
+    params = adapter_parameter_names(tool, specs["goldeneye"])
+    for removed in (
+        "connections",
+        "duration",
+        "extensions",
+        "follow_redirects",
+        "match_codes",
+        "port",
+        "proxy",
+        "recursive",
+        "threads",
+        "user_agent",
+        "wordlist",
+    ):
+        assert removed not in params
+    for expected in (
+        "useragents_file",
+        "workers",
+        "sockets",
+        "method",
+        "debug",
+        "no_ssl_check",
+        "help",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["goldeneye"],
+        {
+            "target": "https://example.com",
+            "useragents_file": "uas.txt",
+            "workers": 4,
+            "sockets": 10,
+            "method": "random",
+            "debug": True,
+            "no_ssl_check": True,
+        },
+    )
+    assert preview["target"] == "https://example.com"
+    assert preview["options"] == (
+        "--useragents uas.txt --workers 4 --sockets 10 --method random "
+        "--debug --nosslcheck"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

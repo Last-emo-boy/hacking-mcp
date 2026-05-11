@@ -3144,6 +3144,31 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "sleeptime",
         ),
     ),
+    "goldeneye": SourceReview(
+        note=(
+            "Reviewed against upstream GoldenEye README and getopt-based "
+            "goldeneye.py source. The CLI accepts a URL positional target plus "
+            "user-agent file, worker count, socket count, HTTP method, debug "
+            "mode, SSL verification disablement, and help flags. The adapter "
+            "removes unrelated web fuzzing and generic DDoS placeholders. The "
+            "endpoint remains policy/info-only because DDOS Attack is disabled "
+            "by policy."
+        ),
+        references=(
+            "https://github.com/jseidl/GoldenEye",
+            "https://raw.githubusercontent.com/jseidl/GoldenEye/master/README.md",
+            "https://raw.githubusercontent.com/jseidl/GoldenEye/master/goldeneye.py",
+        ),
+        verified_parameters=(
+            "useragents_file",
+            "workers",
+            "sockets",
+            "method",
+            "debug",
+            "no_ssl_check",
+            "help",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
