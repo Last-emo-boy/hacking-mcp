@@ -5029,6 +5029,61 @@ def test_setoolkit_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_socialfish_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("socialfish")
+
+    assert tool.run_command == "cd SocialFish && sudo python3 SocialFish.py"
+    assert specs["socialfish"].exposed is False
+    assert "Phishing Attack" in specs["socialfish"].blocked_reason
+    assert records["socialfish"].source_status == "source-reviewed"
+    assert records["socialfish"].unverified_parameters == ()
+    assert records["socialfish"].gap == ""
+    assert any("UndeadSec/SocialFish" in item for item in records["socialfish"].evidence)
+
+    params = adapter_parameter_names(tool, specs["socialfish"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "sources",
+        "passive",
+        "resolvers",
+        "api_key",
+        "output_file",
+        "json_output",
+        "scan_depth",
+        "timeout",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "username" in params
+    assert "password" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["socialfish"],
+        {
+            "target": "ignored.example",
+            "username": "admin",
+            "password": "pass",
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == "admin pass"
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

@@ -728,6 +728,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "setoolkit",
         "showme",
         "sliver",
+        "socialfish",
         "routersploit",
         "ufonet",
         "vegil",

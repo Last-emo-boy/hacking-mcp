@@ -3426,6 +3426,32 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "socialfish": SourceReview(
+        note=(
+            "Reviewed against upstream SocialFish repository metadata, README, "
+            "requirements, SocialFish.py, and core config/database helpers. "
+            "The entrypoint has no argparse/getopt parser and no target URL "
+            "argument; it validates sys.argv and requires exactly two startup "
+            "positionals for the web admin username and password before "
+            "starting a Flask app on 0.0.0.0:5000. Phishing configuration is "
+            "handled inside the web UI/API after startup. The adapter therefore "
+            "suppresses generated target argv and exposes only the source-backed "
+            "username and password positionals. The endpoint remains "
+            "policy/info-only because Phishing Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/UndeadSec/SocialFish",
+            "https://raw.githubusercontent.com/UndeadSec/SocialFish/master/README.md",
+            "https://raw.githubusercontent.com/UndeadSec/SocialFish/master/requirements.txt",
+            "https://raw.githubusercontent.com/UndeadSec/SocialFish/master/SocialFish.py",
+            "https://raw.githubusercontent.com/UndeadSec/SocialFish/master/core/config.py",
+            "https://raw.githubusercontent.com/UndeadSec/SocialFish/master/core/dbsf.py",
+        ),
+        verified_parameters=(
+            "username",
+            "password",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
