@@ -1,14 +1,13 @@
-"""Registry-derived adapter metadata for Finduser."""
+"""Dedicated adapter metadata for FindUser."""
 
-from hacking_mcp.mcp_tools.adapters.generic import build_options_for, parameters_for
-
-
-TOOL_NAME = 'finduser'
+from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 
 
-def parameters():
-    return parameters_for(TOOL_NAME)
+def parameters() -> list[AdapterParameterSpec]:
+    return [
+        AdapterParameterSpec("archived_reference", bool, True, "FindUser upstream/source is unavailable; adapter is reference-only."),
+    ]
 
 
 def build_options(kwargs: dict) -> list[str]:
-    return build_options_for(TOOL_NAME, kwargs)
+    return []

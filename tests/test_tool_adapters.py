@@ -3850,6 +3850,47 @@ def test_socialmapper_source_reviewed_previewable(registry, safety):
     )
 
 
+def test_finduser_source_reviewed_archived_reference(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("finduser")
+
+    assert tool.run_command == "cd finduser && sudo bash finduser.sh"
+    assert records["finduser"].source_status == "source-reviewed"
+    assert records["finduser"].unverified_parameters == ()
+    assert records["finduser"].gap == ""
+    assert any("xHak9x/finduser" in item for item in records["finduser"].evidence)
+
+    params = adapter_parameter_names(tool, specs["finduser"])
+    for removed in (
+        "api_key",
+        "json_output",
+        "output_file",
+        "passive",
+        "resolvers",
+        "scan_depth",
+        "sources",
+        "timeout",
+        "user_agent",
+        "username",
+    ):
+        assert removed not in params
+    assert "archived_reference" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["finduser"],
+        {"target": "ignored-user", "archived_reference": True},
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+
+
 def test_appcheck_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

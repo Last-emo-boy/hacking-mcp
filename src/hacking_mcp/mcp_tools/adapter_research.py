@@ -1906,6 +1906,26 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "finduser": SourceReview(
+        note=(
+            "Reviewed the registry upstream URL and GitHub endpoints for "
+            "xHak9x/finduser. The repository currently returns 404 through "
+            "GitHub and git ls-remote reports Repository not found, so no "
+            "verifiable finduser.sh source CLI is available. The adapter "
+            "therefore exposes only a reference-only archived marker instead "
+            "of generated username/social/OSINT placeholders, and suppresses "
+            "synthetic target argv."
+        ),
+        references=(
+            "https://github.com/xHak9x/finduser",
+            "https://api.github.com/repos/xHak9x/finduser",
+            "https://raw.githubusercontent.com/xHak9x/finduser/master/finduser.sh",
+            "https://raw.githubusercontent.com/xHak9x/finduser/main/finduser.sh",
+        ),
+        verified_parameters=(
+            "archived_reference",
+        ),
+    ),
     "appcheck": SourceReview(
         note=(
             "Reviewed against upstream underhanded.sh. The script has no "
