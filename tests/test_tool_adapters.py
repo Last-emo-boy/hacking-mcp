@@ -5992,6 +5992,58 @@ def test_spycam_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_mobdroid_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("mobdroid")
+
+    assert tool.run_command == "cd mob-droid && sudo python3 mob-droid.py"
+    assert specs["mobdroid"].exposed is False
+    assert "Payload Creation" in specs["mobdroid"].blocked_reason
+    assert records["mobdroid"].source_status == "source-reviewed"
+    assert records["mobdroid"].unverified_parameters == ()
+    assert records["mobdroid"].gap == ""
+    assert any("kinghacker0/Mob-Droid" in item for item in records["mobdroid"].evidence)
+
+    params = adapter_parameter_names(tool, specs["mobdroid"])
+    for removed in (
+        "payload_type",
+        "platform",
+        "architecture",
+        "lhost",
+        "lport",
+        "format",
+        "encoder",
+        "output_file",
+        "apk_path",
+        "package_name",
+        "stager",
+        "listener_name",
+        "apk_name",
+        "bundle_id",
+        "sign_apk",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["mobdroid"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

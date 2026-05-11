@@ -3896,6 +3896,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "mobdroid": SourceReview(
+        note=(
+            "Reviewed against upstream kinghacker0/Mob-Droid README and "
+            "mob-droid.py. The documented startup is sudo python3 "
+            "mob-droid.py. The Python entrypoint is interactive: it uses "
+            "input() menus for generate/inject/install flows and reads "
+            "LHOST/LPORT, output APK names, source APK paths, and command "
+            "choices from stdin before invoking msfvenom, apktool, jarsigner, "
+            "or adb internally. It has no argparse/getopt parser, positional "
+            "target, or stable noninteractive CLI flags. The adapter therefore "
+            "suppresses target argv, removes generated payload/mobile "
+            "placeholders, and exposes only an interactive marker. Execution "
+            "remains policy/info-only because Payload Creation is disabled by "
+            "policy."
+        ),
+        references=(
+            "https://github.com/kinghacker0/Mob-Droid",
+            "https://raw.githubusercontent.com/kinghacker0/Mob-Droid/master/README.md",
+            "https://raw.githubusercontent.com/kinghacker0/Mob-Droid/master/mob-droid.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
