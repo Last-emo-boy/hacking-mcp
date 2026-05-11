@@ -4468,6 +4468,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "evilapp": SourceReview(
+        note=(
+            "Reviewed against upstream crypticterminal/EvilApp evilapp.sh. "
+            "The registry startup is bash evilapp.sh. The Bash entrypoint "
+            "starts an interactive Android session-hijack APK builder using "
+            "read prompts for SDK path, target website URL, port, forwarding "
+            "provider, build confirmation, and server startup while invoking "
+            "gradle, apksigner, PHP, ngrok, and Serveo internally. It has no "
+            "argparse/getopt parser, positional target, or stable CLI flags "
+            "for Android package, payload, listener host/port, tunnel, URL, "
+            "or output paths. The adapter therefore suppresses target argv, "
+            "removes generated mobile/payload/phishing placeholders, and "
+            "exposes only an interactive marker. Execution remains policy/"
+            "info-only because EvilApp is classified dangerous and excluded "
+            "from MCP."
+        ),
+        references=(
+            "https://github.com/crypticterminal/EvilApp",
+            "https://raw.githubusercontent.com/crypticterminal/EvilApp/master/evilapp.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "eviltwin": SourceReview(
         note=(
             "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "

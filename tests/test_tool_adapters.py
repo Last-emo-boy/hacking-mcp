@@ -7208,6 +7208,61 @@ def test_droidcam_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_evilapp_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("evilapp")
+
+    assert tool.run_command == "cd EvilApp && bash evilapp.sh"
+    assert specs["evilapp"].exposed is False
+    assert "classified DANGEROUS" in specs["evilapp"].blocked_reason
+    assert records["evilapp"].source_status == "source-reviewed"
+    assert records["evilapp"].unverified_parameters == ()
+    assert records["evilapp"].gap == ""
+    assert any("crypticterminal/EvilApp" in item for item in records["evilapp"].evidence)
+
+    params = adapter_parameter_names(tool, specs["evilapp"])
+    for removed in (
+        "apk_path",
+        "package_name",
+        "device_id",
+        "spawn",
+        "payload_type",
+        "platform",
+        "architecture",
+        "lhost",
+        "lport",
+        "format",
+        "encoder",
+        "output_file",
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["evilapp"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_eviltwin_source_reviewed_interactive_policy_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

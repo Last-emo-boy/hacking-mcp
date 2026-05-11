@@ -723,6 +723,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "droidcam",
         "dracnmap",
         "enigma",
+        "evilapp",
         "evilginx3",
         "eviltwin",
         "fastssh",
