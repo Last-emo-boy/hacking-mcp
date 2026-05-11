@@ -4421,6 +4421,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "lockphish": SourceReview(
+        note=(
+            "Reviewed against upstream JasonJerry/lockphish lockphish.sh. "
+            "The registry startup is bash lockphish.sh. The Bash entrypoint "
+            "checks dependencies, then uses read prompts for redirect URL, "
+            "subdomain selection, and port-forwarding/server choices while "
+            "building phishing pages and starting PHP/ngrok/Serveo flows "
+            "internally. It has no argparse/getopt parser, positional target, "
+            "or stable CLI flags for template, landing URL, listener host/"
+            "port, tunnel, domain, or output directory. The adapter therefore "
+            "suppresses target argv, removes generated phishing/mobile "
+            "placeholders, and exposes only an interactive marker. Execution "
+            "remains policy/info-only because Lockphish is classified "
+            "dangerous and excluded from MCP."
+        ),
+        references=(
+            "https://github.com/JasonJerry/lockphish",
+            "https://raw.githubusercontent.com/JasonJerry/lockphish/master/lockphish.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "eviltwin": SourceReview(
         note=(
             "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "
