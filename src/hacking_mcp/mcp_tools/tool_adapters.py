@@ -737,6 +737,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "hcxdumptool",
         "infoga",
         "iseeyou",
+        "kawaiideauther",
         "keydroid",
         "knockmail",
         "leviathan",

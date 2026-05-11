@@ -195,7 +195,8 @@ class TestServerCreation:
             f"Open source-review gaps: {research_summary['source_review_gaps']}"
             in result
         )
-        assert f"Showing: 3/{research_summary['source_review_gaps']}" in result
+        expected_showing = min(3, research_summary["source_review_gaps"])
+        assert f"Showing: {expected_showing}/{research_summary['source_review_gaps']}" in result
 
         nmap = nmap_metadata["result"]
         assert "**Tool:** `nmap`" in nmap

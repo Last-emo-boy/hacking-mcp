@@ -4256,6 +4256,33 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "archived_reference",
         ),
     ),
+    "kawaiideauther": SourceReview(
+        note=(
+            "Reviewed against upstream aryanrtm/KawaiiDeauther README, "
+            "GitHub contents, install.sh, and KawaiiDeauther.sh. The "
+            "documented startup is sudo KawaiiDeauther.sh, and the shell "
+            "entrypoint is a menu-driven workflow that uses read prompts for "
+            "attack mode, target SSID/channel, wireless interface, default "
+            "versus custom fake-AP wordlist, generated SSID prefix, and SSID "
+            "count before invoking mdk3/macchanger/nmcli internally. It has "
+            "no argparse/getopt parser, positional target, or stable CLI "
+            "flags for interface/BSSID/ESSID/channel/wordlist. The adapter "
+            "therefore suppresses target argv, removes generated wireless "
+            "placeholders, and exposes only an interactive marker. Execution "
+            "remains policy/info-only because the tool is classified "
+            "dangerous."
+        ),
+        references=(
+            "https://github.com/aryanrtm/KawaiiDeauther",
+            "https://api.github.com/repos/aryanrtm/KawaiiDeauther/contents",
+            "https://raw.githubusercontent.com/aryanrtm/KawaiiDeauther/master/README.md",
+            "https://raw.githubusercontent.com/aryanrtm/KawaiiDeauther/master/KawaiiDeauther.sh",
+            "https://raw.githubusercontent.com/aryanrtm/KawaiiDeauther/master/install.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "airgeddon": SourceReview(
         note=(
             "Reviewed against upstream v1s1t0r1sh3r3/airgeddon README, "
