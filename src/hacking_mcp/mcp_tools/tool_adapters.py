@@ -725,6 +725,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "guymager",
         "havoc",
         "hiddeneye",
+        "howmanypeople",
         "infoga",
         "iseeyou",
         "knockmail",

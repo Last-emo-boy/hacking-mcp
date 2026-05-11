@@ -6684,6 +6684,78 @@ def test_fastssh_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_howmanypeople_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("howmanypeople")
+
+    assert tool.run_command == "howmanypeoplearearound"
+    assert specs["howmanypeople"].exposed is False
+    assert "Wireless Attack" in specs["howmanypeople"].blocked_reason
+    assert records["howmanypeople"].source_status == "source-reviewed"
+    assert records["howmanypeople"].unverified_parameters == ()
+    assert records["howmanypeople"].gap == ""
+    assert any("howmanypeoplearearound" in item for item in records["howmanypeople"].evidence)
+
+    params = adapter_parameter_names(tool, specs["howmanypeople"])
+    for expected in (
+        "adapter",
+        "analyze",
+        "scantime",
+        "output_file",
+        "verbose",
+        "number",
+        "json_output",
+        "nearby",
+        "nocorrection",
+        "loop",
+        "sort",
+    ):
+        assert expected in params
+    for removed in (
+        "interface",
+        "bssid",
+        "essid",
+        "channel",
+        "wordlist",
+        "handshake_file",
+        "monitor_mode",
+        "timeout",
+        "user_agent",
+    ):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["howmanypeople"],
+        {
+            "target": "ignored.example",
+            "adapter": "wlan0",
+            "analyze": "scan.json",
+            "scantime": 20,
+            "output_file": "people.json",
+            "verbose": True,
+            "number": True,
+            "json_output": True,
+            "nearby": True,
+            "nocorrection": True,
+            "loop": True,
+            "sort": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "--adapter wlan0 --analyze scan.json --scantime 20 --out people.json "
+        "--verbose --number --jsonprint --nearby --nocorrection --loop --sort"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

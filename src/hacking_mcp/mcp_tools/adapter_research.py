@@ -4221,6 +4221,37 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "howmanypeople": SourceReview(
+        note=(
+            "Reviewed against upstream howmanypeoplearearound package README "
+            "and CLI documentation. The console command howmanypeoplearearound "
+            "supports --adapter, --analyze, --scantime, --out, --verbose, "
+            "--number, --jsonprint, --nearby, --nocorrection, --loop, and "
+            "--sort. The old generated wireless/web placeholders such as "
+            "interface, BSSID/ESSID/channel, wordlist, handshake, timeout, "
+            "user-agent, and target argv are not source-supported for this "
+            "tool. Execution remains policy/info-only because Wireless Attack "
+            "is disabled by policy."
+        ),
+        references=(
+            "https://github.com/schollz/howmanypeoplearearound",
+            "https://github.com/schollz/howmanypeoplearearound#command-line-usage",
+            "https://pypi.org/project/howmanypeoplearearound/",
+        ),
+        verified_parameters=(
+            "adapter",
+            "analyze",
+            "scantime",
+            "output_file",
+            "verbose",
+            "number",
+            "json_output",
+            "nearby",
+            "nocorrection",
+            "loop",
+            "sort",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
