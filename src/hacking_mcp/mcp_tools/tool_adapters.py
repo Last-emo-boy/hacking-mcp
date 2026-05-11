@@ -708,6 +708,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "appcheck",
         "advphishing",
         "asyncrone",
+        "blackeye",
         "chisel",
         "chrome-keylogger",
         "crivo",

@@ -5342,6 +5342,56 @@ def test_qrjacking_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_blackeye_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("blackeye")
+
+    assert tool.run_command == "cd blackeye && sudo bash blackeye.sh"
+    assert specs["blackeye"].exposed is False
+    assert "Phishing Attack" in specs["blackeye"].blocked_reason
+    assert records["blackeye"].source_status == "source-reviewed"
+    assert records["blackeye"].unverified_parameters == ()
+    assert records["blackeye"].gap == ""
+    assert any("An0nUD4Y/blackeye" in item for item in records["blackeye"].evidence)
+    assert any("thewickedkarma/blackeye-im" in item for item in records["blackeye"].evidence)
+
+    params = adapter_parameter_names(tool, specs["blackeye"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "site",
+        "redirect_url",
+        "custom_domain",
+        "phishlet",
+        "capture_path",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["blackeye"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

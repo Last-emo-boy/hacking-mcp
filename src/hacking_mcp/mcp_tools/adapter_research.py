@@ -3576,6 +3576,36 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "blackeye": SourceReview(
+        note=(
+            "Attempted source review against the registry project URL "
+            "An0nUD4Y/blackeye and the install-command URL "
+            "thelinuxchoice/blackeye; raw README/blackeye.sh requests now "
+            "return 404 and the GitHub API was not reliably readable. A public "
+            "BlackEye-im mirror was reviewed as reference evidence. Its "
+            "blackeye.sh entrypoint presents a template menu, optional custom "
+            "page prompts, Ngrok/Localtunnel selection, and credential/IP wait "
+            "loops through read-driven shell flow. It has no argparse/getopt "
+            "parser, positional target, or supported command-line flags. The "
+            "adapter therefore suppresses target argv, removes generic phishing "
+            "placeholders, and exposes only an interactive marker. Execution "
+            "remains policy/info-only because Phishing Attack is disabled by "
+            "policy."
+        ),
+        references=(
+            "https://github.com/An0nUD4Y/blackeye",
+            "https://raw.githubusercontent.com/An0nUD4Y/blackeye/master/blackeye.sh",
+            "https://github.com/thelinuxchoice/blackeye",
+            "https://raw.githubusercontent.com/thelinuxchoice/blackeye/master/blackeye.sh",
+            "https://github.com/thewickedkarma/blackeye-im",
+            "https://raw.githubusercontent.com/thewickedkarma/blackeye-im/master/README.md",
+            "https://raw.githubusercontent.com/thewickedkarma/blackeye-im/master/blackeye.sh",
+            "https://api.github.com/repos/thewickedkarma/blackeye-im/contents?ref=master",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
