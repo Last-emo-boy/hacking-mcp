@@ -818,7 +818,7 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     assert {"session", "module_name", "set_regions", "whoami"}.issubset(pacu_schema)
 
     evilginx_schema = tools["security_tool_evilginx3"].inputSchema["properties"]
-    assert {"site", "redirect_url", "custom_domain", "phishlet"}.issubset(
+    assert {"phishlets_dir", "redirectors_dir", "config_dir", "debug"}.issubset(
         evilginx_schema
     )
 
@@ -5131,6 +5131,67 @@ def test_hiddeneye_source_reviewed_interactive_policy_only(registry, safety):
     )
     assert preview["target"] == ""
     assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
+def test_evilginx3_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("evilginx3")
+
+    assert tool.run_command == "evilginx"
+    assert specs["evilginx3"].exposed is False
+    assert "Phishing Attack" in specs["evilginx3"].blocked_reason
+    assert records["evilginx3"].source_status == "source-reviewed"
+    assert records["evilginx3"].unverified_parameters == ()
+    assert records["evilginx3"].gap == ""
+    assert any("kgretzky/evilginx2" in item for item in records["evilginx3"].evidence)
+
+    params = adapter_parameter_names(tool, specs["evilginx3"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "site",
+        "redirect_url",
+        "custom_domain",
+        "phishlet",
+        "capture_path",
+    ):
+        assert removed not in params
+    for expected in (
+        "phishlets_dir",
+        "redirectors_dir",
+        "config_dir",
+        "debug",
+        "developer",
+        "version",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["evilginx3"],
+        {
+            "target": "ignored.example",
+            "phishlets_dir": "phishlets",
+            "redirectors_dir": "redirectors",
+            "config_dir": "cfg",
+            "debug": True,
+            "developer": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == "-p phishlets -t redirectors -c cfg -debug -developer"
     assert preview["executable"] is False
 
 

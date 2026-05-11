@@ -3480,6 +3480,32 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "evilginx3": SourceReview(
+        note=(
+            "Reviewed against upstream Evilginx 3 README and Go main.go. "
+            "The entrypoint uses the standard flag package for -p phishlets "
+            "directory, -t redirectors directory, -c configuration directory, "
+            "-debug, -developer, and -v version output, then starts DNS/HTTP "
+            "services and enters the interactive terminal work loop. The "
+            "adapter therefore removes generic phishing placeholders, suppresses "
+            "target argv, and exposes only those startup flags. Execution remains "
+            "policy/info-only because Phishing Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/kgretzky/evilginx2",
+            "https://raw.githubusercontent.com/kgretzky/evilginx2/master/README.md",
+            "https://raw.githubusercontent.com/kgretzky/evilginx2/master/main.go",
+            "https://raw.githubusercontent.com/kgretzky/evilginx2/master/go.mod",
+        ),
+        verified_parameters=(
+            "phishlets_dir",
+            "redirectors_dir",
+            "config_dir",
+            "debug",
+            "developer",
+            "version",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

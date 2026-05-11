@@ -712,6 +712,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "chrome-keylogger",
         "crivo",
         "dracnmap",
+        "evilginx3",
         "goblin-wordgenerator",
         "guymager",
         "havoc",
