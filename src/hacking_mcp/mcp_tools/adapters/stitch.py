@@ -1,14 +1,18 @@
-"""Registry-derived adapter metadata for Stitch."""
+"""Dedicated adapter metadata for Stitch."""
 
-from hacking_mcp.mcp_tools.adapters.generic import build_options_for, parameters_for
-
-
-TOOL_NAME = 'stitch'
+from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 
 
 def parameters():
-    return parameters_for(TOOL_NAME)
+    return [
+        AdapterParameterSpec(
+            "interactive",
+            bool,
+            True,
+            "Stitch starts an interactive cmd.Cmd remote administration shell.",
+        ),
+    ]
 
 
 def build_options(kwargs: dict) -> list[str]:
-    return build_options_for(TOOL_NAME, kwargs)
+    return []

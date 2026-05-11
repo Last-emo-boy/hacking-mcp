@@ -3790,6 +3790,32 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "stitch": SourceReview(
+        note=(
+            "Reviewed against upstream Stitch project page, repository, "
+            "main.py, Application/stitch_cmd.py, and "
+            "Application/stitch_gen.py. The documented startup is sudo "
+            "python3 main.py. The entrypoint launches server_main(), which "
+            "creates a cmd.Cmd command loop, and payload generation continues "
+            "through interactive prompts/raw_input values for listener host/"
+            "port, persistence, build settings, and remote administration "
+            "workflow. It has no argparse/getopt parser, positional target, "
+            "or msfvenom-style CLI flags. The adapter therefore suppresses "
+            "target argv, removes generated payload placeholders, and exposes "
+            "only an interactive marker. Execution remains policy/info-only "
+            "because Payload Creation is disabled by policy."
+        ),
+        references=(
+            "https://nathanlopez.github.io/Stitch",
+            "https://github.com/nathanlopez/Stitch",
+            "https://raw.githubusercontent.com/nathanlopez/Stitch/master/main.py",
+            "https://raw.githubusercontent.com/nathanlopez/Stitch/master/Application/stitch_cmd.py",
+            "https://raw.githubusercontent.com/nathanlopez/Stitch/master/Application/stitch_gen.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
