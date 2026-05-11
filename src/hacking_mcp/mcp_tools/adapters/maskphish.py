@@ -2,7 +2,7 @@
 
 from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 from hacking_mcp.mcp_tools.adapters.helpers import add_bool, add_value
-from hacking_mcp.mcp_tools.adapters.setoolkit import _phishing_options, _phishing_parameters
+from hacking_mcp.mcp_tools.adapters.phishing_common import phishing_options, phishing_parameters
 
 
 def parameters() -> list[AdapterParameterSpec]:
@@ -14,7 +14,7 @@ def parameters() -> list[AdapterParameterSpec]:
         AdapterParameterSpec("recursive", bool, False, "Enable recursive discovery when supported."),
         AdapterParameterSpec("follow_redirects", bool, False, "Follow HTTP redirects when supported."),
         AdapterParameterSpec("proxy", str, "", "Optional HTTP proxy URL."),
-        *_phishing_parameters(),
+        *phishing_parameters(),
     ]
 
 
@@ -27,5 +27,5 @@ def build_options(kwargs: dict) -> list[str]:
     add_bool(tokens, kwargs, "recursive", "-recursion")
     add_bool(tokens, kwargs, "follow_redirects", "-r")
     add_value(tokens, kwargs, "proxy", "-proxy")
-    tokens.extend(_phishing_options(kwargs))
+    tokens.extend(phishing_options(kwargs))
     return tokens

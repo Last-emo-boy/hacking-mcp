@@ -3401,6 +3401,31 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "setoolkit": SourceReview(
+        note=(
+            "Reviewed against upstream TrustedSec Social-Engineer Toolkit "
+            "README, installer, top-level setoolkit entrypoint, and "
+            "src/core/set.py. The installed command starts an interactive "
+            "menu framework; the entrypoint prompts for terms-of-service "
+            "acceptance and menu selections with input(), while core attack "
+            "configuration is read through raw_input/setprompt menus. No "
+            "argparse/getopt CLI parameters or positional target arguments "
+            "are exposed for the phishing workflow. The adapter is therefore "
+            "intentionally interactive-only and removes generated phishing "
+            "placeholders. The endpoint remains policy/info-only because "
+            "Phishing Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/trustedsec/social-engineer-toolkit",
+            "https://raw.githubusercontent.com/trustedsec/social-engineer-toolkit/master/README.md",
+            "https://raw.githubusercontent.com/trustedsec/social-engineer-toolkit/master/setup.py",
+            "https://raw.githubusercontent.com/trustedsec/social-engineer-toolkit/master/setoolkit",
+            "https://raw.githubusercontent.com/trustedsec/social-engineer-toolkit/master/src/core/set.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

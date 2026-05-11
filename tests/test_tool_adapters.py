@@ -924,9 +924,7 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
     }.issubset(ghidra_schema)
 
     setoolkit_schema = tools["security_tool_setoolkit"].inputSchema["properties"]
-    assert {"template", "listener_host", "listener_port", "tunnel"}.issubset(
-        setoolkit_schema
-    )
+    assert {"interactive"}.issubset(setoolkit_schema)
 
     msfvenom_schema = tools["security_tool_msfvenom"].inputSchema["properties"]
     assert {"payload_type", "platform", "lhost", "lport", "format"}.issubset(
@@ -4972,6 +4970,55 @@ def test_advphishing_source_reviewed_interactive_policy_only(registry, safety):
     preview = adapter_request_preview(
         tool,
         specs["advphishing"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
+def test_setoolkit_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("setoolkit")
+
+    assert tool.run_command == "sudo setoolkit"
+    assert specs["setoolkit"].exposed is False
+    assert "Phishing Attack" in specs["setoolkit"].blocked_reason
+    assert records["setoolkit"].source_status == "source-reviewed"
+    assert records["setoolkit"].unverified_parameters == ()
+    assert records["setoolkit"].gap == ""
+    assert any("trustedsec/social-engineer-toolkit" in item for item in records["setoolkit"].evidence)
+
+    params = adapter_parameter_names(tool, specs["setoolkit"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "site",
+        "redirect_url",
+        "custom_domain",
+        "phishlet",
+        "capture_path",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["setoolkit"],
         {
             "target": "ignored.example",
             "interactive": True,

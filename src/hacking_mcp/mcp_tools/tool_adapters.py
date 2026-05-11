@@ -725,6 +725,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "redhawk",
         "reconspider",
         "rvuln",
+        "setoolkit",
         "showme",
         "sliver",
         "routersploit",
