@@ -3691,6 +3691,28 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "quiet",
         ),
     ),
+    "maskphish": SourceReview(
+        note=(
+            "Reviewed against upstream MaskPhish README, repository listing, "
+            "and maskphish.sh. The documented startup is bash maskphish.sh; "
+            "the Bash script validates URLs but obtains the phishing URL, "
+            "masking domain, and social-engineering words through read prompts. "
+            "It has no argparse/getopt parser, positional target, web-fuzzing "
+            "flags, or generic phishing CLI flags. The adapter therefore "
+            "suppresses target argv, removes generated placeholders, and "
+            "exposes only an interactive marker. Execution remains policy/"
+            "info-only because Phishing Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/jaykali/maskphish",
+            "https://raw.githubusercontent.com/jaykali/maskphish/master/README.md",
+            "https://raw.githubusercontent.com/jaykali/maskphish/master/maskphish.sh",
+            "https://api.github.com/repos/jaykali/maskphish/contents?ref=master",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

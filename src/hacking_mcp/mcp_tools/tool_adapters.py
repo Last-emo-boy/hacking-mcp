@@ -723,6 +723,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "knockmail",
         "leviathan",
         "ligolo-ng",
+        "maskphish",
         "mythic",
         "peass-ng",
         "pyphisher",
