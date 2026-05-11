@@ -3117,6 +3117,33 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "slowloris": SourceReview(
+        note=(
+            "Reviewed against upstream Slowloris README and argparse source. "
+            "The command accepts an optional host positional plus web port, "
+            "socket count, verbose logging, randomized user agents, SOCKS5 "
+            "proxy activation and proxy host/port, HTTPS mode, and sleep time "
+            "between keep-alive headers. The adapter removes unrelated web "
+            "fuzzing and generic DDoS placeholders. The endpoint remains "
+            "policy/info-only because DDOS Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/gkbrk/slowloris",
+            "https://raw.githubusercontent.com/gkbrk/slowloris/master/README.md",
+            "https://raw.githubusercontent.com/gkbrk/slowloris/master/slowloris.py",
+        ),
+        verified_parameters=(
+            "port",
+            "sockets",
+            "verbose",
+            "randuseragents",
+            "useproxy",
+            "proxy_host",
+            "proxy_port",
+            "https",
+            "sleeptime",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

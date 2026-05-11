@@ -4287,6 +4287,76 @@ def test_xss_freak_source_reviewed_interactive_only(registry, safety):
     assert preview["confirm_authorized"] is True
 
 
+def test_slowloris_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("slowloris")
+
+    assert tool.run_command == "slowloris {target}"
+    assert specs["slowloris"].exposed is False
+    assert "DDOS Attack" in specs["slowloris"].blocked_reason
+    assert records["slowloris"].source_status == "source-reviewed"
+    assert records["slowloris"].unverified_parameters == ()
+    assert records["slowloris"].gap == ""
+    assert any("gkbrk/slowloris" in item for item in records["slowloris"].evidence)
+
+    params = adapter_parameter_names(tool, specs["slowloris"])
+    for removed in (
+        "connections",
+        "duration",
+        "extensions",
+        "follow_redirects",
+        "match_codes",
+        "method",
+        "proxy",
+        "recursive",
+        "threads",
+        "user_agent",
+        "wordlist",
+    ):
+        assert removed not in params
+    for expected in (
+        "port",
+        "sockets",
+        "verbose",
+        "randuseragents",
+        "useproxy",
+        "proxy_host",
+        "proxy_port",
+        "https",
+        "sleeptime",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["slowloris"],
+        {
+            "target": "example.com",
+            "port": 443,
+            "sockets": 25,
+            "verbose": True,
+            "randuseragents": True,
+            "useproxy": True,
+            "proxy_host": "127.0.0.1",
+            "proxy_port": 9050,
+            "https": True,
+            "sleeptime": 10,
+        },
+    )
+    assert preview["target"] == "example.com"
+    assert preview["options"] == (
+        "--port 443 --sockets 25 --verbose --randuseragents --useproxy "
+        "--proxy-host 127.0.0.1 --proxy-port 9050 --https --sleeptime 10"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
