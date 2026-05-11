@@ -3663,6 +3663,34 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "qrljacking": SourceReview(
+        note=(
+            "Reviewed against upstream OWASP QRLJacking README, QRLJacker "
+            "directory listing, and QrlJacker.py argparse entrypoint. The CLI "
+            "supports -r for a resource/history file, -x for semicolon-separated "
+            "framework commands, --debug, --dev, --verbose, and -q for quiet "
+            "startup before handing control to the interactive Cli.start() "
+            "loop. It does not accept a positional target or generic phishing "
+            "template/tunnel flags. The adapter therefore suppresses target argv "
+            "and exposes only those startup flags. Execution remains policy/"
+            "info-only because Phishing Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/OWASP/QRLJacking",
+            "https://raw.githubusercontent.com/OWASP/QRLJacking/master/README.md",
+            "https://raw.githubusercontent.com/OWASP/QRLJacking/master/QRLJacker/QrlJacker.py",
+            "https://raw.githubusercontent.com/OWASP/QRLJacking/master/QRLJacker/README.md",
+            "https://api.github.com/repos/OWASP/QRLJacking/contents/QRLJacker?ref=master",
+        ),
+        verified_parameters=(
+            "resource_file",
+            "execute_command",
+            "debug",
+            "dev",
+            "verbose",
+            "quiet",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

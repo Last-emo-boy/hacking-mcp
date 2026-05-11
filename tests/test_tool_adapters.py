@@ -5495,6 +5495,68 @@ def test_thanos_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_qrljacking_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("qrljacking")
+
+    assert tool.run_command == "cd QRLJacking/QRLJacker && python3 QrlJacker.py"
+    assert specs["qrljacking"].exposed is False
+    assert "Phishing Attack" in specs["qrljacking"].blocked_reason
+    assert records["qrljacking"].source_status == "source-reviewed"
+    assert records["qrljacking"].unverified_parameters == ()
+    assert records["qrljacking"].gap == ""
+    assert any("OWASP/QRLJacking" in item for item in records["qrljacking"].evidence)
+
+    params = adapter_parameter_names(tool, specs["qrljacking"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "site",
+        "redirect_url",
+        "custom_domain",
+        "phishlet",
+        "capture_path",
+    ):
+        assert removed not in params
+    for expected in (
+        "resource_file",
+        "execute_command",
+        "debug",
+        "dev",
+        "verbose",
+        "quiet",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["qrljacking"],
+        {
+            "target": "ignored.example",
+            "resource_file": "history.rc",
+            "execute_command": "help;exit",
+            "debug": True,
+            "dev": True,
+            "verbose": True,
+            "quiet": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == "-r history.rc -x 'help;exit' --debug --dev --verbose -q"
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
