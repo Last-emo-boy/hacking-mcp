@@ -4501,6 +4501,49 @@ def test_ufonet_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_saphyra_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("saphyra")
+
+    assert tool.run_command == "cd Saphyra-DDoS && python saphyra.py {target}"
+    assert specs["saphyra"].exposed is False
+    assert "DDOS Attack" in specs["saphyra"].blocked_reason
+    assert records["saphyra"].source_status == "source-reviewed"
+    assert records["saphyra"].unverified_parameters == ()
+    assert records["saphyra"].gap == ""
+    assert any("anonymous24x7/Saphyra-DDoS" in item for item in records["saphyra"].evidence)
+
+    params = adapter_parameter_names(tool, specs["saphyra"])
+    for removed in (
+        "connections",
+        "duration",
+        "method",
+        "port",
+        "threads",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "safe" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["saphyra"],
+        {
+            "target": "https://example.com",
+            "safe": True,
+        },
+    )
+    assert preview["target"] == "https://example.com"
+    assert preview["options"] == "safe"
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

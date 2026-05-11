@@ -86,7 +86,7 @@ DDOS_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/anonymous24x7/Saphyra-DDoS.git",
             "chmod +x Saphyra-DDoS/saphyra.py",
         ],
-        run_command="cd Saphyra-DDoS && python3 saphyra.py {target}",
+        run_command="cd Saphyra-DDoS && python saphyra.py {target}",
         project_url="https://github.com/anonymous24x7/Saphyra-DDoS",
         tags=["ddos", "python", "stress-test"],
         safety_tier=SafetyTier.DANGEROUS,

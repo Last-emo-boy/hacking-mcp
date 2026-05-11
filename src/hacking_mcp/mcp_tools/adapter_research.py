@@ -3207,6 +3207,25 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "delay",
         ),
     ),
+    "saphyra": SourceReview(
+        note=(
+            "Reviewed against upstream Saphyra-DDoS README and sys.argv-based "
+            "saphyra.py source. The documented command is python saphyra.py "
+            "<url>; the source accepts a target URL positional and an optional "
+            "second positional value of safe, with no argparse/getopt flags. "
+            "The adapter removes generic DDoS placeholders and only exposes "
+            "the source-backed safe positional toggle. The endpoint remains "
+            "policy/info-only because DDOS Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/anonymous24x7/Saphyra-DDoS",
+            "https://raw.githubusercontent.com/anonymous24x7/Saphyra-DDoS/main/README.md",
+            "https://raw.githubusercontent.com/anonymous24x7/Saphyra-DDoS/main/saphyra.py",
+        ),
+        verified_parameters=(
+            "safe",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
