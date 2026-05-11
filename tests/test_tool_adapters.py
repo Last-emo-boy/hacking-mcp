@@ -6870,6 +6870,108 @@ def test_hcxtools_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_bettercap_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("bettercap")
+
+    assert tool.run_command == "sudo bettercap --help"
+    assert specs["bettercap"].exposed is False
+    assert "Wireless Attack" in specs["bettercap"].blocked_reason
+    assert records["bettercap"].source_status == "source-reviewed"
+    assert records["bettercap"].unverified_parameters == ()
+    assert records["bettercap"].gap == ""
+    assert any("bettercap/bettercap" in item for item in records["bettercap"].evidence)
+
+    params = adapter_parameter_names(tool, specs["bettercap"])
+    for expected in (
+        "iface",
+        "gateway_override",
+        "autostart",
+        "caplet",
+        "eval_commands",
+        "debug",
+        "silent",
+        "no_colors",
+        "no_history",
+        "env_file",
+        "cpu_profile",
+        "mem_profile",
+        "caplets_path",
+        "script",
+        "pcap_buf_size",
+        "version",
+    ):
+        assert expected in params
+    for removed in (
+        "ports",
+        "scan_type",
+        "service_version",
+        "os_detection",
+        "default_scripts",
+        "timing",
+        "top_ports",
+        "rate",
+        "interface",
+        "bssid",
+        "essid",
+        "channel",
+        "wordlist",
+        "handshake_file",
+        "monitor_mode",
+        "pmkid",
+        "deauth_count",
+        "capture_file",
+        "target_essid",
+        "ble",
+        "scan_depth",
+        "timeout",
+        "user_agent",
+        "output_file",
+        "json_output",
+    ):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["bettercap"],
+        {
+            "target": "ignored.example",
+            "iface": "wlan0",
+            "gateway_override": "192.168.1.1",
+            "autostart": "events.stream,net.probe",
+            "caplet": "wifi.cap",
+            "eval_commands": "set wifi.interface wlan0; wifi.recon on",
+            "debug": True,
+            "silent": True,
+            "no_colors": True,
+            "no_history": True,
+            "env_file": "env.json",
+            "cpu_profile": "cpu.prof",
+            "mem_profile": "mem.prof",
+            "caplets_path": "caplets",
+            "script": "session.js",
+            "pcap_buf_size": 4096,
+            "version": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-iface wlan0 -gateway-override 192.168.1.1 "
+        "-autostart events.stream,net.probe -caplet wifi.cap "
+        "-eval 'set wifi.interface wlan0; wifi.recon on' -debug -silent "
+        "-no-colors -no-history -env-file env.json -cpu-profile cpu.prof "
+        "-mem-profile mem.prof -caplets-path caplets -script session.js "
+        "-pcap-buf-size 4096 -version"
+    )
+    assert preview["executable"] is False
+
+
 def test_eviltwin_source_reviewed_interactive_policy_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

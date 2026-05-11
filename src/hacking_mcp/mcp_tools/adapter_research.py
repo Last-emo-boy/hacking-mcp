@@ -4311,6 +4311,48 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "bettercap": SourceReview(
+        note=(
+            "Reviewed against upstream bettercap README, main.go session "
+            "startup flow, and core/options.go Go flag parser. bettercap "
+            "loads modules, evaluates -eval commands, optionally runs a "
+            "caplet, and then enters an interactive session. The stable CLI "
+            "surface is the framework startup flags: interface, gateway "
+            "override, module autostart list, caplet, eval commands, debug/"
+            "silent/color/history toggles, env/profile/caplets/script paths, "
+            "PCAP buffer size, and version. Module-specific WiFi/BLE/MITM "
+            "actions are interactive/caplet commands rather than top-level "
+            "flags, so the old generated nmap-like scan options, wireless "
+            "BSSID/ESSID/channel/wordlist/handshake placeholders, scan depth, "
+            "timeout, user-agent, output, and JSON flags are not source-"
+            "supported CLI arguments. Execution remains policy/info-only "
+            "because Wireless Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/bettercap/bettercap",
+            "https://raw.githubusercontent.com/bettercap/bettercap/master/README.md",
+            "https://raw.githubusercontent.com/bettercap/bettercap/master/main.go",
+            "https://raw.githubusercontent.com/bettercap/bettercap/master/core/options.go",
+        ),
+        verified_parameters=(
+            "iface",
+            "gateway_override",
+            "autostart",
+            "caplet",
+            "eval_commands",
+            "debug",
+            "silent",
+            "no_colors",
+            "no_history",
+            "env_file",
+            "cpu_profile",
+            "mem_profile",
+            "caplets_path",
+            "script",
+            "pcap_buf_size",
+            "version",
+        ),
+    ),
     "eviltwin": SourceReview(
         note=(
             "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "
