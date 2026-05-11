@@ -736,6 +736,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "showme",
         "sliver",
         "socialfish",
+        "thanos",
         "routersploit",
         "ufonet",
         "vegil",

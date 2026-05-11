@@ -3639,6 +3639,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "thanos": SourceReview(
+        note=(
+            "Reviewed against upstream Thanos README and Thanos.sh. The "
+            "documented startup is bash Thanos.sh; the Bash entrypoint prepares "
+            "local files/services, checks root/OS state, then enters read-driven "
+            "menus for attack mode, site selections, Ngrok token setup, "
+            "customized/manual pages, and tunnel providers. It has no argparse/"
+            "getopt parser, positional target, or supported command-line flags. "
+            "The adapter therefore suppresses target argv, removes generic "
+            "phishing placeholders, and exposes only an interactive marker. "
+            "Execution remains policy/info-only because Phishing Attack is "
+            "disabled by policy."
+        ),
+        references=(
+            "https://github.com/TridevReddy/Thanos",
+            "https://raw.githubusercontent.com/TridevReddy/Thanos/master/Thanos.sh",
+            "https://raw.githubusercontent.com/TridevReddy/Thanos/main/README.md",
+            "https://raw.githubusercontent.com/TridevReddy/Thanos/main/Thanos.sh",
+            "https://api.github.com/repos/TridevReddy/Thanos/contents?ref=main",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
