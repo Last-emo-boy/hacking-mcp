@@ -587,6 +587,13 @@ async def test_adapter_schema_includes_tool_specific_parameters(registry, safety
         "version", "verbose",
     }.issubset(stegcracker_schema)
 
+    whitespace_schema = tools["security_tool_whitespace"].inputSchema["properties"]
+    assert {
+        "compress", "quiet", "space_report", "password", "line_length",
+        "message_file", "message", "input_file", "output_file", "version",
+        "help",
+    }.issubset(whitespace_schema)
+
     hashcat_schema = tools["security_tool_hashcat"].inputSchema["properties"]
     assert {
         "hash_type", "attack_mode", "wordlist", "wordlist2", "mask",
@@ -2728,6 +2735,59 @@ def test_stegocracker_source_reviewed_and_previewable(registry, safety):
     )
     assert preview["target"] == "cover.png"
     assert preview["options"] == "--input cover.png --output out.png --message secret --encode"
+
+
+def test_whitespace_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("whitespace")
+
+    assert tool.run_command == "snow"
+    assert tool.project_url == "https://github.com/mattkwan-zz/snow"
+    assert records["whitespace"].source_status == "source-reviewed"
+    assert records["whitespace"].unverified_parameters == ()
+    assert records["whitespace"].gap == ""
+    assert any("mattkwan-zz/snow" in item for item in records["whitespace"].evidence)
+
+    params = adapter_parameter_names(tool, specs["whitespace"])
+    for removed in ("extract", "passphrase", "wordlist"):
+        assert removed not in params
+    for expected in (
+        "compress",
+        "quiet",
+        "space_report",
+        "password",
+        "line_length",
+        "message_file",
+        "message",
+        "input_file",
+        "output_file",
+        "version",
+        "help",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["whitespace"],
+        {
+            "compress": True,
+            "message": "I am lying",
+            "password": "hello world",
+            "line_length": 72,
+            "input_file": "infile.txt",
+            "output_file": "outfile.txt",
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-C -p 'hello world' -l 72 -m 'I am lying' infile.txt outfile.txt"
+    )
 
 
 def test_host2ip_source_reviewed_and_previewable(registry, safety):
@@ -6723,6 +6783,38 @@ async def test_stegocracker_source_reviewed_parameters_build_cli_options(registr
     assert request.tool_name == "stegocracker"
     assert request.target == "cover.png"
     assert request.options == "--input cover.png --output out.png --message secret --encode"
+
+
+@pytest.mark.asyncio
+async def test_whitespace_source_reviewed_parameters_build_cli_options(registry, safety):
+    from mcp.server.fastmcp import FastMCP
+    from unittest.mock import AsyncMock, MagicMock
+
+    mcp = FastMCP(name="adapter-test")
+    response = MagicMock()
+    response.format.return_value = "ok"
+    orchestrator = MagicMock()
+    orchestrator.execute = AsyncMock(return_value=response)
+
+    register(mcp, orchestrator, registry, safety)
+    await mcp.call_tool(
+        "security_tool_whitespace",
+        {
+            "compress": True,
+            "message": "I am lying",
+            "password": "hello world",
+            "line_length": 72,
+            "input_file": "infile.txt",
+            "output_file": "outfile.txt",
+        },
+    )
+
+    request = orchestrator.execute.await_args.args[0]
+    assert request.tool_name == "whitespace"
+    assert request.target == ""
+    assert request.options == (
+        "-C -p 'hello world' -l 72 -m 'I am lying' infile.txt outfile.txt"
+    )
 
 
 @pytest.mark.asyncio

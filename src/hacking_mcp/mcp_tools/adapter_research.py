@@ -1270,6 +1270,38 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "update",
         ),
     ),
+    "whitespace": SourceReview(
+        note=(
+            "The previous beardog108/snow10 registry URL now returns 404. "
+            "Reviewed against the maintained snow mirror and original snow "
+            "man page for whitespace steganography. The registry now uses the "
+            "packaged snow/stegsnow command instead of running an installer. "
+            "The adapter exposes documented compression, quiet, space-report, "
+            "password, line-length, message-file/message-string, input/output "
+            "file, version, and help parameters."
+        ),
+        references=(
+            "https://github.com/beardog108/snow10",
+            "https://api.github.com/repos/beardog108/snow10",
+            "https://github.com/mattkwan-zz/snow",
+            "https://raw.githubusercontent.com/mattkwan-zz/snow/master/README.md",
+            "https://raw.githubusercontent.com/mattkwan-zz/snow/master/snow.1",
+            "http://www.darkside.com.au/snow/",
+        ),
+        verified_parameters=(
+            "compress",
+            "quiet",
+            "space_report",
+            "password",
+            "line_length",
+            "message_file",
+            "message",
+            "input_file",
+            "output_file",
+            "version",
+            "help",
+        ),
+    ),
     "nmap": SourceReview(
         note=(
             "Reviewed against the official Nmap reference guide for target "
