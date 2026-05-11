@@ -4483,6 +4483,31 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "debinject": SourceReview(
+        note=(
+            "Reviewed against upstream UndeadSec/Debinject README, GitHub "
+            "contents, and debinject.py. The documented startup is python "
+            "debinject.py, and the Python 2 entrypoint uses raw_input for "
+            "the .deb package path, LHOST, LPORT, target architecture, "
+            "payload type, persistence choice, and listener startup before "
+            "invoking dpkg, msfvenom, and msfconsole internally. It has no "
+            "argparse/getopt parser, positional target, or stable CLI flags "
+            "for payload/platform/architecture/listener/output values. The "
+            "adapter therefore suppresses target argv, removes generated "
+            "payload placeholders, and exposes only an interactive marker. "
+            "Execution remains policy/info-only because the tool is "
+            "classified dangerous."
+        ),
+        references=(
+            "https://github.com/UndeadSec/Debinject",
+            "https://api.github.com/repos/UndeadSec/Debinject/contents",
+            "https://raw.githubusercontent.com/UndeadSec/Debinject/master/README.md",
+            "https://raw.githubusercontent.com/UndeadSec/Debinject/master/debinject.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "keydroid": SourceReview(
         note=(
             "Reviewed against upstream F4dl0/keydroid keydroid.sh. The "
