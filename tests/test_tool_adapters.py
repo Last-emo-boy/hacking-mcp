@@ -4795,6 +4795,59 @@ def test_dnstwist_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_autophisher_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("autophisher")
+
+    assert tool.run_command == "cd autophisher && sudo bash autophisher.sh"
+    assert specs["autophisher"].exposed is False
+    assert "Phishing Attack" in specs["autophisher"].blocked_reason
+    assert records["autophisher"].source_status == "source-reviewed"
+    assert records["autophisher"].unverified_parameters == ()
+    assert records["autophisher"].gap == ""
+    assert any("CodingRanjith/autophisher" in item for item in records["autophisher"].evidence)
+
+    params = adapter_parameter_names(tool, specs["autophisher"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "sources",
+        "passive",
+        "resolvers",
+        "api_key",
+        "output_file",
+        "json_output",
+        "scan_depth",
+        "timeout",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["autophisher"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == "ignored.example"
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

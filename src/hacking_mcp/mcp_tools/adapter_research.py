@@ -3316,6 +3316,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "autophisher": SourceReview(
+        note=(
+            "Reviewed against upstream Autophisher README, autophisher.sh, "
+            "and scripts/launch.sh wrapper. The main script has no CLI parser "
+            "or positional arguments; platform choice, site profile, tunnel "
+            "provider, LocalXpose token, and region choices are read "
+            "interactively from stdin before starting the local PHP/tunnel "
+            "workflow. The optional launch wrapper only supports help and "
+            "saved credential/IP display modes, not attack configuration. "
+            "The adapter is therefore intentionally interactive-only and "
+            "removes generated phishing, OSINT, and scanner placeholders. "
+            "The endpoint remains policy/info-only because Phishing Attack "
+            "is disabled by policy."
+        ),
+        references=(
+            "https://github.com/CodingRanjith/autophisher",
+            "https://raw.githubusercontent.com/CodingRanjith/autophisher/main/README.md",
+            "https://raw.githubusercontent.com/CodingRanjith/autophisher/main/autophisher.sh",
+            "https://raw.githubusercontent.com/CodingRanjith/autophisher/main/scripts/launch.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
