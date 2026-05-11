@@ -1,11 +1,18 @@
 """Dedicated adapter metadata for TheFatRat."""
 
-from hacking_mcp.mcp_tools.adapters.msfvenom import _payload_options, _payload_parameters
+from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 
 
-def parameters():
-    return _payload_parameters()
+def parameters() -> list[AdapterParameterSpec]:
+    return [
+        AdapterParameterSpec(
+            "interactive",
+            bool,
+            True,
+            "This adapter is intentionally interactive-only; TheFatRat reads setup, payload, LHOST, LPORT, and listener choices from stdin.",
+        ),
+    ]
 
 
 def build_options(kwargs: dict) -> list[str]:
-    return _payload_options(kwargs)
+    return []

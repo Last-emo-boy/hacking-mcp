@@ -5663,6 +5663,56 @@ def test_blackphish_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_thefatrat_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("thefatrat")
+
+    assert tool.run_command == "cd TheFatRat && sudo bash setup.sh"
+    assert specs["thefatrat"].exposed is False
+    assert "Payload Creation" in specs["thefatrat"].blocked_reason
+    assert records["thefatrat"].source_status == "source-reviewed"
+    assert records["thefatrat"].unverified_parameters == ()
+    assert records["thefatrat"].gap == ""
+    assert any("Screetsec/TheFatRat" in item for item in records["thefatrat"].evidence)
+
+    params = adapter_parameter_names(tool, specs["thefatrat"])
+    for removed in (
+        "payload_type",
+        "platform",
+        "architecture",
+        "lhost",
+        "lport",
+        "format",
+        "encoder",
+        "output_file",
+        "stager",
+        "listener_name",
+        "apk_name",
+        "bundle_id",
+        "sign_apk",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["thefatrat"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

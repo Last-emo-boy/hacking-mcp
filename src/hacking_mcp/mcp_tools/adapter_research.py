@@ -3740,6 +3740,32 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "thefatrat": SourceReview(
+        note=(
+            "Reviewed against upstream TheFatRat README, repository listing, "
+            "setup.sh, and the fatrat Bash entrypoint. The registry run_command "
+            "currently points at setup.sh, while the upstream runtime entrypoint "
+            "is the fatrat script. Both flows are read-driven: setup prompts for "
+            "installation/configuration, and fatrat prompts through menus for "
+            "payload generation, default config, LHOST/LPORT, output names, "
+            "listener creation, and embedded file paths. It has no argparse/"
+            "getopt parser, positional target, or direct msfvenom-style CLI "
+            "flags for these values. The adapter therefore suppresses target "
+            "argv, removes generated payload placeholders, and exposes only an "
+            "interactive marker. Execution remains policy/info-only because "
+            "Payload Creation is disabled by policy."
+        ),
+        references=(
+            "https://github.com/Screetsec/TheFatRat",
+            "https://raw.githubusercontent.com/Screetsec/TheFatRat/master/README.md",
+            "https://raw.githubusercontent.com/Screetsec/TheFatRat/master/setup.sh",
+            "https://raw.githubusercontent.com/Screetsec/TheFatRat/master/fatrat",
+            "https://api.github.com/repos/Screetsec/TheFatRat/contents?ref=master",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

@@ -740,6 +740,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "sliver",
         "socialfish",
         "thanos",
+        "thefatrat",
         "routersploit",
         "ufonet",
         "vegil",
