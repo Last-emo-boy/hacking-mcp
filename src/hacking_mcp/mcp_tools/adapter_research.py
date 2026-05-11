@@ -4017,6 +4017,28 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "bluepot": SourceReview(
+        note=(
+            "Reviewed against upstream andrewmichaelsmith/bluepot README and "
+            "packaged release instructions. The documented startup is sudo "
+            "java -jar bluepot.jar from the unpacked bluepot directory. "
+            "BluePot is a Java GUI Bluetooth honeypot and the upstream "
+            "documentation does not define argparse/getopt-style flags, "
+            "positional targets, wireless interface/BSSID/ESSID/channel "
+            "arguments, or wordlist/handshake inputs. The adapter therefore "
+            "suppresses target argv, removes generated wireless placeholders, "
+            "and exposes only an interactive marker. Execution remains "
+            "policy/info-only because Wireless Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/andrewmichaelsmith/bluepot",
+            "https://raw.githubusercontent.com/andrewmichaelsmith/bluepot/master/README.md",
+            "https://raw.githubusercontent.com/andrewmichaelsmith/bluepot/master/bin/bluepot-0.2.tar.gz",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

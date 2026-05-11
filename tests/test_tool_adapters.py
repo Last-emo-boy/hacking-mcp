@@ -6258,6 +6258,50 @@ def test_pixiewps_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_bluepot_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("bluepot")
+
+    assert tool.run_command == "cd bluepot && sudo java -jar bluepot.jar"
+    assert specs["bluepot"].exposed is False
+    assert "Wireless Attack" in specs["bluepot"].blocked_reason
+    assert records["bluepot"].source_status == "source-reviewed"
+    assert records["bluepot"].unverified_parameters == ()
+    assert records["bluepot"].gap == ""
+    assert any("andrewmichaelsmith/bluepot" in item for item in records["bluepot"].evidence)
+
+    params = adapter_parameter_names(tool, specs["bluepot"])
+    for removed in (
+        "interface",
+        "bssid",
+        "essid",
+        "channel",
+        "wordlist",
+        "handshake_file",
+        "monitor_mode",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["bluepot"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

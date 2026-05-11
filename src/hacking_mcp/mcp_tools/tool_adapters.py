@@ -710,6 +710,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "asyncrone",
         "blackeye",
         "blackphish",
+        "bluepot",
         "brutal",
         "chisel",
         "chrome-keylogger",
