@@ -719,6 +719,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "enigma",
         "evilginx3",
         "eviltwin",
+        "fastssh",
         "fluxion",
         "goblin-wordgenerator",
         "guymager",

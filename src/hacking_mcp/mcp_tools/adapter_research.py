@@ -4198,6 +4198,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "fastssh": SourceReview(
+        note=(
+            "Reviewed against upstream Z4nzu/fastssh fastssh.sh. The registry "
+            "run_command uses sudo bash fastssh.sh --scan. The shell script "
+            "dispatches only --scan and --bruteforcer entry modes from argv; "
+            "target ranges, ports, thread counts, SSH users/passwords, and "
+            "wordlist paths are read interactively inside those flows. It has "
+            "no argparse/getopt parser for generic network scan flags or "
+            "wireless interface/BSSID/ESSID/channel arguments. The adapter "
+            "therefore suppresses target argv, removes generated network/"
+            "wireless placeholders, and exposes only mode plus an interactive "
+            "marker. Execution remains policy/info-only because Wireless "
+            "Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/Z4nzu/fastssh",
+            "https://raw.githubusercontent.com/Z4nzu/fastssh/master/fastssh.sh",
+        ),
+        verified_parameters=(
+            "mode",
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

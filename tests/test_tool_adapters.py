@@ -6630,6 +6630,60 @@ def test_eviltwin_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_fastssh_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("fastssh")
+
+    assert tool.run_command == "cd fastssh && sudo bash fastssh.sh --scan"
+    assert specs["fastssh"].exposed is False
+    assert "Wireless Attack" in specs["fastssh"].blocked_reason
+    assert records["fastssh"].source_status == "source-reviewed"
+    assert records["fastssh"].unverified_parameters == ()
+    assert records["fastssh"].gap == ""
+    assert any("Z4nzu/fastssh" in item for item in records["fastssh"].evidence)
+
+    params = adapter_parameter_names(tool, specs["fastssh"])
+    for removed in (
+        "ports",
+        "scan_type",
+        "service_version",
+        "os_detection",
+        "default_scripts",
+        "timing",
+        "top_ports",
+        "rate",
+        "interface",
+        "bssid",
+        "essid",
+        "channel",
+        "wordlist",
+        "handshake_file",
+        "monitor_mode",
+    ):
+        assert removed not in params
+    assert "mode" in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["fastssh"],
+        {
+            "target": "ignored.example",
+            "mode": "bruteforcer",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == "--bruteforcer"
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
