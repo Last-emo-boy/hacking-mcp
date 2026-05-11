@@ -3506,6 +3506,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "iseeyou": SourceReview(
+        note=(
+            "Reviewed against upstream I-See-You README and ISeeYou.sh. "
+            "The documented startup is ./ISeeYou.sh; the Bash script starts "
+            "Serveo remote port forwarding in xterm, prompts for the generated "
+            "Serveo URL with read -p, writes index.html, starts apache2, and "
+            "tails the Apache access log. It has no argparse/getopt parser, no "
+            "positional target, and no supported command-line flags. The adapter "
+            "therefore suppresses target argv, removes generic phishing "
+            "placeholders, and exposes only an interactive marker. Execution "
+            "remains policy/info-only because Phishing Attack is disabled by "
+            "policy."
+        ),
+        references=(
+            "https://github.com/Viralmaniar/I-See-You",
+            "https://raw.githubusercontent.com/Viralmaniar/I-See-You/master/README.md",
+            "https://raw.githubusercontent.com/Viralmaniar/I-See-You/master/ISeeYou.sh",
+            "https://api.github.com/repos/Viralmaniar/I-See-You/contents?ref=master",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
