@@ -4711,6 +4711,90 @@ def test_crivo_source_reviewed_and_previewable(registry, safety):
     assert preview["executable"] is True
 
 
+def test_dnstwist_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("dnstwist")
+
+    assert tool.run_command == "dnstwist {target}"
+    assert specs["dnstwist"].exposed is False
+    assert "Phishing Attack" in specs["dnstwist"].blocked_reason
+    assert records["dnstwist"].source_status == "source-reviewed"
+    assert records["dnstwist"].unverified_parameters == ()
+    assert records["dnstwist"].gap == ""
+    assert any("elceef/dnstwist" in item for item in records["dnstwist"].evidence)
+
+    params = adapter_parameter_names(tool, specs["dnstwist"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "sources",
+        "passive",
+        "resolvers",
+        "api_key",
+        "json_output",
+        "scan_depth",
+        "timeout",
+    ):
+        assert removed not in params
+    for expected in (
+        "all_records",
+        "banners",
+        "dictionary",
+        "output_format",
+        "fuzzers",
+        "geoip",
+        "lsh",
+        "lsh_url",
+        "mxcheck",
+        "output_file",
+        "registered",
+        "unregistered",
+        "phash",
+        "phash_url",
+        "screenshots",
+        "threads",
+        "whois",
+        "tld",
+        "nameservers",
+        "user_agent",
+        "version",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["dnstwist"],
+        {
+            "target": "example.com",
+            "registered": True,
+            "output_format": "json",
+            "output_file": "dnstwist.json",
+            "fuzzers": "homoglyph,hyphenation",
+            "threads": 8,
+            "nameservers": "1.1.1.1,8.8.8.8",
+            "user_agent": "UA",
+        },
+    )
+    assert preview["target"] == "example.com"
+    assert preview["options"] == (
+        "--format json --fuzzers homoglyph,hyphenation --output dnstwist.json "
+        "--registered --threads 8 --nameservers 1.1.1.1,8.8.8.8 "
+        "--useragent UA"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

@@ -3275,6 +3275,47 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "timer",
         ),
     ),
+    "dnstwist": SourceReview(
+        note=(
+            "Reviewed against upstream dnstwist documentation and argparse "
+            "definitions in dnstwist.py. The CLI accepts a domain positional "
+            "target plus flags for DNS record breadth, banners, dictionaries, "
+            "output format/file, selected fuzzers, GeoIP, ssdeep/tlsh LSH, "
+            "MX checks, registered/unregistered filters, perceptual hashes, "
+            "screenshots, threads, WHOIS, TLD dictionaries, nameservers, "
+            "custom user-agent, and version output. Generic phishing, OSINT, "
+            "and scanner placeholders were removed. The endpoint remains "
+            "policy/info-only because Phishing Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/elceef/dnstwist",
+            "https://raw.githubusercontent.com/elceef/dnstwist/master/docs/README.md",
+            "https://raw.githubusercontent.com/elceef/dnstwist/master/dnstwist.py",
+        ),
+        verified_parameters=(
+            "all_records",
+            "banners",
+            "dictionary",
+            "output_format",
+            "fuzzers",
+            "geoip",
+            "lsh",
+            "lsh_url",
+            "mxcheck",
+            "output_file",
+            "registered",
+            "unregistered",
+            "phash",
+            "phash_url",
+            "screenshots",
+            "threads",
+            "whois",
+            "tld",
+            "nameservers",
+            "user_agent",
+            "version",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
