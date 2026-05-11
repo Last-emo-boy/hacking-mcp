@@ -4375,6 +4375,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "keydroid": SourceReview(
+        note=(
+            "Reviewed against upstream F4dl0/keydroid keydroid.sh. The "
+            "registry startup is bash keydroid.sh. The Bash entrypoint checks "
+            "dependencies, then uses read prompts for Android SDK path, "
+            "reverse-shell port, build confirmation, and server startup while "
+            "generating/signing an APK and opening SSH/PHP/netcat listener "
+            "flows internally. It has no argparse/getopt parser, positional "
+            "target, or stable CLI flags for Android package, listener host/"
+            "port, payload, or output paths. The adapter therefore suppresses "
+            "target argv, removes generated RAT/mobile/payload placeholders, "
+            "and exposes only an interactive marker. Execution remains "
+            "policy/info-only because Keydroid is classified dangerous and "
+            "excluded from MCP."
+        ),
+        references=(
+            "https://github.com/F4dl0/keydroid",
+            "https://raw.githubusercontent.com/F4dl0/keydroid/master/keydroid.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "eviltwin": SourceReview(
         note=(
             "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "
