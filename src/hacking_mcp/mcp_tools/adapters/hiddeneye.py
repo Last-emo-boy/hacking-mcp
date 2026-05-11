@@ -1,11 +1,18 @@
 """Dedicated adapter metadata for HiddenEye."""
 
-from hacking_mcp.mcp_tools.adapters.phishing_common import phishing_options, phishing_parameters
+from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 
 
-def parameters():
-    return phishing_parameters()
+def parameters() -> list[AdapterParameterSpec]:
+    return [
+        AdapterParameterSpec(
+            "interactive",
+            bool,
+            True,
+            "This adapter is intentionally interactive-only; HiddenEye reads menu choices from stdin.",
+        ),
+    ]
 
 
 def build_options(kwargs: dict) -> list[str]:
-    return phishing_options(kwargs)
+    return []

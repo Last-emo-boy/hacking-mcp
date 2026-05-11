@@ -5084,6 +5084,56 @@ def test_socialfish_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_hiddeneye_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("hiddeneye")
+
+    assert tool.run_command == "cd HiddenEye && sudo python3 HiddenEye.py"
+    assert specs["hiddeneye"].exposed is False
+    assert "Phishing Attack" in specs["hiddeneye"].blocked_reason
+    assert records["hiddeneye"].source_status == "source-reviewed"
+    assert records["hiddeneye"].unverified_parameters == ()
+    assert records["hiddeneye"].gap == ""
+    assert any("Morsmalleo/HiddenEye" in item for item in records["hiddeneye"].evidence)
+    assert any("HITVICKY/HIDDEN-eye-" in item for item in records["hiddeneye"].evidence)
+
+    params = adapter_parameter_names(tool, specs["hiddeneye"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "site",
+        "redirect_url",
+        "custom_domain",
+        "phishlet",
+        "capture_path",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["hiddeneye"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

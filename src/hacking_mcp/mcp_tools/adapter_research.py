@@ -3452,6 +3452,34 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "password",
         ),
     ),
+    "hiddeneye": SourceReview(
+        note=(
+            "Attempted source review against the registry project URL "
+            "Morsmalleo/HiddenEye; the GitHub repository and raw README/"
+            "HiddenEye.py/requirements URLs now return 404. A public mirror "
+            "that still references the original DarkSecDevelopers/HiddenEye "
+            "project was reviewed as reference evidence. Its HiddenEye.py "
+            "entrypoint has no argparse/getopt parser or positional target "
+            "arguments; it drives start_main_menu(), feature prompts, custom "
+            "redirect prompt, port selector, and server selector through stdin. "
+            "The adapter is therefore intentionally interactive-only and "
+            "removes generated phishing placeholders. The endpoint remains "
+            "policy/info-only because Phishing Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/Morsmalleo/HiddenEye",
+            "https://api.github.com/repos/Morsmalleo/HiddenEye",
+            "https://raw.githubusercontent.com/Morsmalleo/HiddenEye/master/HiddenEye.py",
+            "https://github.com/HITVICKY/HIDDEN-eye-",
+            "https://raw.githubusercontent.com/HITVICKY/HIDDEN-eye-/master/README.md",
+            "https://raw.githubusercontent.com/HITVICKY/HIDDEN-eye-/master/HiddenEye.py",
+            "https://raw.githubusercontent.com/HITVICKY/HIDDEN-eye-/master/Defs/ActionManager/main_runner.py",
+            "https://raw.githubusercontent.com/HITVICKY/HIDDEN-eye-/master/Defs/ActionManager/Server/server_runner.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
