@@ -6744,6 +6744,132 @@ def test_hcxdumptool_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_hcxtools_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("hcxtools")
+
+    assert tool.run_command == "hcxpcapngtool --help"
+    assert specs["hcxtools"].exposed is False
+    assert "Wireless Attack" in specs["hcxtools"].blocked_reason
+    assert records["hcxtools"].source_status == "source-reviewed"
+    assert records["hcxtools"].unverified_parameters == ()
+    assert records["hcxtools"].gap == ""
+    assert any("ZerBea/hcxtools" in item for item in records["hcxtools"].evidence)
+
+    params = adapter_parameter_names(tool, specs["hcxtools"])
+    for expected in (
+        "input_file",
+        "output_hash",
+        "output_hash_ftpsk",
+        "essid_wordlist",
+        "proberequest_wordlist",
+        "identity_file",
+        "username_file",
+        "device_info_file",
+        "convert_all",
+        "eapol_timeout",
+        "nonce_error_corrections",
+        "ignore_ie",
+        "max_essids",
+        "eapmd5_file",
+        "eapmd5_john_file",
+        "eapleap_file",
+        "tacacs_plus_file",
+        "nmea_in",
+        "nmea_out",
+        "csv_file",
+        "log_file",
+        "raw_out",
+        "raw_in",
+        "lts_file",
+        "pmkid_client_file",
+        "deprecated_pmkid_file",
+        "deprecated_hccapx_file",
+        "deprecated_hccap_file",
+        "deprecated_john_file",
+        "prefix",
+        "add_timestamp",
+        "help",
+        "version",
+    ):
+        assert expected in params
+    for removed in (
+        "interface",
+        "bssid",
+        "essid",
+        "channel",
+        "wordlist",
+        "handshake_file",
+        "monitor_mode",
+        "pmkid",
+        "deauth_count",
+        "capture_file",
+        "target_essid",
+        "ble",
+    ):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["hcxtools"],
+        {
+            "target": "ignored.example",
+            "input_file": "capture.pcapng",
+            "output_hash": "hashes.22000",
+            "output_hash_ftpsk": "hashes.37100",
+            "essid_wordlist": "essids.txt",
+            "proberequest_wordlist": "proberequests.txt",
+            "identity_file": "identities.txt",
+            "username_file": "users.txt",
+            "device_info_file": "devices.txt",
+            "convert_all": True,
+            "eapol_timeout": 5000,
+            "nonce_error_corrections": 8,
+            "ignore_ie": True,
+            "max_essids": 3,
+            "eapmd5_file": "eapmd5.4800",
+            "eapmd5_john_file": "eapmd5.john",
+            "eapleap_file": "leap.5500",
+            "tacacs_plus_file": "tacacs.16100",
+            "nmea_in": "in.nmea",
+            "nmea_out": "out.nmea",
+            "csv_file": "aps.csv",
+            "log_file": "convert.log",
+            "raw_out": "frames.raw",
+            "raw_in": "frames-in.raw",
+            "lts_file": "sync.lts",
+            "pmkid_client_file": "client.22000",
+            "deprecated_pmkid_file": "old.pmkid",
+            "deprecated_hccapx_file": "old.hccapx",
+            "deprecated_hccap_file": "old.hccap",
+            "deprecated_john_file": "old.john",
+            "prefix": "out/prefix",
+            "add_timestamp": True,
+            "help": True,
+            "version": True,
+        },
+    )
+    assert preview["target"] == "capture.pcapng"
+    assert preview["options"] == (
+        "-o hashes.22000 -f hashes.37100 -E essids.txt -R proberequests.txt "
+        "-I identities.txt -U users.txt -D devices.txt --all --eapoltimeout 5000 "
+        "--nonce-error-corrections 8 --ignore-ie --max-essids 3 "
+        "--eapmd5 eapmd5.4800 --eapmd5-john eapmd5.john --eapleap leap.5500 "
+        "--tacacs-plus tacacs.16100 --nmea-in in.nmea --nmea-out out.nmea "
+        "--csv aps.csv --log convert.log --raw-out frames.raw "
+        "--raw-in frames-in.raw --lts sync.lts --pmkid-client client.22000 "
+        "--pmkid old.pmkid --hccapx old.hccapx --hccap old.hccap "
+        "--john old.john --prefix out/prefix --add-timestamp -h -v"
+    )
+    assert preview["executable"] is False
+
+
 def test_eviltwin_source_reviewed_interactive_policy_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

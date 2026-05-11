@@ -704,6 +704,9 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         method = str(kwargs.get("method") or "help").strip() or "help"
         return f"{method} {target}".strip()
 
+    if tool.name == "hcxtools":
+        return str(kwargs.get("input_file") or target)
+
     if tool.name in {
         "airgeddon",
         "appcheck",

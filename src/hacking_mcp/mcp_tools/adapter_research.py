@@ -4254,6 +4254,63 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "hcxtools": SourceReview(
+        note=(
+            "Reviewed against upstream ZerBea/hcxtools README and "
+            "hcxpcapngtool.c getopt_long parser/help text. The registry "
+            "entrypoint is hcxpcapngtool --help, a capture-conversion tool "
+            "that accepts pcapng/pcap/cap files as positional input and "
+            "writes Hashcat/John hash formats, ESSID/identity/username/"
+            "device lists, EAP challenge outputs, GPS/CSV/log/raw outputs, "
+            "legacy PMKID/hccap/hccapx/John files, prefix outputs, timestamp "
+            "metadata, and parser tuning flags. The old generated wireless "
+            "placeholders for interface, BSSID, ESSID, channel, wordlist, "
+            "handshake file, monitor mode, PMKID toggle, deauth count, "
+            "capture file, target ESSID, and BLE are not hcxpcapngtool CLI "
+            "arguments. Execution remains policy/info-only because Wireless "
+            "Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/ZerBea/hcxtools",
+            "https://raw.githubusercontent.com/ZerBea/hcxtools/master/README.md",
+            "https://raw.githubusercontent.com/ZerBea/hcxtools/master/hcxpcapngtool.c",
+        ),
+        verified_parameters=(
+            "input_file",
+            "output_hash",
+            "output_hash_ftpsk",
+            "essid_wordlist",
+            "proberequest_wordlist",
+            "identity_file",
+            "username_file",
+            "device_info_file",
+            "convert_all",
+            "eapol_timeout",
+            "nonce_error_corrections",
+            "ignore_ie",
+            "max_essids",
+            "eapmd5_file",
+            "eapmd5_john_file",
+            "eapleap_file",
+            "tacacs_plus_file",
+            "nmea_in",
+            "nmea_out",
+            "csv_file",
+            "log_file",
+            "raw_out",
+            "raw_in",
+            "lts_file",
+            "pmkid_client_file",
+            "deprecated_pmkid_file",
+            "deprecated_hccapx_file",
+            "deprecated_hccap_file",
+            "deprecated_john_file",
+            "prefix",
+            "add_timestamp",
+            "help",
+            "version",
+        ),
+    ),
     "eviltwin": SourceReview(
         note=(
             "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "
