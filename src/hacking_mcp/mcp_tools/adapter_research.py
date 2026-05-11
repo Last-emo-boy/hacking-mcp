@@ -4353,6 +4353,28 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "pyshell": SourceReview(
+        note=(
+            "Reviewed against upstream knassar702/Pyshell README and Python2 "
+            "Pyshell entrypoint. The documented startup is ./Pyshell from the "
+            "cloned directory. The script starts an interactive RAT prompt "
+            "using raw_input commands such as set host, set port, set name, "
+            "make, and run/start/exploit before creating payloads or opening "
+            "a listener. It has no argparse/getopt parser, positional target, "
+            "or stable CLI flags for lhost, lport, session, listener, or "
+            "protocol. The adapter therefore suppresses target argv, removes "
+            "generated RAT placeholders, and exposes only an interactive "
+            "marker. Execution remains policy/info-only because Remote "
+            "Administration (RAT) is disabled by policy."
+        ),
+        references=(
+            "https://github.com/knassar702/Pyshell",
+            "https://raw.githubusercontent.com/knassar702/Pyshell/master/Pyshell",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "eviltwin": SourceReview(
         note=(
             "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "

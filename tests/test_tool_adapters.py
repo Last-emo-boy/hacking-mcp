@@ -6972,6 +6972,48 @@ def test_bettercap_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_pyshell_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("pyshell")
+
+    assert tool.run_command == "cd Pyshell && ./Pyshell"
+    assert specs["pyshell"].exposed is False
+    assert "Remote Administration (RAT)" in specs["pyshell"].blocked_reason
+    assert records["pyshell"].source_status == "source-reviewed"
+    assert records["pyshell"].unverified_parameters == ()
+    assert records["pyshell"].gap == ""
+    assert any("knassar702/Pyshell" in item for item in records["pyshell"].evidence)
+
+    params = adapter_parameter_names(tool, specs["pyshell"])
+    for removed in (
+        "lhost",
+        "lport",
+        "session_id",
+        "listener",
+        "protocol",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["pyshell"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_eviltwin_source_reviewed_interactive_policy_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
