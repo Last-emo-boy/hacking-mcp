@@ -4087,6 +4087,40 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "crivo": SourceReview(
+        note=(
+            "Reviewed against upstream Crivo README, setup.py console_scripts "
+            "entry point, top-level crivo.py launcher, and argparse definitions "
+            "in crivo/main.py. The installed CLI is crivo, while the old registry "
+            "command referenced a non-existent crivo_cli.py. The adapter maps "
+            "target into exactly one supported input mode (-f file, -w webpage, "
+            "or -W webpage-list) and exposes output, scope, IP/domain/URL "
+            "filters, verbose mode, and version. Unsupported generated web "
+            "fuzzing placeholders were removed."
+        ),
+        references=(
+            "https://github.com/GMDSantana/crivo",
+            "https://raw.githubusercontent.com/GMDSantana/crivo/main/README.md",
+            "https://raw.githubusercontent.com/GMDSantana/crivo/main/setup.py",
+            "https://raw.githubusercontent.com/GMDSantana/crivo/main/crivo.py",
+            "https://raw.githubusercontent.com/GMDSantana/crivo/main/crivo/main.py",
+        ),
+        verified_parameters=(
+            "input_mode",
+            "input_file",
+            "webpage",
+            "webpage_list",
+            "output_file",
+            "scope",
+            "ip",
+            "ipv4",
+            "ipv6",
+            "domain",
+            "url",
+            "verbose",
+            "version",
+        ),
+    ),
     "cupp": SourceReview(
         note=(
             "Reviewed against upstream CUPP README and argparse source for "

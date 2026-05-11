@@ -709,6 +709,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "asyncrone",
         "chisel",
         "chrome-keylogger",
+        "crivo",
         "dracnmap",
         "goblin-wordgenerator",
         "guymager",

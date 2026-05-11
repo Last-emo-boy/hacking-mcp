@@ -4646,6 +4646,71 @@ def test_asyncrone_source_reviewed_archived_reference(registry, safety):
     assert preview["executable"] is False
 
 
+def test_crivo_source_reviewed_and_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("crivo")
+
+    assert tool.run_command == "crivo"
+    assert specs["crivo"].exposed is True
+    assert records["crivo"].source_status == "source-reviewed"
+    assert records["crivo"].unverified_parameters == ()
+    assert records["crivo"].gap == ""
+    assert any("GMDSantana/crivo" in item for item in records["crivo"].evidence)
+
+    params = adapter_parameter_names(tool, specs["crivo"])
+    for removed in (
+        "extensions",
+        "follow_redirects",
+        "match_codes",
+        "proxy",
+        "recursive",
+        "threads",
+        "wordlist",
+    ):
+        assert removed not in params
+    for expected in (
+        "input_mode",
+        "input_file",
+        "webpage",
+        "webpage_list",
+        "output_file",
+        "scope",
+        "ip",
+        "ipv4",
+        "ipv6",
+        "domain",
+        "url",
+        "verbose",
+        "version",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["crivo"],
+        {
+            "target": "https://example.com",
+            "input_mode": "webpage",
+            "output_file": "out.txt",
+            "scope": "urls,domains",
+            "ipv4": True,
+            "domain": True,
+            "verbose": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-w https://example.com -o out.txt -s urls,domains --ipv4 --domain -v"
+    )
+    assert preview["executable"] is True
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

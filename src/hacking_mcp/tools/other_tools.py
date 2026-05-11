@@ -335,7 +335,7 @@ OTHER_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/GMDSantana/crivo.git",
             "cd crivo && pip install --user -r requirements.txt",
         ],
-        run_command="cd crivo && python3 crivo_cli.py -h",
+        run_command="crivo",
         project_url="https://github.com/GMDSantana/crivo",
         tags=["web", "extractor", "url", "ip", "scraper"],
         safety_tier=SafetyTier.SAFE,
