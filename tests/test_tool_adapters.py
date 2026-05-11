@@ -6582,6 +6582,54 @@ def test_wifite_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_eviltwin_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("eviltwin")
+
+    assert tool.run_command == "cd fakeap && sudo bash fakeap.sh"
+    assert specs["eviltwin"].exposed is False
+    assert "Wireless Attack" in specs["eviltwin"].blocked_reason
+    assert records["eviltwin"].source_status == "source-reviewed"
+    assert records["eviltwin"].unverified_parameters == ()
+    assert records["eviltwin"].gap == ""
+    assert any("Z4nzu/fakeap" in item for item in records["eviltwin"].evidence)
+
+    params = adapter_parameter_names(tool, specs["eviltwin"])
+    for removed in (
+        "redact",
+        "since_commit",
+        "interface",
+        "bssid",
+        "essid",
+        "channel",
+        "wordlist",
+        "handshake_file",
+        "monitor_mode",
+    ):
+        assert removed not in params
+    assert "action" in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["eviltwin"],
+        {
+            "target": "ignored.example",
+            "action": "stop",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == "--stop"
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

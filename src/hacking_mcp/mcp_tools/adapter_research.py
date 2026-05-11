@@ -4175,6 +4175,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "deauth_count",
         ),
     ),
+    "eviltwin": SourceReview(
+        note=(
+            "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "
+            "startup is sudo bash fakeap.sh. The shell script starts an "
+            "interactive Evil Twin setup flow using read prompts for wireless "
+            "interface/AP/client choices and credential capture workflow. The "
+            "only stable CLI option found is --stop for stopping services. It "
+            "has no argparse/getopt parser for interface/BSSID/ESSID/channel/"
+            "wordlist arguments. The adapter therefore suppresses target argv, "
+            "removes generated wireless and unrelated git/secrets placeholders, "
+            "and exposes action=stop plus an interactive marker. Execution "
+            "remains policy/info-only because Wireless Attack is disabled by "
+            "policy."
+        ),
+        references=(
+            "https://github.com/Z4nzu/fakeap",
+            "https://raw.githubusercontent.com/Z4nzu/fakeap/master/fakeap.sh",
+        ),
+        verified_parameters=(
+            "action",
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
