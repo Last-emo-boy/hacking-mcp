@@ -3872,6 +3872,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "spycam": SourceReview(
+        note=(
+            "Reviewed against upstream indexnotfound404/spycam README and "
+            "spycam shell entrypoint. The documented startup is ./spycam. "
+            "The script installs/builds a Win32 webcam payload through "
+            "interactive prompts, reading payload name and optional icon path "
+            "from stdin before invoking mingw compilation/resource tools. It "
+            "has no argparse/getopt parser, positional target, or stable CLI "
+            "flags for payload name, icon, output, or listener settings. The "
+            "adapter therefore suppresses target argv, removes generated "
+            "payload placeholders, and exposes only an interactive marker. "
+            "Execution remains policy/info-only because Payload Creation is "
+            "disabled by policy, and Spycam is also individually disabled in "
+            "the default safety policy."
+        ),
+        references=(
+            "https://github.com/indexnotfound404/spycam",
+            "https://raw.githubusercontent.com/indexnotfound404/spycam/master/README.md",
+            "https://raw.githubusercontent.com/indexnotfound404/spycam/master/spycam",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

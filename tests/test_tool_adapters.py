@@ -5939,6 +5939,59 @@ def test_venom_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_spycam_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("spycam")
+
+    assert tool.run_command == "cd spycam && ./spycam"
+    assert specs["spycam"].exposed is False
+    assert (
+        "Payload Creation" in specs["spycam"].blocked_reason
+        or "Spycam" in specs["spycam"].blocked_reason
+    )
+    assert records["spycam"].source_status == "source-reviewed"
+    assert records["spycam"].unverified_parameters == ()
+    assert records["spycam"].gap == ""
+    assert any("indexnotfound404/spycam" in item for item in records["spycam"].evidence)
+
+    params = adapter_parameter_names(tool, specs["spycam"])
+    for removed in (
+        "payload_type",
+        "platform",
+        "architecture",
+        "lhost",
+        "lport",
+        "format",
+        "encoder",
+        "output_file",
+        "stager",
+        "listener_name",
+        "apk_name",
+        "bundle_id",
+        "sign_apk",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["spycam"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
