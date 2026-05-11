@@ -757,6 +757,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "web2attack",
         "wifiphisher",
         "wifipumpkin",
+        "wifite",
         "wireshark",
         "xss-payload-generator",
         "xss-freak",

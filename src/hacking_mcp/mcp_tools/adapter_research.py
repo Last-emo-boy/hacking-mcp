@@ -4146,6 +4146,35 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "wifite": SourceReview(
+        note=(
+            "Reviewed against upstream derv82/wifite2 README and "
+            "wifite/args.py argparse parser. The adapter exposes a "
+            "conservative source-supported subset: interface (-i), target "
+            "BSSID (-b/--bssid), target ESSID (-e/--essid), channel "
+            "(-c/--channel), WPA wordlist (--dict), handshake check input "
+            "(--check), PMKID-only mode (--pmkid), and deauth count "
+            "(--num-deauths). The older generic monitor/capture/BLE "
+            "placeholders were removed because they are not Wifite2 CLI "
+            "arguments. Execution remains policy/info-only because Wireless "
+            "Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/derv82/wifite2",
+            "https://raw.githubusercontent.com/derv82/wifite2/master/README.md",
+            "https://raw.githubusercontent.com/derv82/wifite2/master/wifite/args.py",
+        ),
+        verified_parameters=(
+            "interface",
+            "bssid",
+            "essid",
+            "channel",
+            "wordlist",
+            "handshake_file",
+            "pmkid",
+            "deauth_count",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

@@ -6526,6 +6526,62 @@ def test_wifiphisher_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_wifite_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("wifite")
+
+    assert tool.run_command == "sudo wifite"
+    assert specs["wifite"].exposed is False
+    assert "Wireless Attack" in specs["wifite"].blocked_reason
+    assert records["wifite"].source_status == "source-reviewed"
+    assert records["wifite"].unverified_parameters == ()
+    assert records["wifite"].gap == ""
+    assert any("derv82/wifite2" in item for item in records["wifite"].evidence)
+
+    params = adapter_parameter_names(tool, specs["wifite"])
+    for expected in (
+        "interface",
+        "bssid",
+        "essid",
+        "channel",
+        "wordlist",
+        "handshake_file",
+        "pmkid",
+        "deauth_count",
+    ):
+        assert expected in params
+    for removed in ("monitor_mode", "capture_file", "target_essid", "ble"):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["wifite"],
+        {
+            "target": "ignored.example",
+            "interface": "wlan0",
+            "bssid": "00:11:22:33:44:55",
+            "essid": "LabNet",
+            "channel": 6,
+            "wordlist": "wordlist.txt",
+            "handshake_file": "capture.cap",
+            "pmkid": True,
+            "deauth_count": 5,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-i wlan0 -b 00:11:22:33:44:55 -e LabNet -c 6 --dict wordlist.txt "
+        "--check capture.cap --pmkid --num-deauths 5"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
