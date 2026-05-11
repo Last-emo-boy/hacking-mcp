@@ -3766,6 +3766,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "brutal": SourceReview(
+        note=(
+            "Reviewed against upstream Brutal README, repository listing, and "
+            "Brutal.sh. The documented startup is sudo ./Brutal.sh. The Bash "
+            "entrypoint is read-driven: menus and prompts collect HID/"
+            "powershell payload generation choices, LHOST/LPORT, credentials, "
+            "backdoor paths, and management/prank/attack module inputs from "
+            "stdin, with zenity used for payload selection. It has no argparse/"
+            "getopt parser, positional target, or msfvenom-style CLI flags. "
+            "The adapter therefore suppresses target argv, removes generated "
+            "payload placeholders, and exposes only an interactive marker. "
+            "Execution remains policy/info-only because Payload Creation is "
+            "disabled by policy."
+        ),
+        references=(
+            "https://github.com/Screetsec/Brutal",
+            "https://raw.githubusercontent.com/Screetsec/Brutal/master/README.md",
+            "https://raw.githubusercontent.com/Screetsec/Brutal/master/Brutal.sh",
+            "https://api.github.com/repos/Screetsec/Brutal/contents?ref=master",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
