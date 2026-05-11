@@ -1984,6 +1984,27 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "proxy",
         ),
     ),
+    "infoga": SourceReview(
+        note=(
+            "Reviewed the registry upstream and available mirrors. The "
+            "original m4ll0k/Infoga repository currently returns 404 through "
+            "GitHub, and discovered mirrors only preserve README-level usage "
+            "text without the infoga.py source needed to verify a target-safe "
+            "CLI. The tool is therefore marked archived with no run command, "
+            "and the adapter exposes only a reference-only archived marker "
+            "instead of generated email/recon placeholders."
+        ),
+        references=(
+            "https://github.com/m4ll0k/Infoga",
+            "https://api.github.com/repos/m4ll0k/Infoga",
+            "https://github.com/anthophilee/Infoga-Collect-Email-Information2",
+            "https://raw.githubusercontent.com/anthophilee/Infoga-Collect-Email-Information2/main/README.md",
+            "https://github.com/Manati-ki/git-clone-https-github.com-m4ll0k-Infoga",
+        ),
+        verified_parameters=(
+            "archived_reference",
+        ),
+    ),
     "shodanfy": SourceReview(
         note=(
             "The original registry URL m4ll0k/Shodanfy.py currently returns "

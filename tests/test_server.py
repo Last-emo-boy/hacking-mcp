@@ -68,8 +68,8 @@ class TestServerCreation:
 
         result = metadata["result"]
         assert "Total adapters: 184" in result
-        assert "Executable adapters: 122" in result
-        assert "Policy/info-only adapters: 62" in result
+        assert "Executable adapters: 121" in result
+        assert "Policy/info-only adapters: 63" in result
         assert "policy/info-only" in result
         assert "params:" in result
         assert content
@@ -96,11 +96,13 @@ class TestServerCreation:
         assert '"ports": "80,443"' in nmap_metadata["result"]
 
         assert "**Endpoint:** `security_tool_vegil`" in vegil_metadata["result"]
-        assert "`lhost`" in vegil_metadata["result"]
+        assert "`action`" in vegil_metadata["result"]
+        assert "`backdoor_path`" in vegil_metadata["result"]
         assert "**Execution:** policy/info-only" in vegil_metadata["result"]
         assert "## Research Status" in vegil_metadata["result"]
-        assert "Source reviewed: False" in vegil_metadata["result"]
-        assert '"lhost": "127.0.0.1"' in vegil_metadata["result"]
+        assert "Source reviewed: True" in vegil_metadata["result"]
+        assert "Source-verified params: 3" in vegil_metadata["result"]
+        assert "Unverified params: 0" in vegil_metadata["result"]
         assert "does not execute" in vegil_metadata["result"]
 
     @pytest.mark.asyncio
@@ -124,7 +126,8 @@ class TestServerCreation:
             {
                 "tool_name": "vegil",
                 "arguments_json": (
-                    '{"target":"example.com","lhost":"127.0.0.1","lport":4444}'
+                    '{"target":"example.com","action":"inject",'
+                    '"backdoor_path":"rootkit.bin"}'
                 ),
             },
         )
@@ -135,7 +138,7 @@ class TestServerCreation:
 
         assert "**Endpoint:** `security_tool_vegil`" in vegil_metadata["result"]
         assert "**Executable:** False" in vegil_metadata["result"]
-        assert "**Generated options:** `--lhost 127.0.0.1 --lport 4444`" in vegil_metadata["result"]
+        assert "**Generated options:** `--inject rootkit.bin`" in vegil_metadata["result"]
         assert "No command was executed." in vegil_metadata["result"]
 
     @pytest.mark.asyncio

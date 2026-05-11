@@ -2426,6 +2426,51 @@ def test_secretfinder_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_infoga_source_reviewed_archived_reference(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("infoga")
+
+    assert tool.run_command == ""
+    assert tool.archived is True
+    assert "upstream repository returns 404" in tool.archived_reason
+    assert specs["infoga"].exposed is False
+    assert "archived" in specs["infoga"].blocked_reason
+    assert records["infoga"].source_status == "source-reviewed"
+    assert records["infoga"].unverified_parameters == ()
+    assert records["infoga"].gap == ""
+    assert any("m4ll0k/Infoga" in item for item in records["infoga"].evidence)
+
+    params = adapter_parameter_names(tool, specs["infoga"])
+    for removed in (
+        "api_key",
+        "json_output",
+        "output_file",
+        "passive",
+        "resolvers",
+        "scan_depth",
+        "sources",
+        "timeout",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "archived_reference" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["infoga"],
+        {"target": "ignored@example.com", "archived_reference": True},
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_shodanfy_source_reviewed_and_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

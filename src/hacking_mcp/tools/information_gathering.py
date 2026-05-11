@@ -112,10 +112,12 @@ INFORMATION_GATHERING_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/m4ll0k/Infoga.git",
             "cd Infoga && pip install --user .",
         ],
-        run_command="cd Infoga && python3 infoga.py",
+        run_command="",
         project_url="https://github.com/m4ll0k/Infoga",
         tags=["osint", "email", "recon"],
         safety_tier=SafetyTier.SAFE,
+        archived=True,
+        archived_reason="Original upstream repository returns 404 and no verified source CLI is available.",
     ),
     HackingToolDef(
         name="recondog",
