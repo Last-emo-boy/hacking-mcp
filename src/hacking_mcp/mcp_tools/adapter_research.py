@@ -3552,6 +3552,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "qrjacking": SourceReview(
+        note=(
+            "Reviewed against upstream OhMyQR README and ohmyqr.sh. The "
+            "documented startup is bash ohmyqr.sh; the Bash entrypoint checks "
+            "local GUI/screenshot dependencies, prompts for the website to "
+            "mirror, presents Serveo/Ngrok forwarding choices, prompts for "
+            "operator confirmations, starts PHP/tunneling services, opens "
+            "Firefox, and loops screenshots with scrot. It has no argparse/"
+            "getopt parser, positional target, or supported command-line flags. "
+            "The adapter therefore suppresses target argv, removes generic "
+            "phishing placeholders, and exposes only an interactive marker. "
+            "Execution remains policy/info-only because Phishing Attack is "
+            "disabled by policy."
+        ),
+        references=(
+            "https://github.com/cryptedwolf/ohmyqr",
+            "https://raw.githubusercontent.com/cryptedwolf/ohmyqr/master/README.md",
+            "https://raw.githubusercontent.com/cryptedwolf/ohmyqr/master/ohmyqr.sh",
+            "https://api.github.com/repos/cryptedwolf/ohmyqr/contents?ref=master",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
