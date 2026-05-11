@@ -12,7 +12,7 @@ DDOS_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/the-deepnet/ddos.git",
             "cd ddos && sudo pip3 install -r requirements.txt",
         ],
-        run_command="cd ddos && sudo python3 ddos.py",
+        run_command="cd ddos && sudo python3 ddos {target}",
         project_url="https://github.com/the-deepnet/ddos",
         tags=["ddos", "stress-test", "network"],
         safety_tier=SafetyTier.DANGEROUS,

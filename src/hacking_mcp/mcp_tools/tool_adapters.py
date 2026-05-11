@@ -700,6 +700,10 @@ def _request_parts(
 
 def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
     target = str(kwargs.get("target") or "")
+    if tool.name == "ddos-script":
+        method = str(kwargs.get("method") or "help").strip() or "help"
+        return f"{method} {target}".strip()
+
     if tool.name in {
         "appcheck",
         "asyncrone",
@@ -1061,6 +1065,7 @@ def _should_validate_scope(tool: HackingToolDef) -> bool:
 def _options_before_target(tool: HackingToolDef) -> bool:
     return tool.name in {
         "bulk-extractor",
+        "ddos-script",
         "frida",
         "hashbuster",
         "jadx",

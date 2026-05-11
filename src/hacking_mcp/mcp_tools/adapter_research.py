@@ -3249,6 +3249,32 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "archived_reference",
         ),
     ),
+    "ddos-script": SourceReview(
+        note=(
+            "Reviewed against upstream the-deepnet/ddos README and the Python "
+            "entrypoint source. The repository ships an executable file named "
+            "ddos, not ddos.py. Usage is positional: method, URL/target, proxy "
+            "type, threads, proxy-list filename, multiple, and timer. The "
+            "adapter removes generated scanner and generic DDoS placeholders "
+            "and exposes only those source-backed positional fields; the "
+            "method is folded into the target placeholder so generated options "
+            "can precede it. The endpoint remains policy/info-only because "
+            "DDOS Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/the-deepnet/ddos",
+            "https://raw.githubusercontent.com/the-deepnet/ddos/master/README.md",
+            "https://raw.githubusercontent.com/the-deepnet/ddos/master/ddos",
+        ),
+        verified_parameters=(
+            "method",
+            "socks_type",
+            "threads",
+            "proxylist",
+            "multiple",
+            "timer",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

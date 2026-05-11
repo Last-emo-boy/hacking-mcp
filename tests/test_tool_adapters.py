@@ -4357,6 +4357,63 @@ def test_slowloris_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_ddos_script_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("ddos-script")
+
+    assert tool.run_command == "cd ddos && sudo python3 ddos {target}"
+    assert specs["ddos-script"].exposed is False
+    assert "DDOS Attack" in specs["ddos-script"].blocked_reason
+    assert records["ddos-script"].source_status == "source-reviewed"
+    assert records["ddos-script"].unverified_parameters == ()
+    assert records["ddos-script"].gap == ""
+    assert any("the-deepnet/ddos" in item for item in records["ddos-script"].evidence)
+
+    params = adapter_parameter_names(tool, specs["ddos-script"])
+    for removed in (
+        "connections",
+        "duration",
+        "port",
+        "ports",
+        "rate",
+        "scan_type",
+        "user_agent",
+    ):
+        assert removed not in params
+    for expected in (
+        "method",
+        "socks_type",
+        "threads",
+        "proxylist",
+        "multiple",
+        "timer",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["ddos-script"],
+        {
+            "target": "https://example.com",
+            "method": "bypass",
+            "socks_type": "5",
+            "threads": 10,
+            "proxylist": "socks5.txt",
+            "multiple": 2,
+            "timer": 30,
+        },
+    )
+    assert preview["target"] == "bypass https://example.com"
+    assert preview["options"] == "5 10 socks5.txt 2 30"
+    assert preview["executable"] is False
+
+
 def test_goldeneye_source_reviewed_policy_only_previewable(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
