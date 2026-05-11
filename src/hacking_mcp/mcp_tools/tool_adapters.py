@@ -760,6 +760,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "showme",
         "sliver",
         "socialfish",
+        "socialmapper",
         "spycam",
         "stitch",
         "thanos",

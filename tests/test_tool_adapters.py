@@ -3772,6 +3772,84 @@ def test_socialscan_source_reviewed_and_previewable(registry, safety):
     )
 
 
+def test_socialmapper_source_reviewed_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("socialmapper")
+
+    assert tool.run_command == "cd social_mapper/setup && python3 social_mapper.py -h"
+    assert records["socialmapper"].source_status == "source-reviewed"
+    assert records["socialmapper"].unverified_parameters == ()
+    assert records["socialmapper"].gap == ""
+    assert any("Greenwolf/social_mapper" in item for item in records["socialmapper"].evidence)
+
+    params = adapter_parameter_names(tool, specs["socialmapper"])
+    for removed in ("timeout", "sources", "passive", "resolvers", "api_key", "output_file", "json_output"):
+        assert removed not in params
+    for expected in (
+        "input_format",
+        "input_value",
+        "mode",
+        "threshold",
+        "email_format",
+        "company_id",
+        "show_browser",
+        "wait_after_login",
+        "all_sites",
+        "facebook",
+        "pinterest",
+        "twitter",
+        "instagram",
+        "linkedin",
+        "vkontakte",
+        "weibo",
+        "douban",
+        "verbose",
+        "debug",
+        "version",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["socialmapper"],
+        {
+            "target": "ignored.example",
+            "input_format": "csv",
+            "input_value": "targets.csv",
+            "mode": "fast",
+            "threshold": "strict",
+            "email_format": "<first>.<last>@example.com",
+            "company_id": "12345",
+            "show_browser": True,
+            "wait_after_login": True,
+            "all_sites": True,
+            "facebook": True,
+            "pinterest": True,
+            "twitter": True,
+            "instagram": True,
+            "linkedin": True,
+            "vkontakte": True,
+            "weibo": True,
+            "douban": True,
+            "verbose": True,
+            "debug": True,
+            "version": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "-f csv -i targets.csv -m fast -t strict "
+        "-e '<first>.<last>@example.com' -cid 12345 -s -w -a "
+        "-fb -pn -tw -ig -li -vk -wb -db -vv -d -v"
+    )
+
+
 def test_appcheck_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

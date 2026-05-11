@@ -1866,6 +1866,46 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "debug",
         ),
     ),
+    "socialmapper": SourceReview(
+        note=(
+            "Reviewed against upstream Greenwolf/social_mapper README and "
+            "social_mapper.py argparse definitions. The registry startup "
+            "remains the documented help command, while the adapter generates "
+            "the source-backed -f input format, -i input value, -m matching "
+            "mode, threshold, email format, company id, browser/login waits, "
+            "site selectors, verbosity, debug, and version flags. Generic "
+            "OSINT/social placeholders such as timeout, sources, passive, "
+            "resolvers, api_key, output_file, and json_output are not "
+            "upstream CLI parameters."
+        ),
+        references=(
+            "https://github.com/Greenwolf/social_mapper",
+            "https://raw.githubusercontent.com/Greenwolf/social_mapper/master/README.md",
+            "https://raw.githubusercontent.com/Greenwolf/social_mapper/master/social_mapper.py",
+        ),
+        verified_parameters=(
+            "input_format",
+            "input_value",
+            "mode",
+            "threshold",
+            "email_format",
+            "company_id",
+            "show_browser",
+            "wait_after_login",
+            "all_sites",
+            "facebook",
+            "pinterest",
+            "twitter",
+            "instagram",
+            "linkedin",
+            "vkontakte",
+            "weibo",
+            "douban",
+            "verbose",
+            "debug",
+            "version",
+        ),
+    ),
     "appcheck": SourceReview(
         note=(
             "Reviewed against upstream underhanded.sh. The script has no "
