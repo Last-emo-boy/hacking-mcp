@@ -7266,6 +7266,66 @@ def test_debinject_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_pixload_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("pixload")
+
+    assert tool.run_command == "cd pixload && ls"
+    assert specs["pixload"].exposed is False
+    assert "DANGEROUS" in specs["pixload"].blocked_reason
+    assert records["pixload"].source_status == "source-reviewed"
+    assert records["pixload"].unverified_parameters == ()
+    assert records["pixload"].gap == ""
+    assert any("sighook/pixload" in item or "chinarulezzz/pixload" in item for item in records["pixload"].evidence)
+
+    params = adapter_parameter_names(tool, specs["pixload"])
+    for expected in ("tool", "payload", "pixel_width", "pixel_height", "section", "help", "version"):
+        assert expected in params
+    for removed in (
+        "payload_type",
+        "platform",
+        "architecture",
+        "lhost",
+        "lport",
+        "format",
+        "encoder",
+        "output_file",
+        "stager",
+        "listener_name",
+        "apk_name",
+        "bundle_id",
+        "sign_apk",
+    ):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["pixload"],
+        {
+            "target": "payload.jpg",
+            "tool": "jpg",
+            "section": "com",
+            "payload": "<script src=//example.com></script>",
+            "pixel_width": 64,
+            "pixel_height": 32,
+            "version": True,
+            "help": True,
+        },
+    )
+    assert preview["target"] == "payload.jpg"
+    assert preview["options"] == (
+        "pixload-jpg -S com -W 64 -H 32 "
+        "-P '<script src=//example.com></script>' -v -h"
+    )
+    assert preview["executable"] is False
+
+
 def test_keydroid_source_reviewed_interactive_policy_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

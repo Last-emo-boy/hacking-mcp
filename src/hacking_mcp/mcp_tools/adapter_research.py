@@ -4508,6 +4508,39 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "pixload": SourceReview(
+        note=(
+            "Reviewed against upstream pixload README and documented help "
+            "for pixload-bmp, pixload-gif, pixload-jpg, pixload-png, and "
+            "pixload-webp. The registry startup is inventory-only (cd "
+            "pixload && ls), while the adapter exposes the source-backed "
+            "image tool selector, payload string, GIF/PNG dimensions, JPEG "
+            "section selector, help, and version flags, with the MCP target "
+            "serving as the output image file. Generated msfvenom-style "
+            "payload/platform/listener/output placeholders are not pixload "
+            "CLI parameters. Execution remains policy/info-only because the "
+            "tool is classified dangerous."
+        ),
+        references=(
+            "https://github.com/chinarulezzz/pixload",
+            "https://raw.githubusercontent.com/chinarulezzz/pixload/master/README.md",
+            "https://github.com/sighook/pixload",
+            "https://github.com/sighook/pixload/blob/master/pixload-bmp.1.pod",
+            "https://github.com/sighook/pixload/blob/master/pixload-gif.1.pod",
+            "https://github.com/sighook/pixload/blob/master/pixload-jpg.1.pod",
+            "https://github.com/sighook/pixload/blob/master/pixload-png.1.pod",
+            "https://github.com/sighook/pixload/blob/master/pixload-webp.1.pod",
+        ),
+        verified_parameters=(
+            "tool",
+            "payload",
+            "pixel_width",
+            "pixel_height",
+            "section",
+            "help",
+            "version",
+        ),
+    ),
     "keydroid": SourceReview(
         note=(
             "Reviewed against upstream F4dl0/keydroid keydroid.sh. The "
