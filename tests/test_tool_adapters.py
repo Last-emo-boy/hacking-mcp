@@ -4544,6 +4544,51 @@ def test_saphyra_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_asyncrone_source_reviewed_archived_reference(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("asyncrone")
+
+    assert tool.run_command == ""
+    assert tool.archived is True
+    assert "repositories return 404" in tool.archived_reason
+    assert specs["asyncrone"].exposed is False
+    assert "DDOS Attack" in specs["asyncrone"].blocked_reason
+    assert records["asyncrone"].source_status == "source-reviewed"
+    assert records["asyncrone"].unverified_parameters == ()
+    assert records["asyncrone"].gap == ""
+    assert any("fatihsnsy/aSYNcrone" in item for item in records["asyncrone"].evidence)
+
+    params = adapter_parameter_names(tool, specs["asyncrone"])
+    for removed in (
+        "connections",
+        "duration",
+        "method",
+        "port",
+        "ports",
+        "rate",
+        "scan_type",
+        "threads",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "archived_reference" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["asyncrone"],
+        {"target": "ignored.example", "archived_reference": True},
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

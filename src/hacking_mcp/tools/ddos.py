@@ -39,12 +39,17 @@ DDOS_TOOLS: list[HackingToolDef] = [
             "git clone https://github.com/fatih4842/aSYNcrone.git",
             "cd aSYNcrone && sudo gcc aSYNcrone.c -o aSYNcrone -lpthread",
         ],
-        run_command="cd aSYNcrone && sudo ./aSYNcrone",
+        run_command="",
         project_url="https://github.com/fatihsnsy/aSYNcrone",
         tags=["ddos", "syn-flood", "network"],
         safety_tier=SafetyTier.DANGEROUS,
         supported_os=["linux"],
         requires_root=True,
+        archived=True,
+        archived_reason=(
+            "Original upstream and install repositories return 404 and no "
+            "verified aSYNcrone.c source is available."
+        ),
     ),
     HackingToolDef(
         name="ufonet",

@@ -3226,6 +3226,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "safe",
         ),
     ),
+    "asyncrone": SourceReview(
+        note=(
+            "Attempted source review for the original registry project URL and "
+            "the install-command repository; both GitHub repositories now "
+            "return 404, and no verifiable aSYNcrone.c source was available "
+            "from public repository search. Historical wrapper metadata only "
+            "describes positional prompts and is not sufficient to verify the "
+            "C CLI. The registry therefore has no run command and the adapter "
+            "is reference-only. The endpoint also remains policy/info-only "
+            "because DDOS Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/fatihsnsy/aSYNcrone",
+            "https://api.github.com/repos/fatihsnsy/aSYNcrone",
+            "https://github.com/fatih4842/aSYNcrone",
+            "https://api.github.com/repos/fatih4842/aSYNcrone",
+            "https://raw.githubusercontent.com/fatihsnsy/aSYNcrone/master/aSYNcrone.c",
+            "https://raw.githubusercontent.com/fatih4842/aSYNcrone/master/aSYNcrone.c",
+        ),
+        verified_parameters=(
+            "archived_reference",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
