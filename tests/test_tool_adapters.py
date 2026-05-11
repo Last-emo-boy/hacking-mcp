@@ -4422,6 +4422,85 @@ def test_goldeneye_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_ufonet_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("ufonet")
+
+    assert tool.run_command == "cd ufonet && python3 ufonet --gui"
+    assert specs["ufonet"].exposed is False
+    assert "DDOS Attack" in specs["ufonet"].blocked_reason
+    assert records["ufonet"].source_status == "source-reviewed"
+    assert records["ufonet"].unverified_parameters == ()
+    assert records["ufonet"].gap == ""
+    assert any("epsylon/ufonet" in item for item in records["ufonet"].evidence)
+
+    params = adapter_parameter_names(tool, specs["ufonet"])
+    for removed in (
+        "connections",
+        "duration",
+        "method",
+        "port",
+        "target",
+        "wordlist",
+    ):
+        if removed != "target":
+            assert removed not in params
+    for expected in (
+        "gui",
+        "verbose",
+        "examples",
+        "timeline",
+        "update",
+        "check_tor",
+        "force_ssl",
+        "proxy",
+        "user_agent",
+        "referer",
+        "host_header",
+        "x_forwarded_for",
+        "x_client_ip",
+        "timeout",
+        "retries",
+        "threads",
+        "delay",
+    ):
+        assert expected in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["ufonet"],
+        {
+            "target": "ignored.example",
+            "gui": True,
+            "verbose": True,
+            "force_ssl": True,
+            "proxy": "http://127.0.0.1:8118",
+            "user_agent": "UA",
+            "referer": "https://ref.example",
+            "host_header": "host.example",
+            "x_forwarded_for": True,
+            "x_client_ip": True,
+            "timeout": 10,
+            "retries": 2,
+            "threads": 5,
+            "delay": 1,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "--gui --verbose --force-ssl --proxy http://127.0.0.1:8118 "
+        "--user-agent UA --referer https://ref.example --host host.example "
+        "--xforw --xclient --timeout 10 --retries 2 --threads 5 --delay 1"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

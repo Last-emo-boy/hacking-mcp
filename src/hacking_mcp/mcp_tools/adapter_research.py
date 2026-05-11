@@ -3169,6 +3169,44 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "ufonet": SourceReview(
+        note=(
+            "Reviewed against upstream UFONet README, entrypoint, main runner, "
+            "and optparse definitions. The registry command launches the "
+            "web GUI by default; the adapter suppresses generated target argv "
+            "and generic DDoS placeholders and exposes source-backed GUI, "
+            "general status/update/Tor/SSL toggles, and request-configuration "
+            "flags. Direct attack and botnet-management options are not "
+            "exposed in this adapter. The endpoint remains policy/info-only "
+            "because DDOS Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/epsylon/ufonet",
+            "https://raw.githubusercontent.com/epsylon/ufonet/master/README.md",
+            "https://raw.githubusercontent.com/epsylon/ufonet/master/ufonet",
+            "https://raw.githubusercontent.com/epsylon/ufonet/master/core/main.py",
+            "https://raw.githubusercontent.com/epsylon/ufonet/master/core/options.py",
+        ),
+        verified_parameters=(
+            "gui",
+            "verbose",
+            "examples",
+            "timeline",
+            "update",
+            "check_tor",
+            "force_ssl",
+            "proxy",
+            "user_agent",
+            "referer",
+            "host_header",
+            "x_forwarded_for",
+            "x_client_ip",
+            "timeout",
+            "retries",
+            "threads",
+            "delay",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
