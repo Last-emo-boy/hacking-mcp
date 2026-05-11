@@ -7160,6 +7160,54 @@ def test_lockphish_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_droidcam_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("droidcam")
+
+    assert tool.run_command == "cd WishFish && sudo bash wishfish.sh"
+    assert specs["droidcam"].exposed is False
+    assert "classified DANGEROUS" in specs["droidcam"].blocked_reason
+    assert records["droidcam"].source_status == "source-reviewed"
+    assert records["droidcam"].unverified_parameters == ()
+    assert records["droidcam"].gap == ""
+    assert any("kinghacker0/WishFish" in item for item in records["droidcam"].evidence)
+
+    params = adapter_parameter_names(tool, specs["droidcam"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "apk_path",
+        "package_name",
+        "device_id",
+        "spawn",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["droidcam"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_eviltwin_source_reviewed_interactive_policy_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

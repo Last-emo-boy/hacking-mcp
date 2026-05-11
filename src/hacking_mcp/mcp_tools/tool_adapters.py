@@ -720,6 +720,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "chisel",
         "chrome-keylogger",
         "crivo",
+        "droidcam",
         "dracnmap",
         "enigma",
         "evilginx3",

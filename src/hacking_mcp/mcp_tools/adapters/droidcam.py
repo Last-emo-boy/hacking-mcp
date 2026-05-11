@@ -1,14 +1,18 @@
-"""Registry-derived adapter metadata for Droidcam."""
+"""Dedicated adapter metadata for DroidCam/WishFish."""
 
-from hacking_mcp.mcp_tools.adapters.generic import build_options_for, parameters_for
-
-
-TOOL_NAME = 'droidcam'
+from hacking_mcp.mcp_tools.adapter_types import AdapterParameterSpec
 
 
 def parameters():
-    return parameters_for(TOOL_NAME)
+    return [
+        AdapterParameterSpec(
+            "interactive",
+            bool,
+            True,
+            "WishFish starts an interactive camera-capture phishing tunnel flow.",
+        ),
+    ]
 
 
 def build_options(kwargs: dict) -> list[str]:
-    return build_options_for(TOOL_NAME, kwargs)
+    return []

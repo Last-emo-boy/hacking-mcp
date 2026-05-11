@@ -4444,6 +4444,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "droidcam": SourceReview(
+        note=(
+            "Reviewed against upstream kinghacker0/WishFish wishfish.sh. The "
+            "registry startup is sudo bash wishfish.sh. The Bash entrypoint "
+            "starts an interactive camera-capture phishing flow using read "
+            "prompts for tunnel server, template selection, YouTube video "
+            "ID, ngrok token changes, and optional subdomain values while "
+            "starting PHP/ngrok/Serveo flows internally. It has no argparse/"
+            "getopt parser, positional target, or stable CLI flags for "
+            "template, landing URL, listener host/port, tunnel, domain, "
+            "Android package, or output directory. The adapter therefore "
+            "suppresses target argv, removes generated phishing/mobile "
+            "placeholders, and exposes only an interactive marker. Execution "
+            "remains policy/info-only because DroidCam/WishFish is classified "
+            "dangerous and excluded from MCP."
+        ),
+        references=(
+            "https://github.com/kinghacker0/WishFish",
+            "https://raw.githubusercontent.com/kinghacker0/WishFish/master/wishfish.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "eviltwin": SourceReview(
         note=(
             "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "
