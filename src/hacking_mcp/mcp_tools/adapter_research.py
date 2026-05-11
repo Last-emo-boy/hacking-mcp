@@ -3920,6 +3920,27 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "enigma": SourceReview(
+        note=(
+            "Reviewed against upstream UndeadSec/Enigma enigma.py. The "
+            "documented startup is sudo python3 enigma.py. The Python 2 style "
+            "entrypoint is interactive: it reads built-in/custom payload "
+            "selection, payload file paths, LHOST/LPORT, and client host "
+            "values with raw_input before preparing dropper files and starting "
+            "an HTTP server. It has no argparse/getopt parser, positional "
+            "target, or stable CLI flags. The adapter therefore suppresses "
+            "target argv, removes generated payload placeholders, and exposes "
+            "only an interactive marker. Execution remains policy/info-only "
+            "because Payload Creation is disabled by policy."
+        ),
+        references=(
+            "https://github.com/UndeadSec/Enigma",
+            "https://raw.githubusercontent.com/UndeadSec/Enigma/master/enigma.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
