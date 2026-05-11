@@ -732,6 +732,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "rvuln",
         "saycheese",
         "setoolkit",
+        "shellphish",
         "showme",
         "sliver",
         "socialfish",

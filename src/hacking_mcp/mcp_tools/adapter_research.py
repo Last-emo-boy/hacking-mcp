@@ -3606,6 +3606,39 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "shellphish": SourceReview(
+        note=(
+            "Attempted source review against the registry project URL "
+            "An0nUD4Y/shellphish and original thelinuxchoice/shellphish; raw "
+            "README/shellphish.sh requests now return 404 and the GitHub API "
+            "was not reliably readable. Public ShellPhish mirrors that preserve "
+            "the original thelinuxchoice script were reviewed as reference "
+            "evidence. The shellphish.sh entrypoint checks dependencies, "
+            "presents a template menu, uses read prompts for custom page fields "
+            "and, in newer mirrors, optional port/forwarding choices, then "
+            "starts PHP/tunneling services and waits for IP/credential files. "
+            "It has no argparse/getopt parser, positional target, timeout flag, "
+            "or generic phishing CLI flags. The adapter therefore suppresses "
+            "target argv, removes generated placeholders, and exposes only an "
+            "interactive marker. Execution remains policy/info-only because "
+            "Phishing Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/An0nUD4Y/shellphish",
+            "https://raw.githubusercontent.com/An0nUD4Y/shellphish/master/shellphish.sh",
+            "https://github.com/thelinuxchoice/shellphish",
+            "https://raw.githubusercontent.com/thelinuxchoice/shellphish/master/shellphish.sh",
+            "https://github.com/Kecatoca/thelinuxchoice-shellphish",
+            "https://raw.githubusercontent.com/Kecatoca/thelinuxchoice-shellphish/master/README.md",
+            "https://raw.githubusercontent.com/Kecatoca/thelinuxchoice-shellphish/master/shellphish.sh",
+            "https://api.github.com/repos/Kecatoca/thelinuxchoice-shellphish/contents?ref=master",
+            "https://github.com/MDNabin010/shellphish",
+            "https://raw.githubusercontent.com/MDNabin010/shellphish/master/shellphish.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
