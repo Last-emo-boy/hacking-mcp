@@ -3063,6 +3063,28 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "xss-freak": SourceReview(
+        note=(
+            "The original PR0PH3CY33/XSS-Freak registry URL currently returns "
+            "404, so this review uses a reachable XSS-Freak source mirror. "
+            "The Python script has no argparse/getopt/sys.argv CLI; it starts "
+            "an interactive prompt asking for the target and payload file, "
+            "then performs crawling and payload checks from those inputs. The "
+            "adapter therefore suppresses target argv and generated XSS "
+            "placeholders, exposing only an interactive marker while preserving "
+            "the XSS Attack confirmation requirement."
+        ),
+        references=(
+            "https://github.com/PR0PH3CY33/XSS-Freak",
+            "https://api.github.com/repos/PR0PH3CY33/XSS-Freak",
+            "https://github.com/sepulvedazallalinux/XSS-Freak",
+            "https://raw.githubusercontent.com/sepulvedazallalinux/XSS-Freak/master/README.md",
+            "https://raw.githubusercontent.com/sepulvedazallalinux/XSS-Freak/master/XSS-Freak.py",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

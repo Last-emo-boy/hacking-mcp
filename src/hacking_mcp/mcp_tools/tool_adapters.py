@@ -725,6 +725,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "web2attack",
         "wireshark",
         "xss-payload-generator",
+        "xss-freak",
         "xssfinder",
         "xerosploit",
     }:
