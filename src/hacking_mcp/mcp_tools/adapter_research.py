@@ -4235,6 +4235,27 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "deauth_count",
         ),
     ),
+    "wifijammer-ng": SourceReview(
+        note=(
+            "Reviewed the registry upstream URL and GitHub endpoints for "
+            "MisterBianco/wifijammer-ng. The repository currently returns "
+            "404 through GitHub and git ls-remote reports Repository not "
+            "found, so no verifiable wifijammer.py source CLI is available. "
+            "The adapter therefore exposes only a reference-only archived "
+            "marker instead of generated wireless placeholders, suppresses "
+            "synthetic target argv, and remains policy/info-only because the "
+            "tool is classified dangerous."
+        ),
+        references=(
+            "https://github.com/MisterBianco/wifijammer-ng",
+            "https://api.github.com/repos/MisterBianco/wifijammer-ng",
+            "https://raw.githubusercontent.com/MisterBianco/wifijammer-ng/master/wifijammer.py",
+            "https://raw.githubusercontent.com/MisterBianco/wifijammer-ng/master/README.md",
+        ),
+        verified_parameters=(
+            "archived_reference",
+        ),
+    ),
     "airgeddon": SourceReview(
         note=(
             "Reviewed against upstream v1s1t0r1sh3r3/airgeddon README, "

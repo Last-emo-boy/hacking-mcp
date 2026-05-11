@@ -6702,6 +6702,49 @@ def test_wifite_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_wifijammer_ng_source_reviewed_archived_reference(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("wifijammer-ng")
+
+    assert tool.run_command == "cd wifijammer-ng && sudo python3 wifijammer.py --help"
+    assert specs["wifijammer-ng"].exposed is False
+    assert "DANGEROUS" in specs["wifijammer-ng"].blocked_reason
+    assert records["wifijammer-ng"].source_status == "source-reviewed"
+    assert records["wifijammer-ng"].unverified_parameters == ()
+    assert records["wifijammer-ng"].gap == ""
+    assert any("MisterBianco/wifijammer-ng" in item for item in records["wifijammer-ng"].evidence)
+
+    params = adapter_parameter_names(tool, specs["wifijammer-ng"])
+    for removed in (
+        "interface",
+        "bssid",
+        "essid",
+        "channel",
+        "wordlist",
+        "handshake_file",
+        "monitor_mode",
+        "pmkid",
+        "deauth_count",
+    ):
+        assert removed not in params
+    assert "archived_reference" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["wifijammer-ng"],
+        {"target": "ignored.example", "archived_reference": True},
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_airgeddon_source_reviewed_interactive_policy_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
