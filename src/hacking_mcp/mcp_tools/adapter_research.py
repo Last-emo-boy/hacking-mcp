@@ -4175,6 +4175,31 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "deauth_count",
         ),
     ),
+    "airgeddon": SourceReview(
+        note=(
+            "Reviewed against upstream v1s1t0r1sh3r3/airgeddon README, "
+            "wiki usage notes, and airgeddon.sh. The documented startup is "
+            "sudo bash airgeddon.sh / bash airgeddon.sh, and the shell "
+            "entrypoint is a menu-driven wireless audit suite configured by "
+            ".airgeddonrc, AIRGEDDON_* environment values, and interactive "
+            "read prompts. The script does not expose a getopt/getopts or "
+            "argparse-style interface for interface/BSSID/ESSID/channel, "
+            "wordlist, handshake, PMKID, deauth, capture, target ESSID, or "
+            "BLE parameters. The adapter therefore suppresses target argv, "
+            "removes generated wireless placeholders, and exposes only an "
+            "interactive marker. Execution remains policy/info-only because "
+            "Wireless Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/v1s1t0r1sh3r3/airgeddon",
+            "https://raw.githubusercontent.com/v1s1t0r1sh3r3/airgeddon/master/README.md",
+            "https://raw.githubusercontent.com/wiki/v1s1t0r1sh3r3/airgeddon/Options.md",
+            "https://raw.githubusercontent.com/v1s1t0r1sh3r3/airgeddon/master/airgeddon.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "eviltwin": SourceReview(
         note=(
             "Reviewed against upstream Z4nzu/fakeap fakeap.sh. The documented "

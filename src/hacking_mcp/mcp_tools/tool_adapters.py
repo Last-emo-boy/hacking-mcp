@@ -705,6 +705,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         return f"{method} {target}".strip()
 
     if tool.name in {
+        "airgeddon",
         "appcheck",
         "advphishing",
         "asyncrone",
