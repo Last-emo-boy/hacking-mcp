@@ -5882,6 +5882,63 @@ def test_msfvenom_source_reviewed_msfpc_policy_only_previewable(registry, safety
     assert preview["executable"] is False
 
 
+def test_venom_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("venom")
+
+    assert tool.run_command == "cd venom && sudo ./venom.sh"
+    assert specs["venom"].exposed is False
+    assert "Payload Creation" in specs["venom"].blocked_reason
+    assert records["venom"].source_status == "source-reviewed"
+    assert records["venom"].unverified_parameters == ()
+    assert records["venom"].gap == ""
+    assert any("r00t-3xp10it/venom" in item for item in records["venom"].evidence)
+
+    params = adapter_parameter_names(tool, specs["venom"])
+    for removed in (
+        "payload_type",
+        "platform",
+        "architecture",
+        "lhost",
+        "lport",
+        "format",
+        "encoder",
+        "output_file",
+        "stager",
+        "listener_name",
+        "apk_name",
+        "bundle_id",
+        "sign_apk",
+        "shell",
+        "direction",
+        "method",
+        "batch",
+        "loop",
+        "verbose",
+        "help",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["venom"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

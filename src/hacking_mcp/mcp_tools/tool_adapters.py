@@ -746,6 +746,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "routersploit",
         "ufonet",
         "vegil",
+        "venom",
         "websploit",
         "web2attack",
         "wireshark",

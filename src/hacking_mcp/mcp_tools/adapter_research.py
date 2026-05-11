@@ -3849,6 +3849,29 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "help",
         ),
     ),
+    "venom": SourceReview(
+        note=(
+            "Reviewed against upstream r00t-3xp10it/venom repository and "
+            "venom.sh. The documented startup is sudo ./venom.sh. The Bash "
+            "entrypoint is a large menu-driven payload generator: it reads "
+            "main/sub-menu choices with read, collects LHOST/LPORT, payload "
+            "selection, output names, dropper paths, delivery mode, and "
+            "post-exploitation module choices through zenity dialogs, then "
+            "invokes msfvenom/msfconsole internally. It has no argparse/"
+            "getopt parser, positional target, or stable noninteractive CLI "
+            "flags. The adapter therefore suppresses target argv, removes "
+            "generated payload placeholders, and exposes only an interactive "
+            "marker. Execution remains policy/info-only because Payload "
+            "Creation is disabled by policy."
+        ),
+        references=(
+            "https://github.com/r00t-3xp10it/venom",
+            "https://raw.githubusercontent.com/r00t-3xp10it/venom/master/venom.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
