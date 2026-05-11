@@ -3377,6 +3377,30 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "nokill",
         ),
     ),
+    "advphishing": SourceReview(
+        note=(
+            "Reviewed against upstream Ignitetch/AdvPhishing repository "
+            "metadata, README, Linux setup script, and AdvPhishing.sh. The "
+            "documented startup is ./AdvPhishing.sh after setup, and the "
+            "entrypoint has no CLI parser or positional target arguments; it "
+            "uses read prompts for educational-purpose confirmation, attack "
+            "template selection, optional URL modification, and submenus, then "
+            "runs a fixed local PHP server on 127.0.0.1:4444 with ngrok. The "
+            "adapter is therefore intentionally interactive-only and removes "
+            "generated phishing, OSINT, and scanner placeholders. The endpoint "
+            "remains policy/info-only because Phishing Attack is disabled by "
+            "policy."
+        ),
+        references=(
+            "https://github.com/Ignitetch/AdvPhishing",
+            "https://raw.githubusercontent.com/Ignitetch/AdvPhishing/master/README.md",
+            "https://raw.githubusercontent.com/Ignitetch/AdvPhishing/master/Linux-Setup.sh",
+            "https://raw.githubusercontent.com/Ignitetch/AdvPhishing/master/AdvPhishing.sh",
+        ),
+        verified_parameters=(
+            "interactive",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

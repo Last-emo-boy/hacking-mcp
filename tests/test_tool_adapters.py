@@ -4929,6 +4929,59 @@ def test_pyphisher_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_advphishing_source_reviewed_interactive_policy_only(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("advphishing")
+
+    assert tool.run_command == "cd AdvPhishing && sudo bash AdvPhishing.sh"
+    assert specs["advphishing"].exposed is False
+    assert "Phishing Attack" in specs["advphishing"].blocked_reason
+    assert records["advphishing"].source_status == "source-reviewed"
+    assert records["advphishing"].unverified_parameters == ()
+    assert records["advphishing"].gap == ""
+    assert any("Ignitetch/AdvPhishing" in item for item in records["advphishing"].evidence)
+
+    params = adapter_parameter_names(tool, specs["advphishing"])
+    for removed in (
+        "template",
+        "landing_url",
+        "listener_host",
+        "listener_port",
+        "tunnel",
+        "domain",
+        "output_dir",
+        "sources",
+        "passive",
+        "resolvers",
+        "api_key",
+        "output_file",
+        "json_output",
+        "scan_depth",
+        "timeout",
+        "user_agent",
+    ):
+        assert removed not in params
+    assert "interactive" in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["advphishing"],
+        {
+            "target": "ignored.example",
+            "interactive": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == ""
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

@@ -706,6 +706,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
 
     if tool.name in {
         "appcheck",
+        "advphishing",
         "asyncrone",
         "chisel",
         "chrome-keylogger",
