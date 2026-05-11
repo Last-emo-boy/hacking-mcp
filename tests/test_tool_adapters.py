@@ -6302,6 +6302,106 @@ def test_bluepot_source_reviewed_interactive_policy_only(registry, safety):
     assert preview["executable"] is False
 
 
+def test_fluxion_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("fluxion")
+
+    assert tool.run_command == "cd fluxion && sudo bash fluxion.sh -i"
+    assert specs["fluxion"].exposed is False
+    assert "Wireless Attack" in specs["fluxion"].blocked_reason
+    assert records["fluxion"].source_status == "source-reviewed"
+    assert records["fluxion"].unverified_parameters == ()
+    assert records["fluxion"].gap == ""
+    assert any("FluxionNetwork/fluxion" in item for item in records["fluxion"].evidence)
+
+    params = adapter_parameter_names(tool, specs["fluxion"])
+    for expected in (
+        "bssid",
+        "essid",
+        "channel",
+        "language",
+        "attack",
+        "interface",
+        "jammer_interface",
+        "ap_interface",
+        "tracker_interface",
+        "ap_service",
+        "debug",
+        "debug_log",
+        "killer",
+        "reloader",
+        "airmon_ng",
+        "multiplexer",
+        "install",
+        "ratio",
+        "auto",
+        "scan_time",
+        "scan_only",
+        "list_interfaces",
+        "skip_dependencies",
+        "timeout",
+        "reg_domain",
+        "band",
+        "version",
+        "help",
+    ):
+        assert expected in params
+    for removed in ("wordlist", "handshake_file", "monitor_mode", "pmkid", "deauth_count"):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["fluxion"],
+        {
+            "target": "ignored.example",
+            "bssid": "00:11:22:33:44:55",
+            "essid": "LabNet",
+            "channel": 6,
+            "language": "en",
+            "attack": "Handshake Snooper",
+            "interface": "wlan0",
+            "jammer_interface": "wlan1",
+            "ap_interface": "wlan2",
+            "tracker_interface": "wlan3",
+            "ap_service": "hostapd",
+            "debug": True,
+            "debug_log": "fluxion.log",
+            "killer": True,
+            "reloader": True,
+            "airmon_ng": True,
+            "multiplexer": True,
+            "install": True,
+            "ratio": "16:9",
+            "auto": True,
+            "scan_time": 30,
+            "scan_only": True,
+            "list_interfaces": True,
+            "skip_dependencies": True,
+            "timeout": 120,
+            "reg_domain": "US",
+            "band": "2.4",
+            "version": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "--version --debug --debug-log fluxion.log --killer --reloader "
+        "--airmon-ng --multiplexer --bssid 00:11:22:33:44:55 --essid LabNet "
+        "--channel 6 --language en --attack 'Handshake Snooper' --install "
+        "--ratio 16:9 --auto --scan-time 30 --scan-only --list-interfaces "
+        "--interface wlan0 --skip-dependencies --jammer-interface wlan1 "
+        "--ap-interface wlan2 --tracker-interface wlan3 --ap-service hostapd "
+        "--timeout 120 --reg-domain US --band 2.4"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 

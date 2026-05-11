@@ -4039,6 +4039,54 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "interactive",
         ),
     ),
+    "fluxion": SourceReview(
+        note=(
+            "Reviewed against upstream FluxionNetwork/fluxion README and "
+            "fluxion.sh getopt parsing. The documented startup is fluxion.sh, "
+            "and the parser supports version/help/debug/debug-log, killer, "
+            "reloader, airmon-ng, multiplexer, BSSID, ESSID, channel, "
+            "language, attack, install, ratio, auto mode, scan-time, "
+            "scan-only, list-interfaces, interface hints, skip-dependencies, "
+            "jammer/AP/tracker interface selection, AP service, timeout, "
+            "regulatory domain, and band. The adapter maps those source "
+            "flags and suppresses synthetic target argv. Execution remains "
+            "policy/info-only because Wireless Attack is disabled by policy."
+        ),
+        references=(
+            "https://github.com/FluxionNetwork/fluxion",
+            "https://raw.githubusercontent.com/FluxionNetwork/fluxion/master/fluxion.sh",
+        ),
+        verified_parameters=(
+            "bssid",
+            "essid",
+            "channel",
+            "language",
+            "attack",
+            "interface",
+            "jammer_interface",
+            "ap_interface",
+            "tracker_interface",
+            "ap_service",
+            "debug",
+            "debug_log",
+            "killer",
+            "reloader",
+            "airmon_ng",
+            "multiplexer",
+            "install",
+            "ratio",
+            "auto",
+            "scan_time",
+            "scan_only",
+            "list_interfaces",
+            "skip_dependencies",
+            "timeout",
+            "reg_domain",
+            "band",
+            "version",
+            "help",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "
