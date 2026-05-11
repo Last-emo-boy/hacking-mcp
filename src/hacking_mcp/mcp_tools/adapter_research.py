@@ -3977,6 +3977,46 @@ SOURCE_REVIEWED_TOOLS: dict[str, SourceReview] = {
             "version",
         ),
     ),
+    "pixiewps": SourceReview(
+        note=(
+            "Reviewed against upstream wiire/pixiewps README, source, and "
+            "documented pixiewps CLI help/manpage. The command accepts WPS "
+            "Pixie Dust inputs such as PKE, PKR, E-Hash1, E-Hash2, AuthKey, "
+            "E-Nonce, R-Nonce, and E-BSSID, plus verbosity, output file, "
+            "thread/job count, mode, start/end dates, force, M7 encrypted "
+            "settings, M5 encrypted nonce, help, and version flags. The old "
+            "generic wireless interface/bssid/essid/channel/wordlist/"
+            "handshake placeholders are not present in the upstream CLI. "
+            "Execution remains policy/info-only because Wireless Attack is "
+            "disabled by policy."
+        ),
+        references=(
+            "https://github.com/wiire/pixiewps",
+            "https://raw.githubusercontent.com/wiire/pixiewps/master/README.md",
+            "https://raw.githubusercontent.com/wiire/pixiewps/master/src/pixiewps.c",
+        ),
+        verified_parameters=(
+            "pke",
+            "pkr",
+            "e_hash1",
+            "e_hash2",
+            "authkey",
+            "e_nonce",
+            "r_nonce",
+            "e_bssid",
+            "verbosity",
+            "output_file",
+            "jobs",
+            "mode",
+            "start",
+            "end",
+            "force",
+            "m7_enc",
+            "m5_enc",
+            "help",
+            "version",
+        ),
+    ),
     "rvuln": SourceReview(
         note=(
             "Reviewed against upstream RVuln HOW-TO and Rust main.rs. The "

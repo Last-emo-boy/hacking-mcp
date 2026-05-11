@@ -730,6 +730,7 @@ def _request_target(tool: HackingToolDef, kwargs: dict) -> str:
         "mobdroid",
         "mythic",
         "peass-ng",
+        "pixiewps",
         "pyphisher",
         "qrjacking",
         "qrljacking",

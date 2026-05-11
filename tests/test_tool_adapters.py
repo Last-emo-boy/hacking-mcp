@@ -6170,6 +6170,94 @@ def test_wifipumpkin_source_reviewed_policy_only_previewable(registry, safety):
     assert preview["executable"] is False
 
 
+def test_pixiewps_source_reviewed_policy_only_previewable(registry, safety):
+    from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
+
+    specs = {s.tool_name: s for s in build_adapter_specs(registry, safety)}
+    records = {
+        record.tool_name: record
+        for record in build_adapter_research_records(registry, safety)
+    }
+    tool = registry.get_tool("pixiewps")
+
+    assert tool.run_command == "pixiewps --help"
+    assert specs["pixiewps"].exposed is False
+    assert "Wireless Attack" in specs["pixiewps"].blocked_reason
+    assert records["pixiewps"].source_status == "source-reviewed"
+    assert records["pixiewps"].unverified_parameters == ()
+    assert records["pixiewps"].gap == ""
+    assert any("wiire/pixiewps" in item for item in records["pixiewps"].evidence)
+
+    params = adapter_parameter_names(tool, specs["pixiewps"])
+    for expected in (
+        "pke",
+        "pkr",
+        "e_hash1",
+        "e_hash2",
+        "authkey",
+        "e_nonce",
+        "r_nonce",
+        "e_bssid",
+        "verbosity",
+        "output_file",
+        "jobs",
+        "mode",
+        "start",
+        "end",
+        "force",
+        "m7_enc",
+        "m5_enc",
+        "help",
+        "version",
+    ):
+        assert expected in params
+    for removed in (
+        "interface",
+        "bssid",
+        "essid",
+        "channel",
+        "wordlist",
+        "handshake_file",
+        "monitor_mode",
+    ):
+        assert removed not in params
+
+    preview = adapter_request_preview(
+        tool,
+        specs["pixiewps"],
+        {
+            "target": "ignored.example",
+            "pke": "aa",
+            "pkr": "bb",
+            "e_hash1": "cc",
+            "e_hash2": "dd",
+            "authkey": "ee",
+            "e_nonce": "ff",
+            "r_nonce": "11",
+            "e_bssid": "00:11:22:33:44:55",
+            "verbosity": 3,
+            "output_file": "pixie.log",
+            "jobs": 4,
+            "mode": "1,3",
+            "start": "01/2015",
+            "end": "12/2016",
+            "force": True,
+            "m7_enc": "abcd",
+            "m5_enc": "ef01",
+            "version": True,
+        },
+    )
+    assert preview["target"] == ""
+    assert preview["options"] == (
+        "--pke aa --pkr bb --e-hash1 cc --e-hash2 dd --authkey ee "
+        "--e-nonce ff --r-nonce 11 --e-bssid 00:11:22:33:44:55 "
+        "--verbosity 3 --output pixie.log --jobs 4 --mode 1,3 "
+        "--start 01/2015 --end 12/2016 --force --m7-enc abcd "
+        "--m5-enc ef01 --version"
+    )
+    assert preview["executable"] is False
+
+
 def test_rvuln_source_reviewed_interactive_only(registry, safety):
     from hacking_mcp.mcp_tools.tool_adapters import adapter_parameter_names
 
